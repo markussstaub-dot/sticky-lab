@@ -75,3 +75,14 @@ Erkenntnisse mit Datum. Rohdaten: `/lab/messungen.csv` auf der SD-Karte bzw. CSV
 - Mit EDC am USB läuft alles; **beim Abziehen ist es sofort aus** (Streifen, wenn gerade ein Refresh lief bzw. das
   Panel ohne sauberes Abschalten den Strom verliert). Die Firmware kommt gar nicht zum Halten.
 - Folge: Energie-Messungen (Station 8) gehen auf diesem Gerät erst, wenn das geklärt ist.
+
+## 15.11.2026 – gelöst: zweiter Haltepin GPIO46 (FW 0.4.2)
+
+- Seeeds offizielle Beispiele (github.com/Seeed-Projects/sticky-esp-idf-peripherals, `main/pin_config.h`) nennen
+  **zwei** Haltepins: `PIN_POWER_HOLD 45` und **`PIN_POWER_LOCK 46`**; `demo_board_init()` setzt beide als Erstes
+  auf HIGH. EDC (und das Lab bis 0.4.1) setzte nur GPIO45.
+- Mit GPIO46 HIGH bleibt das Lab-Gerät beim Abziehen an, Tasten klicken (Markus, getestet). Im Leichtschlaf wird
+  GPIO46 wie GPIO45 per `gpio_hold_en` festgehalten.
+- Warum der andere Sticky ohne GPIO46 hält, ist offen (Platinen-Version, oder der Pin landet dort zufällig HIGH).
+- **Folge für EDC:** dieselbe Zeile gehört in die EDC-Firmware, sonst geht ein Gerät wie dieses ohne Kabel aus.
+- Nebenfund im Seeed-README: eine SHT40-Messung beim Start setzt die Wellenform-Temperatur des Panels.

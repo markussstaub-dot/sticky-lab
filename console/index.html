@@ -455,7 +455,7 @@ const INV = () => [
  { name: 'Energie', rolle: 'Li-Po-Akku mit Ladechip und Füllstandsmesser', zeilen: [
    ['Füllstand', ['BQ27220, 0x55: Spannung verlässlich; meldet 7500 mAh Design/voll, 0 Zyklen – wohl nie auf diesen Akku eingestellt, Prozent und Strom darum fraglich (Lab 15.11.)', 'gemessen']],
    ['Laden', ['BQ25616, nur 0–45 °C; /CE an GPIO 39 aktiv LOW halten, sonst lädt er nie', 'bekannt']],
-   ['Selbsthaltung', ['PWR_HOLD GPIO 45, ohne sie geht er im Akkubetrieb aus', 'bekannt']],
+   ['Selbsthaltung', ['PWR_HOLD GPIO 45 und PWR_LOCK GPIO 46, beide HIGH (laut Seeed). Ohne GPIO 46 ging das Lab-Gerät beim Abziehen sofort aus; EDC setzt 46 nicht', 'gemessen']],
    ['Kapazität', akku ? [`voll ${akku.voll} mAh, Design ${akku.design} mAh, Rest ${akku.rest} mAh (${akku.zeit})`, 'gemessen']
                       : ['„Akku lesen“ in der Steuerung holt sie aus dem BQ27220', 'offen']],
    ['jetzt', akku ? [`${akku.mv} mV, ${akku.ma} mA (Mittel ${akku.mittel}), ${akku.soc} %, ${akku.grad} °C, ${akku.zyklen} Zyklen${akku.usb === '1' ? ', am USB' : ''}`, 'gemessen'] : ['–', 'offen']],

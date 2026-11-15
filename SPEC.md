@@ -94,7 +94,7 @@ denn der bleibt unverändert.
 
 | übernehmen | woher | Anmerkung |
 |---|---|---|
-| Pins, Tasten aktiv low (KI 4, ▲ 5, ▼ 6), PWR_HOLD 45, Summer 48, Touch 2/3/21/41/42, MISC_I2C 0/1 | EDC `SPEC.md`, `STAND.md` | dazu die Stolperfalle: Tasten und Touch erst **nach** `display.begin()` einrichten |
+| Pins, Tasten aktiv low (KI 4, ▲ 5, ▼ 6), PWR_HOLD 45 **und PWR_LOCK 46** (laut Seeed, fehlt in EDC), Summer 48, Touch 2/3/21/41/42, MISC_I2C 0/1 | EDC `SPEC.md`, `STAND.md` | dazu die Stolperfalle: Tasten und Touch erst **nach** `display.begin()` einrichten |
 | Seeed_GFX2 mit Patch `gfxPartialWachHalten` | `firmware-ble/bibliothek-patch` | Refresh-Labor misst genau diese Stellschrauben |
 | GT911-Konfiguration nur schreiben, wenn keine da ist | EDC-Firmware | |
 | Teil-Refresh, Hoch/Quer-Drehung, 180° | `modus.h`, `widget.h` | |

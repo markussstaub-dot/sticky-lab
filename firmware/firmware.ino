@@ -8,7 +8,7 @@
  * Bauen: arduino-cli compile -b "esp32:esp32:XIAO_ESP32S3:PSRAM=opi,CDCOnBoot=cdc"
  *        --build-property build.flash_size=32MB --build-path "%LOCALAPPDATA%\sticky-build\sticky-lab" firmware
  */
-#define LAB_VERSION "0.4.1"
+#define LAB_VERSION "0.4.2"
 
 #include <esp_sleep.h>
 #include <driver/gpio.h>
@@ -93,10 +93,12 @@ static void vielleichtSchlafen() {
     for (auto& t : tasten) gpio_wakeup_enable((gpio_num_t)t.pin, t.ruhe == HIGH ? GPIO_INTR_LOW_LEVEL : GPIO_INTR_HIGH_LEVEL);
     esp_sleep_enable_gpio_wakeup();
     gpio_hold_en((gpio_num_t)PIN_PWR_HOLD);
+    gpio_hold_en((gpio_num_t)PIN_PWR_LOCK);
     gpio_hold_en((gpio_num_t)PIN_CHG_EN_N);
     esp_light_sleep_start();
     gpio_hold_dis((gpio_num_t)PIN_CHG_EN_N);
     gpio_hold_dis((gpio_num_t)PIN_PWR_HOLD);
+    gpio_hold_dis((gpio_num_t)PIN_PWR_LOCK);
     for (auto& t : tasten) gpio_wakeup_disable((gpio_num_t)t.pin);
     esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
     // die weckende Taste nicht als Bedienung auswerten
@@ -121,6 +123,8 @@ void setup() {
     setCpuFrequencyMhz(80);   // wie EDC, damit Messungen vergleichbar sind
     pinMode(PIN_PWR_HOLD, OUTPUT);
     digitalWrite(PIN_PWR_HOLD, HIGH);
+    pinMode(PIN_PWR_LOCK, OUTPUT);
+    digitalWrite(PIN_PWR_LOCK, HIGH);   // wie Seeed: HOLD und LOCK zuerst
     pinMode(PIN_CHG_EN_N, OUTPUT);
     digitalWrite(PIN_CHG_EN_N, LOW);   // Laden erlauben
     pinMode(PIN_CHG_STATE, INPUT_PULLUP);

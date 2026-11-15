@@ -121,11 +121,13 @@ static bool schlafMessen(float& maMittel, float& sek) {
         gpio_wakeup_enable((gpio_num_t)PIN_BTN_KI, tasten[K_KI].ruhe == HIGH ? GPIO_INTR_LOW_LEVEL : GPIO_INTR_HIGH_LEVEL);
         esp_sleep_enable_gpio_wakeup();
         gpio_hold_en((gpio_num_t)PIN_PWR_HOLD);
+        gpio_hold_en((gpio_num_t)PIN_PWR_LOCK);
         gpio_hold_en((gpio_num_t)PIN_CHG_EN_N);
         Serial.flush();
         esp_light_sleep_start();
         gpio_hold_dis((gpio_num_t)PIN_CHG_EN_N);
         gpio_hold_dis((gpio_num_t)PIN_PWR_HOLD);
+        gpio_hold_dis((gpio_num_t)PIN_PWR_LOCK);
         gpio_wakeup_disable((gpio_num_t)PIN_BTN_KI);
         bool taste = esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_GPIO;
         esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);

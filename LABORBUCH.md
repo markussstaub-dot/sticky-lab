@@ -153,3 +153,4 @@ Erkenntnisse mit Datum. Rohdaten: `/lab/messungen.csv` auf der SD-Karte bzw. CSV
 - Per USB getippt (Maschine, 100 ms je Anschlag): 61 Zeichen + 4 Shift, **0 Fehler**, 258 Zeichen/min – kein
   Anschlag geht während eines Refreshs verloren (Touch-Sammler). Menschliche Messung steht aus.
 - Schwäche: die Schrift kennt kein ß, es erscheint als „ss“ (wird aber als ß gespeichert und gezählt).
+- **Erste Menschenmessung (Markus): 49 Zeichen/min, 3 Fehler** (u. a. ein verschlucktes Leerzeichen) – Notiz-Tempo, ~10 Wörter/min.

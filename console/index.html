@@ -122,6 +122,7 @@ th{color:var(--muted);font-weight:normal}
    <div class="reihe">
     <button data-cmd="k">KI · Übersicht</button>
     <button data-cmd="1">1 Refresh</button>
+    <button data-cmd="6">6 Touch</button>
     <button data-cmd="8">8 Energie</button>
     <button data-cmd="a">Akku lesen</button>
     <button data-cmd="u">▲</button>
@@ -179,7 +180,14 @@ function zeile(t){
     if (!$('#inventar').hidden) inventar();
   }
   if (t.startsWith('INFO ')) {
-    const [, v, st, akku, usb, sd] = t.split(' ');
+    const [, v, st, akku, usb, sd, pw, ph, pf, pmm] = t.split(' ');
+    if (pw && +pmm > 0) {
+      panel = { w: +pw, h: +ph, farben: +pf, pxmm: +pmm };
+      STICKY_MM = panel.w / panel.pxmm;
+      const c = $('#spiegel');
+      if (c.width !== panel.w || c.height !== panel.h) { c.width = panel.w; c.height = panel.h; }
+      zoomSetzen();
+    }
     $('#info').textContent = `FW ${v} · Station ${st} · Akku ${akku} % · ${usb === '1' ? 'USB' : 'Akku'} · ${sd === 'sd' ? 'SD' : 'keine SD'}`;
   }
   if (t.startsWith('STATION ') && $('#auto').checked) setTimeout(() => senden('f'), 150);
@@ -207,8 +215,8 @@ function verarbeiten(){
 }
 
 function zeichne(bits){
-  const c = $('#spiegel'), g = c.getContext('2d'), img = g.createImageData(800, 480);
-  for (let i = 0; i < 800 * 480; i++) {
+  const c = $('#spiegel'), g = c.getContext('2d'), img = g.createImageData(c.width, c.height);
+  for (let i = 0; i < c.width * c.height; i++) {
     const s = bits[i >> 3] & (0x80 >> (i & 7));
     const o = i * 4, v = s ? 17 : 244;
     img.data[o] = v; img.data[o+1] = v; img.data[o+2] = s ? 17 : 236; img.data[o+3] = 255;
@@ -348,7 +356,8 @@ setInterval(() => { if (verbunden()) senden('i'); }, 30000);
 // Display: 3,97″ bei 800 × 480 → 9,25 px/mm → 86,5 × 51,9 mm. Originalgröße braucht die Pixeldichte des Bildschirms
 // (physische Pixel je mm); CSS-Pixel = physische Pixel / devicePixelRatio. Zenbook Pro Duo: oben 15,6″ 3840×2160 ≈ 11,1,
 // ScreenPad 14″ 3840×1100 ≈ 11,2 px/mm.
-const STICKY_MM = 800 / 9.25;
+let panel = { w: 800, h: 480, farben: 2, pxmm: 9.25 };   // kommt mit INFO vom Sticky (Panel-Profil)
+let STICKY_MM = panel.w / panel.pxmm;
 const merk = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch { return null; } };
 let zoomArt = merk('zoomArt') || 'original';
 let zoomFaktor = +(merk('zoomFaktor') || 1);
@@ -406,6 +415,7 @@ const INV = () => [
  { name: 'Anzeige', rolle: 'e-Ink 3,97″, 800 × 480 (9,25 px/mm, 86,5 × 51,9 mm), 1 bpp (Schwarz/Weiß), über Seeed_GFX2', zeilen: [
    ['Voll-Refresh', mittel('Voll') || ['2277 ms (Lab 15.11.)', 'gemessen']],
    ['Teil-Refresh', mittel('Teil') || ['952 ms für 368 × 300 px (Lab 15.11.)', 'gemessen']],
+   ['Fläche', ['fast egal: 28 × 28 px 838 ms, 180 × 150 px 950 ms, 368 × 300 px 952 ms – die Zeit steckt im Panel-Ablauf', 'gemessen']],
    ['Teil wach', mittel('Teil wach') || ['853 ms, ohne die zwei 100-ms-Schlafpausen', 'gemessen']],
    ['Schnell', ['kehrt nach 0 ms zurück, läuft wohl im Hintergrund; EDC sah falsche Bilder', 'offen']],
    ['ohne Strom', ['Bild bleibt stehen (auch ein falsches)', 'bekannt']],
@@ -415,6 +425,11 @@ const INV = () => [
    ['Finger', ['bis 5 gleichzeitig (Lab nutzt 1)', 'bekannt']],
    ['Anschluss', ['I²C 0x5D an GPIO 2/3, INT 21, RST 41, Strom 42', 'bekannt']],
    ['Abfrage', ['alle 25 ms', 'bekannt']],
+   ['Treffer', (m => m ? [`im Mittel ${(m.wert / 10).toFixed(1)} px (${(m.wert / 10 / panel.pxmm).toFixed(1)} mm)`, 'gemessen'] : ['Station 6 → Zielen', 'offen'])(messungen.filter(x => x.art === 'ziel-mittel').pop())],
+   ['Rückmeldung', (() => { const n = {'rueck-rahmen':'Rahmen','rueck-invert':'Invert','rueck-punkt':'Punkt'};
+      const v = Object.keys(n).map(a => { const m = messungen.filter(x => x.art === a).pop(); return m ? `${n[a]} ${m.wert} ms` : null; }).filter(Boolean);
+      return v.length ? [v.join(', '), 'gemessen'] : ['Station 6 → Rückmeldung', 'offen']; })()],
+   ['Kritzeln', (m => m ? [`${m.wert} ms je Teilbild (${m.notiz})`, 'gemessen'] : ['Station 6 → Kritzeln', 'offen'])(messungen.filter(x => x.art === 'kritzel-teil').pop())],
    ['Stift', ['nur leitende Spitze, kein Kuli', 'bekannt']],
   ], grenze: ['offen', 'Latenz Berührung → sichtbare Rückmeldung? Treffergenauigkeit am Rand?'] },
  { name: 'Tasten', rolle: 'KI, ▲, ▼ an der rechten Seite', zeilen: [

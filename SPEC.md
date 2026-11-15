@@ -33,11 +33,11 @@ Jede Station ist eine Seite. Reihenfolge = Bau-Reihenfolge.
 | 3 | **Raster & Dithering** | Graukeil und ein Testbild von der SD: Schwelle, Bayer 4×4/8×8, Floyd-Steinberg, Atkinson, Halbtonpunkte, Linienraster | Rechenzeit; dazu die Frage, was auf 1 bpp am besten aussieht |
 | 4 | **Braun-Baukasten** | alle Bedienelemente aus `braun.js`, jetzt in C++ in der Firmware gezeichnet: Doppelring, Pille, Rasterrand, dünner Ring, Schieber, Drehrad, Reiter; jeweils Ruhe, gedrückt und aktiv | Zeichenzeit je Element; ob 58 px für „Wurstfinger“ reichen |
 | 5 | **Bewegung** | Animation per Teil-Refresh: Fortschrittsbalken, Zeiger, Zahlenrolle wie im Kilometerzähler, Ladekreis | erreichte Bilder pro Sekunde; ab wann es ruckelt oder schmiert |
-| 6 | **Touch-Labor** | Zielscheibe mit Treffer-Kreuzen, Kritzelspur, Rückmeldungsarten im Vergleich (Rahmen, Invertieren, Klick, Summer) | Latenz Berührung → sichtbare Rückmeldung, Abweichung vom Ziel in px |
+| 6 | **Touch-Labor** (umgesetzt FW 0.3.0: Zielen, Rückmeldung, Kritzeln) | Zielscheibe mit Treffer-Kreuzen, Kritzelspur, Rückmeldungsarten im Vergleich (Rahmen, Invertieren, Klick, Summer) | Latenz Berührung → sichtbare Rückmeldung, Abweichung vom Ziel in px |
 | 7 | **Instrumente** | Sensoren als Braun-Instrumente: Klima (SHT40) mit Taupunkt, Wasserwaage (LSM6DS3), Akku mit Spannung, Strom und Verlauf (BQ27220), Uhr (PCF8563) | Werte live, wahlweise alle n Sekunden in die CSV |
 | 8 | **Energie** (umgesetzt FW 0.2.0) | Akku-Kapazität aus dem BQ27220 (FullChargeCapacity), Dauerlauf: n Refreshes einer Art, dann Füllstand vorher/nachher; Grundverbrauch wach, Leichtschlaf, Tiefschlaf über Stunden | mAh je Voll-/Teil-Refresh, mA je Zustand, hochgerechnet „Refreshes pro Ladung“ und „Tage im Schlaf“ |
 
-- Stand 15.11.2026: 1 und 8 gebaut (Markus wollte 8 vorziehen). Rest: Vorschlag 4 und 6 als Nächstes.
+- Stand 15.11.2026: 1, 6 und 8 gebaut. Vorschlag als Nächstes: 4 (Braun-Baukasten).
 - Vorschlag (ursprünglich): zuerst **1, 4, 6** bauen. Sie sind die Grundlage für alles andere: schnelles Zeichnen, die Bauteile und
   das Bediengefühl.
 - offen: weitere Stationen, z. B. **Hoch/Quer** (drehen per Lagesensor), **Schlafbild** (was steht nach dem
@@ -148,7 +148,23 @@ Der Sticky hat schon zwei App-Plätze (`app0` und `app1`, je 4 MB), siehe `parti
 - Vorschlag: Flashen bleibt bei arduino-cli. Die Console gibt den Port frei („Trennen“), damit hochgeladen werden kann.
 - Vorschlag: Die Firmware antwortet auf USB maschinenlesbar (Zeilen wie `MESSUNG …`, `STATION …`, `FOTO n` + Daten).
 
-## 9. Offen
+## 9. Ausbaufähig bleiben, z. B. für einen farbigen Sticky (Markus, 15.11.2026)
+
+- fest: **Das Lab hängt nicht an einem Panel.** Alles Panel-Abhängige steht in einem **Panel-Profil**
+  (`firmware/anzeige.h`: Name, Breite, Höhe, Anzahl Farben, Pixeldichte, kann Teil-Refresh). Umgesetzt FW 0.3.0;
+  der Sticky meldet das Profil per `INFO`, die Console richtet Spiegel und Originalgröße danach aus.
+- Vorschlag: **Farbe über Rollen, nicht über feste Werte.** Zeichnen mit Rollen wie heute (Hauptaktion, Auswahl,
+  Werkzeug, Nebensache) plus einer Rolle „Akzent“. Auf Schwarz/Weiß wird Akzent zu Raster, auf Farbe zu einer
+  echten Farbe (Braun-Vorbild: ein einziges Orange/Grün als Signal).
+- Vorschlag: **Stationen fragen Fähigkeiten ab** statt sie anzunehmen: kein Teil-Refresh → Refresh-Labor misst nur
+  Voll, Touch-Rückmeldung zeigt das. Neue Stationen für Farbe: Farbtafel, Farb-Dithering, Refresh-Dauer je Farbe.
+- Vorschlag: **Foto mit Farbe**: heute PBM (1 bpp); für Farbe ein indiziertes Format (z. B. 4 bpp + Palette) und die
+  Console zeichnet mit der Palette aus dem Profil.
+- Vorschlag: **ein Build je Gerät** über ein Compile-Flag (`-DPANEL_STICKY_SW`, später `-DPANEL_STICKY_FARBE`);
+  Pins und Treiber je Board im Profil. Der Rest des Labs bleibt gleich.
+- offen: welches Farbpanel (Spectra 6 o. ä.), ob Seeed_GFX2 es unterstützt, ob Touch und Tasten gleich bleiben.
+
+## 10. Offen
 
 - Ab wann ist ein Ergebnis reif für EDC, und wer trägt es dorthin? Vorschlag: Markus entscheidet je Fund, eine
   EDC-Session baut es ein.

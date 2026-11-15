@@ -11,6 +11,18 @@ extern bool gfxPartialWachHalten;   // aus dem Bibliotheks-Patch (reterminal-sti
 
 static const uint32_t SCHWARZ = TFT_BLACK, WEISS = TFT_WHITE;
 
+// ---- Panel-Profil -------------------------------------------------------------------------------------
+// Alles, was vom Panel abhängt, steht hier. Ein späterer Sticky mit anderem Panel (z. B. Farbe) bekommt ein
+// eigenes Profil; Stationen und Console lesen Größe, Farben und Pixeldichte von hier statt sie fest anzunehmen.
+struct Panel {
+    const char* name;
+    int w, h;          // Pixel quer
+    int farben;        // 2 = Schwarz/Weiß; Farb-e-Ink z. B. 6 (Spectra 6) oder 7
+    float pxProMm;     // Pixeldichte, für Originalgröße und Messungen in mm
+    bool teilRefresh;  // kann das Panel Teil-Refresh? (Farb-e-Ink meist nicht)
+};
+static const Panel PANEL = { "Sticky 3.97in SW", 800, 480, 2, 9.25f, true };
+
 // ---- Refresh-Arten ---------------------------------------------------------------
 enum Art : uint8_t { ART_TEIL = 0, ART_TEIL_WACH, ART_SCHNELL, ART_VOLL, ART_ANZAHL };
 static const char* ART_NAME[ART_ANZAHL] = { "Teil", "Teil wach", "Schnell", "Voll" };

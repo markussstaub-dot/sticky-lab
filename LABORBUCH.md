@@ -30,3 +30,13 @@ Erkenntnisse mit Datum. Rohdaten: `/lab/messungen.csv` auf der SD-Karte bzw. CSV
 ## 15.11.2026 – Console am Fold
 - Chrome 157 auf dem Fold6 hat `navigator.serial` und `navigator.usb`. Die Console nimmt auf Android WebUSB und
   spricht den CH343 (1A86:55D3) als CDC-ACM an. Verbinden, Spiegel und „Foto holen“ gehen (Markus, am Fold getestet).
+
+## 15.11.2026 – FW 0.3.0: Station 6 Touch
+
+- **Teil-Refresh kostet fast unabhängig von der Fläche ~0,85–0,95 s:** Punkt 28 × 28 px 838 ms, Feld 180 × 150 px
+  950 ms (Rahmen) bzw. 1001 ms (invertiert), Testfeld 368 × 300 px 952 ms. Die Zeit steckt im Ablauf des Panels
+  (Wellenform), nicht in der Datenmenge. Folge fürs Design: Rückmeldung per Bild ist nie schneller als ~0,85 s;
+  sofortige Rückmeldung geht nur über Klick (0 ms) – oder später über die LED.
+- Zielen- und Rückmeldungs-Logik per USB geprüft (künstliche Tipps mit Versatz +3/−2 px → 3,6 px gemessen).
+  Echte Finger-Messung und Kritzeln stehen noch aus.
+- Ohne Kabel noch nicht gemessen (Protokoll auf der Karte leer).

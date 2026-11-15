@@ -8,7 +8,7 @@
  * Bauen: arduino-cli compile -b "esp32:esp32:XIAO_ESP32S3:PSRAM=opi,CDCOnBoot=cdc"
  *        --build-property build.flash_size=32MB --build-path "%LOCALAPPDATA%\sticky-build\sticky-lab" firmware
  */
-#define LAB_VERSION "0.2.1"
+#define LAB_VERSION "0.3.0"
 
 #include <esp_sleep.h>
 #include <driver/gpio.h>
@@ -22,12 +22,15 @@
 #include "stationen/uebersicht.h"
 #include "stationen/refresh.h"
 #include "stationen/energie.h"
+#include "stationen/touch.h"
 
 // ---- Stationen (Index 0 = Übersicht, danach Nummer wie in der SPEC) ------------------------
 static const Station STATIONEN[] = {
     { "Übersicht", uebersichtBetreten, uebersichtTaste, uebersichtTipp, nullptr },
     { "1 · Refresh-Labor", refresh::betreten, refresh::taste, refresh::tipp, nullptr },
-    {}, {}, {}, {}, {}, {},   // 2–7 kommen noch
+    {}, {}, {}, {},           // 2–5 kommen noch
+    { "6 · Touch", touch::betreten, touch::taste, touch::tipp, touch::kritzelnTick },
+    {},                       // 7 kommt noch
     { "8 · Energie", energie::betreten, energie::taste, energie::tipp, nullptr },
 };
 static const int ANZAHL = sizeof STATIONEN / sizeof STATIONEN[0];
@@ -168,7 +171,7 @@ void loop() {
             Serial.println("CSV-ENDE");
         }
         else if (c == 'i') {
-            Serial.printf("INFO %s %d %d %d %s\n", LAB_VERSION, aktuell, akkuProzent(), usbDa() ? 1 : 0, sdDa ? "sd" : "-");
+            Serial.printf("INFO %s %d %d %d %s %d %d %d %.2f\n", LAB_VERSION, aktuell, akkuProzent(), usbDa() ? 1 : 0, sdDa ? "sd" : "-", PANEL.w, PANEL.h, PANEL.farben, PANEL.pxProMm);
         }
     }
     vielleichtSchlafen();

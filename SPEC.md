@@ -167,5 +167,9 @@ Der Sticky hat schon zwei App-Plätze (`app0` und `app1`, je 4 MB), siehe `parti
 
 ## 10. Offen
 
+- Idee (Markus, 15.11.2026): **Sticky Stack** – zwei Stickys halten magnetisch aneinander; nebeneinander als
+  ein Bild 1600 × 480, Rücken an Rücken doppelseitig. Braucht eine Verbindung zwischen den Geräten (BLE oder
+  ESP-NOW); geparkt.
+
 - Ab wann ist ein Ergebnis reif für EDC, und wer trägt es dorthin? Vorschlag: Markus entscheidet je Fund, eine
   EDC-Session baut es ein.

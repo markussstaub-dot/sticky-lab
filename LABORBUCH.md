@@ -91,7 +91,13 @@ Erkenntnisse mit Datum. Rohdaten: `/lab/messungen.csv` auf der SD-Karte bzw. CSV
 
 - Die Firmware meldet jetzt beim Start den von Seeed_GFX2 erkannten Controller (`system,panel` in der CSV, `INFO`,
   Statuszeile der Übersicht, Tech-Inventar).
-- Markus' Sticky: **SSD1677**, Treiber meldet **Graustufen-Refresh mit 4 Stufen: ja**. Das Lab-Gerät: noch offen
-  (beim nächsten Anstecken). Ist es ein SSD2677, deutet das auf zwei Bauserien hin (vgl. GPIO46).
+- Beide Geräte: **SSD1677**, Treiber meldet **Graustufen-Refresh mit 4 Stufen: ja**. Der GPIO46-Unterschied hat
+  also nichts mit der Display-Variante zu tun; am ehesten der unbestimmte Pegel des Strapping-Pins GPIO46.
 - Neue Frage fürs Lab: echte Graustufen (4 Stufen, `updateGray`) statt Dithering – wie sieht es aus, wie lange
   dauert es? Kandidat für Station 3.
+
+## 15.11.2026 – Beobachtung: Sticky Stack
+
+- Zwei Stickys **halten magnetisch aneinander** (Magnete im Gehäuse). Idee fürs Lab, geparkt: „Sticky Stack“ –
+  zwei Geräte nebeneinander als ein breites Bild (1600 × 480) oder Rücken an Rücken als doppelseitige Anzeige;
+  der Lagesensor könnte erkennen, wie sie zusammenhängen. Offen: ob die Magnete den Touch oder Sensoren stören.

@@ -201,7 +201,7 @@ static void statuszeile(const char* name) {
     text(name, 20, 23, &FreeSansBold12pt7b, ML_DATUM);
     char r[40];
     int p = akkuProzent();
-    if (p >= 0) snprintf(r, sizeof r, "%d %%  ·  LAB", p); else snprintf(r, sizeof r, "LAB");
+    if (p >= 0) snprintf(r, sizeof r, "%d %%  ·  LAB  ·  ?", p); else snprintf(r, sizeof r, "LAB  ·  ?");   // ? = Tipp auf die Statuszeile zeigt Hilfe
     text(r, W - 20, 23, &FreeSans12pt7b, MR_DATUM);
     display.fillRect(0, STATUS_H - 2, W, 2, SCHWARZ);
 }

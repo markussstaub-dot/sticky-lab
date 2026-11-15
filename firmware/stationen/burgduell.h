@@ -9,7 +9,9 @@ namespace burgduell {
 static const int FY = STATUS_H, FH = 410 - STATUS_H;        // Spielfeld
 static const int HUD_Y = 412;
 static const int FEUER_X = 748, FEUER_Y = 445, FEUER_R = 36;
-static const int GX = 16, GY = 420, GW = 170, GH = 52;      // Pille Gegner
+static const int GX = 8, GY = 420, GW = 150, GH = 52;       // Pille Gegner
+// Regler unten: Winkel − / +, Pulver − / +  (runde Knöpfe, r = 22)
+static const int RY = 452, RR = 22, WM_X = 200, WP_X = 320, PM_X = 400, PP_X = 520;
 static const int BW = 46, BH = 40;                          // Burg
 
 static int16_t boden[W];                                    // Geländehöhe (y) je Spalte
@@ -36,7 +38,7 @@ static void neueWelt() {
     hp[0] = hp[1] = 3; am = 0; zuege = 0; vorbei = false; spurN = 0;
     wind = random(-5, 6);
     winkel[0] = winkel[1] = 45; kraft[0] = kraft[1] = 55;
-    snprintf(meldung, sizeof meldung, "%s", T("Tipp ins Feld = zielen, ▲▼ = fein, Ring = Feuer", "Tap the field = aim, ▲▼ = fine, ring = fire"));
+    snprintf(meldung, sizeof meldung, "%s", T("Voll-Fahne beginnt", "Solid flag starts"));   // Bedienung steht in der Hilfe
 }
 static void kanone(int b, int& x, int& y) { x = burgX[b] + (b == 0 ? 10 : -10); y = boden[burgX[b]] - BH - 10; }
 
@@ -69,6 +71,7 @@ static void feldZeichnen(bool zielhilfe) {
     if (wind == 0) snprintf(b, sizeof b, "%s", T("Wind still", "No wind"));
     else snprintf(b, sizeof b, "Wind %d", abs(wind));
     text(b, W / 2, FY + 16, &FreeSans9pt7b, MC_DATUM);
+    if (*meldung) text(meldung, 10, FY + 10, &FreeSans9pt7b);   // Meldung oben links im Feld
     if (wind) {
         int l = abs(wind) * 8, x = W / 2 - l / 2, y = FY + 34;
         display.fillRect(x, y - 1, l, 3, SCHWARZ);
@@ -84,23 +87,32 @@ static void feldZeichnen(bool zielhilfe) {
     }
 }
 
+static void rundKnopf(int cx, const char* s) {
+    display.fillCircle(cx, RY, RR, WEISS);
+    for (int i = 0; i < 2; i++) display.drawCircle(cx, RY, RR - i, SCHWARZ);
+    text(s, cx, RY, &FreeSansBold12pt7b, MC_DATUM);
+}
 static void hud() {
     display.fillRect(0, HUD_Y, W, H - HUD_Y, WEISS);
     display.drawFastHLine(0, HUD_Y, W, SCHWARZ);
     pille(GX, GY, GW, GH, gegenSticky ? T("gegen Sticky", "vs. Sticky") : T("2 Spieler", "2 players"), R_NEBEN);
-    // zwei Zeilen links vom Feuer-Knopf: wer, Winkel, Kraft – darunter die Meldung
-    char b[80];
-    const int tx = GX + GW + 14;
     if (vorbei) {
-        text(meldung, tx, GY + 14, &FreeSansBold12pt7b, ML_DATUM);
-        text(T("Tippen = neues Spiel", "Tap = new game"), tx, GY + 40, &FreeSans9pt7b, ML_DATUM);
-    } else {
-        snprintf(b, sizeof b, T("%s  ·  Winkel %d°  ·  Kraft %d", "%s  ·  angle %d°  ·  power %d"),
-                 am == 0 ? T("Voll-Fahne", "Solid flag") : (gegenSticky ? "Sticky" : T("Ring-Fahne", "Ring flag")), winkel[am], kraft[am]);
-        text(b, tx, GY + 14, &FreeSansBold9pt7b, ML_DATUM);
-        text(meldung, tx, GY + 40, &FreeSans9pt7b, ML_DATUM);
+        text(meldung, 180, GY + 14, &FreeSansBold12pt7b, ML_DATUM);
+        text(T("Tippen = neues Spiel", "Tap = new game"), 180, GY + 40, &FreeSans9pt7b, ML_DATUM);
+        return;
     }
-    if (!vorbei) doppelring(FEUER_X, FEUER_Y, FEUER_R, T("Feuer", "Fire"));
+    char b[24];
+    // Winkel
+    text(T("Winkel", "Angle"), (WM_X + WP_X) / 2, HUD_Y + 10, &FreeSans9pt7b, MC_DATUM);
+    rundKnopf(WM_X, "-"); rundKnopf(WP_X, "+");
+    snprintf(b, sizeof b, "%d°", winkel[am]); text(b, (WM_X + WP_X) / 2, RY, &FreeSansBold12pt7b, MC_DATUM);
+    // Pulver
+    text(T("Pulver", "Powder"), (PM_X + PP_X) / 2, HUD_Y + 10, &FreeSans9pt7b, MC_DATUM);
+    rundKnopf(PM_X, "-"); rundKnopf(PP_X, "+");
+    snprintf(b, sizeof b, "%d", kraft[am]); text(b, (PM_X + PP_X) / 2, RY, &FreeSansBold12pt7b, MC_DATUM);
+    // wer ist dran (klein über dem Feuer-Knopf)
+    text(am == 0 ? T("Voll-Fahne", "Solid flag") : (gegenSticky ? "Sticky" : T("Ring-Fahne", "Ring flag")), 640, HUD_Y + 10, &FreeSans9pt7b, MC_DATUM);
+    doppelring(FEUER_X, FEUER_Y, FEUER_R, T("Feuer", "Fire"));
 }
 static void statusZug() {
     char t[48];
@@ -181,6 +193,17 @@ static void taste(Knopf k) {
 static void tipp(int x, int y) {
     if (vorbei) { neueWelt(); allesNeu(); teil(0, 0, W, H); return; }
     if (drin(x, y, GX, GY, GW, GH)) { gegenSticky = !gegenSticky; hud(); teil(0, HUD_Y, W, H - HUD_Y); return; }
+    auto rund = [&](int cx) { int a = x - cx, b = y - RY; return a * a + b * b <= (RR + 10) * (RR + 10); };
+    if (!(gegenSticky && am == 1) && y >= HUD_Y) {   // Regler: Winkel ±5°, Pulver ±5
+        int w = winkel[am], k = kraft[am];
+        if (rund(WM_X)) w -= 5; else if (rund(WP_X)) w += 5; else if (rund(PM_X)) k -= 5; else if (rund(PP_X)) k += 5;
+        w = constrain(w, 5, 85); k = constrain(k, 10, 100);
+        if (w != winkel[am] || k != kraft[am]) {
+            winkel[am] = w; kraft[am] = k;
+            feldZeichnen(true); hud(); teil(0, FY, W, H - FY);
+            return;
+        }
+    }
     int dx = x - FEUER_X, dy = y - FEUER_Y;
     if (dx * dx + dy * dy <= (FEUER_R + 8) * (FEUER_R + 8)) {
         feuer();

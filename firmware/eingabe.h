@@ -49,6 +49,26 @@ static void tastenPoll(void (*cb)(Knopf, bool)) {
 }
 static bool tasteUnten(Knopf k) { return tasten[k].stand != tasten[k].ruhe; }
 
+// Leichtschlaf: Tasten-Interrupts vorher lösen, die Weckquelle auf Pegel setzen, danach umgekehrt (wie EDC schlaf.h).
+// Ohne detachInterrupt feuert der Pegel-Interrupt beim Aufwachen ununterbrochen in tasteIsr → Interrupt-Watchdog
+// startet neu (Lab 15.11.2026: viermal „start grund 5“ im Akkubetrieb).
+static void tastenSchlafen(bool nurKi = false) {
+    for (int i = 0; i < 3; i++) {
+        if (nurKi && i != K_KI) continue;
+        Taste& t = tasten[i];
+        detachInterrupt(digitalPinToInterrupt(t.pin));
+        gpio_wakeup_enable((gpio_num_t)t.pin, t.ruhe == HIGH ? GPIO_INTR_LOW_LEVEL : GPIO_INTR_HIGH_LEVEL);
+    }
+}
+static void tastenWach(bool nurKi = false) {
+    for (int i = 0; i < 3; i++) {
+        if (nurKi && i != K_KI) continue;
+        Taste& t = tasten[i];
+        gpio_wakeup_disable((gpio_num_t)t.pin);
+        attachInterruptArg(digitalPinToInterrupt(t.pin), tasteIsr, &t, t.ruhe == HIGH ? FALLING : RISING);
+    }
+}
+
 // ---- Touch GT911 ----------------------------------------------------------------------------
 TwoWire wireTp = TwoWire(1);
 static uint8_t tpAddr = 0;

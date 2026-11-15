@@ -5,6 +5,9 @@
 
 namespace braunkasten {
 
+static void knopfPunkt(int x, int y, bool);   // weiter unten: Drehknopf mit dem Finger drehen
+static void knopfZeichnen();
+
 static int seite = 0;
 static uint32_t zeichenUs = 0, refreshMs = 0;
 static const char* letztesElement = "";
@@ -88,12 +91,12 @@ static void tippKnoepfe(int x, int y) {
 }
 
 // ---- Seite 2: Regler --------------------------------------------------------------------------------------
-static int schieberStufe = 2, knopfStufe = 3; static bool schalterAn = false; static int reiterNr = 0;
+static int schieberStufe = 2, knopfStufe = 5; static bool schalterAn = false; static int reiterNr = 0;
 static const char* REITER_DE[3] = { "Tag", "Woche", "Monat" };
 static const char* REITER_EN[3] = { "Day", "Week", "Month" };
 #define REITER (EN ? REITER_EN : REITER_DE)
 static const int SBX = 60, SBY = 120, SBW = 420, SBN = 5;
-static const int DKX = 660, DKY = 168, DKR = 58, DKN = 7;
+static const int DKX = 684, DKY = 168, DKR = 58, DKN = 11;   // 11 Stufen, mit dem Finger drehen
 static const int SWX = 40, SWY = 225, SWW = 130, SWH = 58;
 static const int RTX = 220, RTY = 225, RTW = 380, RTH = 58;
 static const int TY = 360, TR = 32;
@@ -114,7 +117,7 @@ static void seiteRegler() {
     text(T("Schieber, 5 Stufen", "Slider, 5 steps"), SBX, 70, &FreeSans9pt7b);
     schieber(SBX, SBY, SBW, SBN, schieberStufe);
     text(T("Drehknopf", "Rotary knob"), DKX + DKR + 20, 66, &FreeSans9pt7b, MR_DATUM);
-    drehknopf(DKX, DKY, DKR, DKN, knopfStufe);
+    knopfZeichnen();
     schalter(SWX, SWY, SWW, SWH, schalterAn);
     reiter(RTX, RTY, RTW, RTH, REITER, 3, reiterNr);
     text(T("Tasten wie ET66: Zahlen schwarz, Rechenzeichen Ring", "Keys like ET66: digits black, operators ring"), 40, 304, &FreeSans9pt7b);
@@ -125,8 +128,8 @@ static void tippRegler(int x, int y) {
         schieberStufe = schieberWert(SBX, SBW, SBN, x);
         bedienen("schieber", SBX - 24, SBY - 30, SBW + 48, 60, [] { schieber(SBX, SBY, SBW, SBN, schieberStufe); });
     } else if (drin(x, y, DKX - DKR - 22, DKY - DKR - 22, 2 * DKR + 44, 2 * DKR + 44)) {
-        knopfStufe = constrain(knopfStufe + (x < DKX ? -1 : 1), 0, DKN - 1);
-        bedienen("drehknopf", DKX - DKR - 22, DKY - DKR - 22, 2 * DKR + 44, 2 * DKR + 44, [] { drehknopf(DKX, DKY, DKR, DKN, knopfStufe); });
+        // Drehen übernimmt knopfPunkt() (jeder Touch-Punkt); ein Tipp setzt den Zeiger direkt auf die Stelle
+        knopfPunkt(x, y, true);
     } else if (drin(x, y, SWX, SWY, SWW, SWH)) {
         schalterAn = !schalterAn;
         bedienen("schalter", SWX, SWY, SWW, SWH, [] { schalter(SWX, SWY, SWW, SWH, schalterAn); });
@@ -144,6 +147,40 @@ static void tippRegler(int x, int y) {
             teil(40, TY - TR - 4, 680, 2 * TR + 8);
             return;
         }
+    }
+}
+
+// ---- Drehknopf drehen: Winkel des Fingers um die Mitte → Stufe; gesammelt auffrischen wie beim Kritzeln ------
+static bool knopfDreckig = false; static uint32_t knopfZeit = 0, knopfSeit = 0;
+static void knopfZeichnen() {
+    drehknopf(DKX, DKY, DKR, DKN, knopfStufe);
+    char b[8]; snprintf(b, sizeof b, "%d", knopfStufe);
+    display.fillCircle(DKX, DKY, 20, WEISS);
+    text(b, DKX, DKY, &FreeSansBold12pt7b, MC_DATUM);
+}
+static void knopfPunkt(int x, int y, bool) {
+    if (seite != 1) return;
+    int dx = x - DKX, dy = y - DKY;
+    if (dx * dx + dy * dy > (DKR + 30) * (DKR + 30) || dx * dx + dy * dy < 15 * 15) return;
+    float a = atan2f(dy, dx) * RAD_TO_DEG;          // −180 … 180, 0 = rechts, im Uhrzeigersinn positiv
+    float w = a - 135; while (w < 0) w += 360;       // Skala beginnt unten links (135°) und läuft 270° im Uhrzeigersinn
+    if (w > 270) w = (w > 315) ? 0 : 270;            // Lücke unten: an das nähere Ende klemmen
+    int st = lroundf(w / 270 * (DKN - 1));
+    if (st != knopfStufe) {
+        knopfStufe = st;
+        knopfZeichnen();
+        if (!knopfDreckig) knopfSeit = millis();
+        knopfDreckig = true;
+    }
+    knopfZeit = millis();
+}
+static void tick() {
+    tpPunkt = knopfPunkt;
+    if (knopfDreckig && (millis() - knopfZeit > 120 || millis() - knopfSeit > 900)) {
+        knopfDreckig = false;
+        refreshMs = teil(DKX - DKR - 22, DKY - DKR - 22, 2 * DKR + 44, 2 * DKR + 44, true);
+        letztesElement = "drehknopf"; zeichenUs = 0;
+        messzeile(); teil(0, MY - 14, W, 30);
     }
 }
 

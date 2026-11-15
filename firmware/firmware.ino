@@ -9,7 +9,7 @@
  * Bauen: arduino-cli compile -b "esp32:esp32:XIAO_ESP32S3:PSRAM=opi,CDCOnBoot=cdc"
  *        --build-property build.flash_size=32MB --build-path "%LOCALAPPDATA%\sticky-build\sticky-lab" firmware
  */
-#define LAB_VERSION "0.7.1"
+#define LAB_VERSION "0.7.6"
 
 #include <esp_sleep.h>
 #include <driver/gpio.h>
@@ -31,6 +31,7 @@
 #include "stationen/bewegung.h"
 #include "stationen/burgduell.h"
 #include "stationen/tastatur.h"
+#include "hilfe.h"
 
 // ---- Stationen (Index 0 = Übersicht, danach Nummer wie in der SPEC) ------------------------
 static const Station STATIONEN[] = {
@@ -38,7 +39,7 @@ static const Station STATIONEN[] = {
     { "1 · Refresh-Labor", refresh::betreten, refresh::taste, refresh::tipp, nullptr },
     { "2 · Schrift", schriften::betreten, schriften::taste, schriften::tipp, nullptr },
     { "3 · Raster", rasterlabor::betreten, rasterlabor::taste, rasterlabor::tipp, nullptr },
-    { "4 · Braun-Baukasten", braunkasten::betreten, braunkasten::taste, braunkasten::tipp, nullptr },
+    { "4 · Braun-Baukasten", braunkasten::betreten, braunkasten::taste, braunkasten::tipp, braunkasten::tick },
     { "5 · Bewegung", bewegung::betreten, bewegung::taste, bewegung::tipp, nullptr },
     { "6 · Touch", touch::betreten, touch::taste, touch::tipp, touch::kritzelnTick },
     { "7 · Instrumente", instrumente::betreten, instrumente::taste, instrumente::tipp, instrumente::tick },
@@ -78,10 +79,16 @@ static void tasteCb(Knopf k, bool unten) {
         else if (!kiFotoGemacht) geheZu(0);
         return;
     }
+    if (hilfeAn) { if (unten) { hilfeAn = false; geheZu(aktuell); } return; }   // jede Taste schließt die Hilfe
+    // ▲ und ▼ zusammen = Hilfe (wie EDC)
+    if (unten && ((k == K_UP && tasteUnten(K_DOWN)) || (k == K_DOWN && tasteUnten(K_UP)))) { tpPunkt = nullptr; hilfeZeigen(aktuell); return; }
     if (unten && aktuell >= 0 && STATIONEN[aktuell].taste) STATIONEN[aktuell].taste(k);
 }
 static void touchCb(int x, int y, bool unten) {
-    if (unten && aktuell >= 0 && STATIONEN[aktuell].tipp) STATIONEN[aktuell].tipp(x, y);
+    if (!unten) return;
+    if (hilfeAn) { hilfeAn = false; geheZu(aktuell); return; }                // Tipp schließt die Hilfe
+    if (y < STATUS_H) { tpPunkt = nullptr; hilfeZeigen(aktuell); return; }   // Tipp auf die Statuszeile = Hilfe
+    if (aktuell >= 0 && STATIONEN[aktuell].tipp) STATIONEN[aktuell].tipp(x, y);
 }
 
 // ---- Schlaf: nach 3 min ohne Bedienung im Akkubetrieb leicht schlafen, Tasten wecken ------------
@@ -96,7 +103,7 @@ static void vielleichtSchlafen() {
     uint32_t t0 = millis();
     Serial.println("Schlaf");
     Serial.flush();
-    for (auto& t : tasten) gpio_wakeup_enable((gpio_num_t)t.pin, t.ruhe == HIGH ? GPIO_INTR_LOW_LEVEL : GPIO_INTR_HIGH_LEVEL);
+    tastenSchlafen();
     esp_sleep_enable_gpio_wakeup();
     gpio_hold_en((gpio_num_t)PIN_PWR_HOLD);
     gpio_hold_en((gpio_num_t)PIN_PWR_LOCK);
@@ -105,7 +112,7 @@ static void vielleichtSchlafen() {
     gpio_hold_dis((gpio_num_t)PIN_CHG_EN_N);
     gpio_hold_dis((gpio_num_t)PIN_PWR_HOLD);
     gpio_hold_dis((gpio_num_t)PIN_PWR_LOCK);
-    for (auto& t : tasten) gpio_wakeup_disable((gpio_num_t)t.pin);
+    tastenWach();
     esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
     // die weckende Taste nicht als Bedienung auswerten
     delay(50);
@@ -116,8 +123,8 @@ static void vielleichtSchlafen() {
     // Statuszeile zurück (ohne „Zzz“)
     if (aktuell >= 0) {
         display.fillRect(W - 300, 0, 300, STATUS_H - 2, WEISS);
-        char r[24]; int p = akkuProzent();
-        if (p >= 0) snprintf(r, sizeof r, "%d %%  ·  LAB", p); else snprintf(r, sizeof r, "LAB");
+        char r[32]; int p = akkuProzent();
+        if (p >= 0) snprintf(r, sizeof r, "%d %%  ·  LAB  ·  ?", p); else snprintf(r, sizeof r, "LAB  ·  ?");
         text(r, W - 20, 23, &FreeSans12pt7b, MR_DATUM);
         teil(W - 300, 0, 300, STATUS_H - 2);
     }
@@ -181,7 +188,7 @@ void loop() {
     tastenPoll(tasteCb);
     if (tasteUnten(K_KI) && !kiFotoGemacht && millis() - kiSeit > 800) fotoMachen();
     touchPoll(touchCb);   // holt nur ab, was der Touch-Sammler gesammelt hat
-    if (aktuell >= 0 && STATIONEN[aktuell].tick) STATIONEN[aktuell].tick();
+    if (!hilfeAn && aktuell >= 0 && STATIONEN[aktuell].tick) STATIONEN[aktuell].tick();
     static bool strichEcho = false;   // Fehlersuche: empfangene Strich-Punkte zurückmelden (bei Bedarf true)
     // USB-Befehle (Sticky-Console, console/index.html): je ein Zeichen, „t x y“ mit Zeilenende
     // Ohne USB ist der CH343 stromlos und seine Leitung zum ESP schwebt: Rauschen wäre sonst ein Befehl (z. B. „f“ =

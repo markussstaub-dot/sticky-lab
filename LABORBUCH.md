@@ -163,3 +163,15 @@ Erkenntnisse mit Datum. Rohdaten: `/lab/messungen.csv` auf der SD-Karte bzw. CSV
 - Console: `data-en`-Attribute für feste Texte, `t()` für den Rest, Tech-Inventar komplett zweisprachig;
   Sprache aus dem Browser, Schalter DE/EN oben. Neuer Knopf „Sticky: DE/EN“ schaltet die Sprache am Gerät.
 - README englisch (mit deutschem Teil) – Voraussetzung, um das Lab später in den Seeed-Playground zu bringen.
+
+## 15.11.2026 – FW 0.7.2–0.7.6: Watchdog-Absturz, Hilfe, Drehknopf, Burgduell-Regler
+
+- **Absturz im Akkubetrieb gefunden:** viermal „start grund 5“ = Interrupt-Watchdog. Ursache: vor dem Leichtschlaf
+  blieben die Tasten-Interrupts angehängt; die Pegel-Weckquelle feuerte nach dem Aufwachen ununterbrochen in die
+  Tasten-Routine. Jetzt wie EDC: `detachInterrupt` vor dem Schlaf, danach wieder anhängen. Test am USB: 30 Schlafzyklen
+  (Energie → Schlaf 5 min) ohne Neustart. Die Energie-Läufe von unterwegs sind dabei verloren gegangen.
+- **Hilfe je Station** (Idee Markus): Tipp auf die Statuszeile oder ▲+▼, DE/EN; „?“ oben rechts.
+- **Drehknopf** (Markus: „wirkt haklig“): jetzt mit dem Finger drehen, 11 Stufen, Wert in der Mitte, gesammelt
+  auffrischen – per Strich über USB geprüft (auf 10 gedreht).
+- **Burgduell** (Markus): Winkel und Pulver mit − / + einstellen; Meldungen oben links im Feld.
+- Fotos vom Gerät für den Playground liegen in `vermarktung/fotos/` (nicht im Repo).

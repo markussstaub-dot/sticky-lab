@@ -72,4 +72,6 @@ Erkenntnisse mit Datum. Rohdaten: `/lab/messungen.csv` auf der SD-Karte bzw. CSV
   die Selbsthaltung über PWR_HOLD (GPIO45 HIGH) wirkt hier nicht. Beim anderen Sticky klappt dieselbe Firmware.
 - Die Werks-Firmware meldet „HAL init done (power latched inside)“ – die Selbsthaltung ist also vorgesehen. Offen:
   ob die Werks-Firmware auf diesem Gerät hält (anderer Pin, andere Polarität, oder Hardwarefehler).
+- Mit EDC am USB läuft alles; **beim Abziehen ist es sofort aus** (Streifen, wenn gerade ein Refresh lief bzw. das
+  Panel ohne sauberes Abschalten den Strom verliert). Die Firmware kommt gar nicht zum Halten.
 - Folge: Energie-Messungen (Station 8) gehen auf diesem Gerät erst, wenn das geklärt ist.

@@ -111,16 +111,20 @@ denn der bleibt unverändert.
 
 Der Sticky hat schon zwei App-Plätze (`app0` und `app1`, je 4 MB), siehe `partitions.csv`.
 
-- fest (15.11.2026): **A**, B später bei Bedarf.
+- fest (15.11.2026, abends geändert): **B mit Umschalten am Gerät** (unten). A bleibt als Rückfall mit dem PC.
 - **A: einfach umflashen.** Gerät anstecken, Lab oder EDC aufspielen, je etwa 1 Minute. Kein Aufwand, aber
   immer der PC nötig.
 - später **B: zwei Plätze.** EDC bleibt in `app0`, das Lab kommt per esptool nach `app1` (0x410000). Im Lab
   schaltet „zurück zu EDC“ (in der Übersicht) per Neustart auf `app0`. Von EDC zum Lab geht es ohne Änderung an EDC
   nur mit dem PC (Skript `umschalten.ps1`, schreibt nur otadata, wenige Sekunden). Später kann EDC eine Taste
   dafür bekommen, das wäre dann ein Schritt in EDC. Aufwand: etwa ein Abend.
-- Vorschlag (Markus, 15.11.2026): **B mit Umschalten am Gerät**: EDC in `app0`, Lab in `app1` (beide passen: EDC
+- fest (Markus, 15.11.2026): **B mit Umschalten am Gerät**: EDC in `app0`, Lab in `app1` (beide passen: EDC
   ~1,0 MB, Lab ~0,7 MB, je 4 MB Platz). Lab → EDC: Kachel „zurück zu EDC“ setzt den Start auf `app0` und startet neu.
   EDC → Lab: braucht eine kleine Ergänzung in EDC (Menüeintrag „Sticky Lab“, setzt `app1`). Daten bleiben getrennt.
+  - Vorschlag **Notausgang**: beim Einschalten ▲ halten startet den jeweils anderen Platz – falls eine Firmware hängt
+  - Vorschlag **feste Plätze**: EDC immer `app0`, Lab immer `app1`. Ein Update (Kabel, Karte oder BLE) schreibt nur in
+    den Platz seiner eigenen Firmware, nie „in den freien“ – sonst überschreibt ein EDC-Update das Lab
+  - Vorschlag: der Platz, der gerade läuft, steht in der Übersicht bzw. im EDC-Menü (z. B. „EDC · Platz 0“)
 - Vorschlag (Markus, 15.11.2026): **Firmware-Bibliothek in der APK**: die Sticky-App trägt fertige Firmwares (EDC,
   Lab, später Spiele) mit und spielt die gewählte per BLE in den freien App-Platz (OTA), danach Umschalten wie oben.
   ~0,7–1 MB über BLE dauert grob 2–5 min. Braucht OTA-Empfang in EDC und eine Auswahlseite in der App – Arbeit im
@@ -135,7 +139,8 @@ Der Sticky hat schon zwei App-Plätze (`app0` und `app1`, je 4 MB), siehe `parti
 1. fest: **Lab-Gerät ist vorerst der zweite Sticky**, der erste bleibt bei der EDC-Firmware. Geht das Lab-Gerät
    später zurück auf EDC, wird `/lab/` von der SD gelöscht. Deshalb gilt besonders: Das Lab lässt die EDC-Daten auf
    dem Gerät in Ruhe (siehe 6.).
-2. fest: **Wechsel per Umflashen (A).** Die zwei Plätze (B) kommen erst, wenn das Hin und Her nervt.
+2. fest: **zwei Plätze mit Umschalten am Gerät (B)** (abends geändert, vorher A: Umflashen). Damit geht z. B. der
+   Multiclient-Test mit zwei EDC-Stickys, ohne das Lab zu verlieren.
 3. fest: **eigenes Repo `sticky-lab`, öffentlich.** Anlegen und pushen erst nach Markus' ausdrücklichem „Ja“. Keine
    persönlichen Daten, auch nicht in Testbildern oder Messungen.
 4. fest: **Lizenz MIT** wie reterminal-sticky.

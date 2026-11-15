@@ -99,5 +99,7 @@ Erkenntnisse mit Datum. Rohdaten: `/lab/messungen.csv` auf der SD-Karte bzw. CSV
 ## 15.11.2026 – Beobachtung: Sticky Stack
 
 - Zwei Stickys **halten magnetisch aneinander** (Magnete im Gehäuse). Idee fürs Lab, geparkt: „Sticky Stack“ –
-  zwei Geräte nebeneinander als ein breites Bild (1600 × 480) oder Rücken an Rücken als doppelseitige Anzeige;
-  der Lagesensor könnte erkennen, wie sie zusammenhängen. Offen: ob die Magnete den Touch oder Sensoren stören.
+  zwei Geräte nebeneinander als ein breites Bild (1600 × 480) oder Rücken an Rücken als doppelseitige Anzeige.
+  **Nachtrag (Markus):** die Magnete halten nur Rücken an Front – gestapelt, das untere Display ist verdeckt.
+  Nebeneinander und Rücken an Rücken gehen also nicht magnetisch. Bleibt: Stapel als „Paket“ (oben zeigt, unten
+  schläft) oder ein gedruckter Halter für nebeneinander. Offen: ob die Magnete Touch oder Sensoren stören.

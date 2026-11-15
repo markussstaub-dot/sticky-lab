@@ -16,7 +16,15 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;padding:16p
 @media (max-width:900px){main{grid-template-columns:1fr}}
 .karte{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px}
 .karte h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px}
-canvas{width:100%;height:auto;display:block;background:#f4f2ec;border-radius:6px;cursor:crosshair;image-rendering:pixelated}
+#buehne{overflow:auto;max-width:100%}
+canvas{width:100%;height:auto;display:block;background:#f4f2ec;border-radius:6px;cursor:crosshair;image-rendering:auto}
+canvas.scharf{image-rendering:pixelated}
+.zoom{margin:0 0 10px}
+.zoom button{min-height:36px;padding:0 12px;font-size:14px}
+#lineal{margin-top:6px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+#lineal span{display:block;height:6px;border:1px solid var(--ink);border-top:0;background:repeating-linear-gradient(90deg,var(--ink) 0 1px,transparent 1px 10%)}
+#lineal em{font-style:normal}
+details{margin-top:6px}
 .reihe{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}
 button{font:inherit;min-height:44px;padding:0 18px;border-radius:999px;border:2px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
 button.voll{background:var(--ink);color:var(--surface)}
@@ -60,7 +68,21 @@ th{color:var(--muted);font-weight:normal}
  <section>
   <div class="karte">
    <h2>Spiegel · Klick = Tippen am Sticky</h2>
-   <canvas id="spiegel" width="800" height="480"></canvas>
+   <div class="reihe zoom">
+    <button data-zoom="original" title="so groß wie das echte Display (3,97″, 86,5 × 51,9 mm)">Originalgröße</button>
+    <button data-zoom="pixel" title="ein Sticky-Pixel = ein Bildschirm-Pixel">1:1 Pixel</button>
+    <button data-zoom="einpassen">Einpassen</button>
+    <button id="kleiner" aria-label="kleiner">−</button>
+    <button id="groesser" aria-label="größer">+</button>
+    <span class="hinweis" id="zoomtext"></span>
+   </div>
+   <div id="buehne"><canvas id="spiegel" width="800" height="480"></canvas></div>
+   <div id="lineal" title="50 mm – mit einem Lineal nachmessen"><span></span><em>50 mm</em></div>
+   <details class="hinweis"><summary>Originalgröße stimmt nicht?</summary>
+    Den Balken oben mit einem Lineal messen. Physische Bildschirm-Pixel je mm:
+    <input id="pxmm" type="number" step="0.01" min="2" max="40" style="width:6em"> (Zenbook-Bildschirme ≈ 11,2;
+    zeigt der Balken z. B. 45 statt 50 mm, den Wert mit 50/45 malnehmen). Fenster-Zoom von Edge auf 100 % lassen.
+   </details>
    <div class="reihe">
     <button data-cmd="f">Foto holen</button>
     <label><input type="checkbox" id="auto" checked> nach jeder Aktion</label>
@@ -296,6 +318,40 @@ $('#csv').onclick = () => {
 };
 setInterval(() => { if (verbunden()) senden('i'); }, 30000);
 
+// ---- Zoom des Spiegels ----
+// Display: 3,97″ bei 800 × 480 → 9,25 px/mm → 86,5 × 51,9 mm. Originalgröße braucht die Pixeldichte des Bildschirms
+// (physische Pixel je mm); CSS-Pixel = physische Pixel / devicePixelRatio. Zenbook Pro Duo: oben 15,6″ 3840×2160 ≈ 11,1,
+// ScreenPad 14″ 3840×1100 ≈ 11,2 px/mm.
+const STICKY_MM = 800 / 9.25;
+const merk = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch { return null; } };
+let zoomArt = merk('zoomArt') || 'original';
+let zoomFaktor = +(merk('zoomFaktor') || 1);
+let pxmm = +(merk('pxmm') || 11.2);
+function zoomSetzen(){
+  const c = $('#spiegel');
+  let breite = null, text = '';
+  if (zoomArt === 'original') { breite = STICKY_MM * pxmm / devicePixelRatio * zoomFaktor; text = zoomFaktor === 1 ? 'Originalgröße' : `Original × ${zoomFaktor.toFixed(2)}`; }
+  else if (zoomArt === 'pixel') { breite = 800 / devicePixelRatio * zoomFaktor; text = `${Math.round(zoomFaktor * 100)} % Pixel`; }
+  else text = 'eingepasst';
+  c.style.width = breite ? breite + 'px' : '100%';
+  c.style.maxWidth = breite ? 'none' : '100%';
+  c.classList.toggle('scharf', zoomArt !== 'einpassen' && breite >= 800 / devicePixelRatio);
+  $('#zoomtext').textContent = text;
+  document.querySelectorAll('[data-zoom]').forEach(b => b.classList.toggle('voll', b.dataset.zoom === zoomArt));
+  $('#lineal span').style.width = (50 * pxmm / devicePixelRatio) + 'px';
+  $('#pxmm').value = pxmm;
+  merk('zoomArt', zoomArt); merk('zoomFaktor', zoomFaktor); merk('pxmm', pxmm);
+}
+document.querySelectorAll('[data-zoom]').forEach(b => b.onclick = () => { zoomArt = b.dataset.zoom; zoomFaktor = 1; zoomSetzen(); });
+$('#groesser').onclick = () => { if (zoomArt === 'einpassen') zoomArt = 'original'; zoomFaktor = Math.min(6, zoomFaktor * 1.25); zoomSetzen(); };
+$('#kleiner').onclick = () => { if (zoomArt === 'einpassen') zoomArt = 'original'; zoomFaktor = Math.max(0.25, zoomFaktor / 1.25); zoomSetzen(); };
+$('#pxmm').onchange = e => { const v = +e.target.value; if (v >= 2 && v <= 40) { pxmm = v; zoomSetzen(); } };
+// Fenster auf einen anderen Bildschirm gezogen → devicePixelRatio kann sich ändern
+let letzteDpr = devicePixelRatio;
+setInterval(() => { if (devicePixelRatio !== letzteDpr) { letzteDpr = devicePixelRatio; zoomSetzen(); } }, 1000);
+addEventListener('resize', zoomSetzen);
+zoomSetzen();
+
 // ---- Reiter ----
 document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
   document.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('voll', x === b));
@@ -317,7 +373,7 @@ const INV = () => [
    ['Flash', ['32 MB: 2 × 4 MB App, ~24 MB LittleFS', 'bekannt']],
    ['Funk', ['BLE 5 und WLAN 2,4 GHz, kein klassisches Bluetooth', 'bekannt']],
   ], grenze: ['offen', 'Wie viel bringen 240 MHz bei Dithering und Zeichnen, und was kostet es an Strom?'] },
- { name: 'Anzeige', rolle: 'e-Ink 800 × 480, 1 bpp (Schwarz/Weiß), über Seeed_GFX2', zeilen: [
+ { name: 'Anzeige', rolle: 'e-Ink 3,97″, 800 × 480 (9,25 px/mm, 86,5 × 51,9 mm), 1 bpp (Schwarz/Weiß), über Seeed_GFX2', zeilen: [
    ['Voll-Refresh', mittel('Voll') || ['2277 ms (Lab 15.11.)', 'gemessen']],
    ['Teil-Refresh', mittel('Teil') || ['952 ms für 368 × 300 px (Lab 15.11.)', 'gemessen']],
    ['Teil wach', mittel('Teil wach') || ['853 ms, ohne die zwei 100-ms-Schlafpausen', 'gemessen']],

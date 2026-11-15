@@ -8,7 +8,7 @@
  * Bauen: arduino-cli compile -b "esp32:esp32:XIAO_ESP32S3:PSRAM=opi,CDCOnBoot=cdc"
  *        --build-property build.flash_size=32MB --build-path "%LOCALAPPDATA%\sticky-build\sticky-lab" firmware
  */
-#define LAB_VERSION "0.2.0"
+#define LAB_VERSION "0.2.1"
 
 #include <esp_sleep.h>
 #include <driver/gpio.h>
@@ -70,6 +70,12 @@ static void touchCb(int x, int y, bool unten) {
 static const uint32_t SCHLAF_NACH_MS = 3 * 60 * 1000;
 static void vielleichtSchlafen() {
     if (millis() - letzteBedienung < SCHLAF_NACH_MS || usbDa()) return;
+    // Schlafbild muss ohne Strom stimmen: „Zzz“ in die Statuszeile, damit niemand das Gerät für tot hält
+    display.fillRect(W - 300, 0, 300, STATUS_H - 2, WEISS);
+    text("Zzz  ·  Taste weckt", W - 20, 23, &FreeSansBold12pt7b, MR_DATUM);
+    teil(W - 300, 0, 300, STATUS_H - 2);
+    messung("system", "schlaf", (millis() - letzteBedienung) / 1000, "s");
+    uint32_t t0 = millis();
     Serial.println("Schlaf");
     Serial.flush();
     for (auto& t : tasten) gpio_wakeup_enable((gpio_num_t)t.pin, t.ruhe == HIGH ? GPIO_INTR_LOW_LEVEL : GPIO_INTR_HIGH_LEVEL);
@@ -85,6 +91,16 @@ static void vielleichtSchlafen() {
     delay(50);
     for (auto& t : tasten) { t.stand = digitalRead(t.pin); t.gedrueckt = false; t.seit = millis(); }
     bedient();
+    klick();   // hörbar wach, auch wenn die weckende Taste sonst nichts tut
+    messung("system", "wach", (millis() - t0) / 1000, "s");
+    // Statuszeile zurück (ohne „Zzz“)
+    if (aktuell >= 0) {
+        display.fillRect(W - 300, 0, 300, STATUS_H - 2, WEISS);
+        char r[24]; int p = akkuProzent();
+        if (p >= 0) snprintf(r, sizeof r, "%d %%  ·  LAB", p); else snprintf(r, sizeof r, "LAB");
+        text(r, W - 20, 23, &FreeSans12pt7b, MR_DATUM);
+        teil(W - 300, 0, 300, STATUS_H - 2);
+    }
     Serial.println("wach");
 }
 
@@ -110,6 +126,7 @@ void setup() {
     tastenInit();
     touchInit();
     bedient();
+    messung("system", "start", (int)esp_reset_reason(), "grund", usbDa() ? "usb" : "akku");
     geheZu(0);
 }
 
@@ -120,7 +137,17 @@ void loop() {
     if (millis() - tp > 25) { tp = millis(); touchPoll(touchCb); }
     if (aktuell >= 0 && STATIONEN[aktuell].tick) STATIONEN[aktuell].tick();
     // USB-Befehle (Sticky-Console, console/index.html): je ein Zeichen, „t x y“ mit Zeilenende
-    while (Serial.available()) {
+    // Ohne USB ist der CH343 stromlos und seine Leitung zum ESP schwebt: Rauschen wäre sonst ein Befehl (z. B. „f“ =
+    // 4 s Foto senden). Darum nur am USB auswerten, sonst verwerfen und zählen.
+    static uint32_t rauschen = 0;
+    if (!usbDa()) {
+        while (Serial.available()) { Serial.read(); rauschen++; }
+        static uint32_t gemeldet = 0, gemeldetUm = 0;
+        if (rauschen != gemeldet && millis() - gemeldetUm > 60000) {   // höchstens einmal je Minute auf die Karte
+            messung("system", "uart-rauschen", rauschen, "byte"); gemeldet = rauschen; gemeldetUm = millis();
+        }
+    }
+    while (usbDa() && Serial.available()) {
         int c = Serial.read();
         if (c == 'f') fotoSeriell();
         else if (c >= '0' && c <= '9') geheZu(c - '0');
@@ -133,6 +160,13 @@ void loop() {
             bedient();
             touchCb(x, y, true);
         } else if (c == 'a') akkuSeriell();
+        else if (c == 'c') {   // Messungen von der Karte über USB
+            File f = sdEin() ? SD.open("/lab/messungen.csv") : File();
+            Serial.println("CSV-ANFANG");
+            while (f && f.available()) Serial.write(f.read());
+            if (f) f.close();
+            Serial.println("CSV-ENDE");
+        }
         else if (c == 'i') {
             Serial.printf("INFO %s %d %d %d %s\n", LAB_VERSION, aktuell, akkuProzent(), usbDa() ? 1 : 0, sdDa ? "sd" : "-");
         }

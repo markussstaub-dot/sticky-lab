@@ -14,9 +14,9 @@ static const int MY = 446;
 static void messzeile() {
     display.fillRect(0, MY - 14, W, 30, WEISS);
     char b[96];
-    if (*letztesElement) snprintf(b, sizeof b, "%s: zeichnen %lu µs  ·  Teil-Refresh %lu ms   (▲▼ Seite %d/2)",
+    if (*letztesElement) snprintf(b, sizeof b, T("%s: zeichnen %lu µs  ·  Teil-Refresh %lu ms   (▲▼ Seite %d/2)", "%s: draw %lu µs  ·  partial refresh %lu ms   (▲▼ page %d/2)"),
                                   letztesElement, (unsigned long)zeichenUs, (unsigned long)refreshMs, seite + 1);
-    else snprintf(b, sizeof b, "Tippen bedient ein Element  ·  ▲▼ Seite %d/2", seite + 1);
+    else snprintf(b, sizeof b, T("Tippen bedient ein Element  ·  ▲▼ Seite %d/2", "Tap operates an element  ·  ▲▼ page %d/2"), seite + 1);
     text(b, W / 2, MY, &FreeSans9pt7b, MC_DATUM);
 }
 /** Element neu zeichnen (zeichne), Zeit messen, Teil-Refresh des Bereichs, dann Messzeile */
@@ -45,11 +45,11 @@ static void knopfZelle(int zeile, int spalte, bool live = false, bool gedrueckt 
         case 0: display.fillRect(cx - 50, cy - 50, 100, 100, WEISS);
                 if (ak) { display.fillCircle(cx, cy, 44, WEISS);
                           for (int i = 0; i < 3; i++) display.drawCircle(cx, cy, 44 - i, SCHWARZ);
-                          display.fillCircle(cx, cy, 34, SCHWARZ); text("Stopp", cx, cy, &FreeSansBold9pt7b, MC_DATUM, WEISS); }
+                          display.fillCircle(cx, cy, 34, SCHWARZ); text(T("Stopp", "Stop"), cx, cy, &FreeSansBold9pt7b, MC_DATUM, WEISS); }
                 else doppelring(cx, cy, 44, "Start", gd);
                 break;
         case 1: pille(cx - PW / 2, cy - PH / 2, PW, PH, "± 10", ak ? R_AUSWAHL : R_NEBEN, gd); break;
-        case 2: pille(cx - PW / 2, cy - PH / 2, PW, PH, "Lupe", ak ? R_AUSWAHL : R_WERKZEUG, gd); break;
+        case 2: pille(cx - PW / 2, cy - PH / 2, PW, PH, T("Lupe", "Zoom"), ak ? R_AUSWAHL : R_WERKZEUG, gd); break;
         case 3: display.fillRect(cx - 40, cy - 40, 80, 80, WEISS);
                 zahlTaste(cx, cy, 34, "7", gd);
                 if (ak) for (int i = 0; i < 3; i++) display.drawCircle(cx, cy, 38 + i, SCHWARZ);
@@ -62,10 +62,12 @@ static void zelleBox(int zeile, int spalte, int& x, int& y, int& w, int& h) {
     x = cx - hw; y = cy - hh; w = 2 * hw; h = 2 * hh;
 }
 static void seiteKnoepfe() {
-    text("Ruhe", SX[0], 66, &FreeSans9pt7b, MC_DATUM);
-    text("gedrückt", SX[1], 66, &FreeSans9pt7b, MC_DATUM);
-    text("aktiv", SX[2], 66, &FreeSans9pt7b, MC_DATUM);
-    static const char* rolle[4] = { "Haupt", "Neben", "Werkzeug", "Zahl" };
+    text(T("Ruhe", "idle"), SX[0], 66, &FreeSans9pt7b, MC_DATUM);
+    text(T("gedrückt", "pressed"), SX[1], 66, &FreeSans9pt7b, MC_DATUM);
+    text(T("aktiv", "active"), SX[2], 66, &FreeSans9pt7b, MC_DATUM);
+    static const char* rolle_de[4] = { "Haupt", "Neben", "Werkzeug", "Zahl" };
+    static const char* rolle_en[4] = { "Main", "Minor", "Tool", "Digit" };
+    const char* const* rolle = EN ? rolle_en : rolle_de;
     for (int z = 0; z < 4; z++) {
         text(rolle[z], 14, ZY[z], &FreeSans9pt7b, ML_DATUM);
         for (int s = 0; s < 3; s++) knopfZelle(z, s);
@@ -87,7 +89,9 @@ static void tippKnoepfe(int x, int y) {
 
 // ---- Seite 2: Regler --------------------------------------------------------------------------------------
 static int schieberStufe = 2, knopfStufe = 3; static bool schalterAn = false; static int reiterNr = 0;
-static const char* REITER[3] = { "Tag", "Woche", "Monat" };
+static const char* REITER_DE[3] = { "Tag", "Woche", "Monat" };
+static const char* REITER_EN[3] = { "Day", "Week", "Month" };
+#define REITER (EN ? REITER_EN : REITER_DE)
 static const int SBX = 60, SBY = 120, SBW = 420, SBN = 5;
 static const int DKX = 660, DKY = 168, DKR = 58, DKN = 7;
 static const int SWX = 40, SWY = 225, SWW = 130, SWH = 58;
@@ -107,13 +111,13 @@ static void tastenReihe(int gedrueckt) {
     }
 }
 static void seiteRegler() {
-    text("Schieber, 5 Stufen", SBX, 70, &FreeSans9pt7b);
+    text(T("Schieber, 5 Stufen", "Slider, 5 steps"), SBX, 70, &FreeSans9pt7b);
     schieber(SBX, SBY, SBW, SBN, schieberStufe);
-    text("Drehknopf", DKX + DKR + 20, 66, &FreeSans9pt7b, MR_DATUM);
+    text(T("Drehknopf", "Rotary knob"), DKX + DKR + 20, 66, &FreeSans9pt7b, MR_DATUM);
     drehknopf(DKX, DKY, DKR, DKN, knopfStufe);
     schalter(SWX, SWY, SWW, SWH, schalterAn);
     reiter(RTX, RTY, RTW, RTH, REITER, 3, reiterNr);
-    text("Tasten wie ET66: Zahlen schwarz, Rechenzeichen Ring", 40, 304, &FreeSans9pt7b);
+    text(T("Tasten wie ET66: Zahlen schwarz, Rechenzeichen Ring", "Keys like ET66: digits black, operators ring"), 40, 304, &FreeSans9pt7b);
     tastenReihe(-1);
 }
 static void tippRegler(int x, int y) {
@@ -145,7 +149,7 @@ static void tippRegler(int x, int y) {
 
 // ---- Rahmen ---------------------------------------------------------------------------------------------
 static void betreten() {
-    statuszeile(seite == 0 ? "4 · Braun: Knöpfe" : "4 · Braun: Regler");
+    statuszeile(seite == 0 ? T("4 · Braun: Knöpfe", "4 · Braun: buttons") : T("4 · Braun: Regler", "4 · Braun: controls"));
     if (seite == 0) seiteKnoepfe(); else seiteRegler();
     messzeile();
 }

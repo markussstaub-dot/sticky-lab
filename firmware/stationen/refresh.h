@@ -28,14 +28,14 @@ static void testfeld() {
     static const GFXfont* F[4] = { &FreeSansBold24pt7b, &FreeSansBold12pt7b, &FreeSans12pt7b, &FreeSans9pt7b };
     static const int Y[4] = { TY + 172, TY + 222, TY + 252, TY + 280 };
     int z = probe % 4;
-    text(z == 0 ? "Aa 0123" : "Ghosting-Probe 0123 Ää", TX + 8, Y[z], F[z]);
+    text(z == 0 ? "Aa 0123" : T("Ghosting-Probe 0123 Ää", "Ghosting probe 0123 Ää"), TX + 8, Y[z], F[z]);
     display.drawRect(TX - 1, TY - 1, TW + 2, TH + 2, SCHWARZ);
 }
 
 static void werte() {
     display.fillRect(VX, VY, VW, VH - 56, WEISS);
     char b[96];
-    text("letzter Lauf", VX, VY + 6, &FreeSans9pt7b);
+    text(T("letzter Lauf", "last run"), VX, VY + 6, &FreeSans9pt7b);
     long ms = letzte[art];
     if (ms >= 0) snprintf(b, sizeof b, "%ld", ms); else snprintf(b, sizeof b, "-");
     display.setFreeFont(&FreeSansBold24pt7b);
@@ -46,33 +46,33 @@ static void werte() {
     int bw = display.textWidth(ms >= 0 ? b : "-");
     display.setTextSize(1);
     text("ms", VX + bw + 10, VY + 92, &FreeSans12pt7b, TL_DATUM);
-    snprintf(b, sizeof b, "%s  ·  seit Voll: %lu", ART_NAME[art], (unsigned long)probe);
+    snprintf(b, sizeof b, T("%s  ·  seit Voll: %lu", "%s  ·  since full: %lu"), ART_ANZEIGE(art), (unsigned long)probe);
     text(b, VX, VY + 128, &FreeSans12pt7b);
     auto zahl = [](long v, char* o) { if (v >= 0) sprintf(o, "%ld", v); else strcpy(o, "-"); };
     char a[4][12];
     for (int i = 0; i < 4; i++) zahl(letzte[i], a[i]);
-    snprintf(b, sizeof b, "Teil %s  ·  wach %s", a[0], a[1]);
+    snprintf(b, sizeof b, T("Teil %s  ·  wach %s", "Partial %s  ·  awake %s"), a[0], a[1]);
     text(b, VX, VY + 164, &FreeSans9pt7b);
-    snprintf(b, sizeof b, "Schnell %s  ·  Voll %s", a[2], a[3]);
+    snprintf(b, sizeof b, T("Schnell %s  ·  Voll %s", "Fast %s  ·  Full %s"), a[2], a[3]);
     text(b, VX, VY + 186, &FreeSans9pt7b);
-    if (resteAb >= 0) snprintf(b, sizeof b, "Reste ab %ld (%s)", resteAb, ART_NAME[resteArt]);
-    else snprintf(b, sizeof b, "Reste: noch nicht gesehen");
+    if (resteAb >= 0) snprintf(b, sizeof b, T("Reste ab %ld (%s)", "Ghosting from %ld (%s)"), resteAb, ART_ANZEIGE(resteArt));
+    else snprintf(b, sizeof b, "%s", T("Reste: noch nicht gesehen", "Ghosting: not seen yet"));
     text(b, VX, VY + 212, &FreeSans9pt7b);
 }
 
 static void pillen() {
     display.fillRect(0, PY - 4, LOS_X - LOS_R - 10, PH + 8, WEISS);
     for (int i = 0; i < ART_ANZAHL; i++)
-        pille(PX0 + i * (PW + PGAP), PY, PW, PH, ART_NAME[i], i == art ? R_AUSWAHL : R_NEBEN);
+        pille(PX0 + i * (PW + PGAP), PY, PW, PH, ART_ANZEIGE(i), i == art ? R_AUSWAHL : R_NEBEN);
 }
 
 static void betreten() {
-    statuszeile("1 · Refresh-Labor");
+    statuszeile(T("1 · Refresh-Labor", "1 · Refresh lab"));
     testfeld();
     werte();
-    pille(RX, RY, RW, RH, "Reste sichtbar", R_WERKZEUG);
+    pille(RX, RY, RW, RH, T("Reste sichtbar", "Ghosting seen"), R_WERKZEUG);
     pillen();
-    doppelring(LOS_X, LOS_Y, LOS_R, "Los");
+    doppelring(LOS_X, LOS_Y, LOS_R, T("Los", "Go"));
 }
 
 static void los() {

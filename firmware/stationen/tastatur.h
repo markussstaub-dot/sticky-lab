@@ -19,10 +19,10 @@ static const Taste EN2[] = { {"⇧","⇧",T_SHIFT,15},{"z","Z"},{"x","X"},{"c","
 static const Taste R3[]  = { {"DE","EN",T_SPRACHE,15},{",",",",T_ZEICHEN,10},{"","",T_LEER,50},{".",".",T_ZEICHEN,10},{"OK","OK",T_ENTER,15} };
 
 struct Reihe { const Taste* t; uint8_t n; };
-static bool englisch = false, shift = false;
+static bool shift = false;   // Sprache: globaler Schalter EN (anzeige.h)
 static Reihe reihe(int r) {
     if (r == 3) return { R3, 5 };
-    if (englisch) return r == 0 ? Reihe{ EN0, 10 } : r == 1 ? Reihe{ EN1, 9 } : Reihe{ EN2, 9 };
+    if (EN) return r == 0 ? Reihe{ EN0, 10 } : r == 1 ? Reihe{ EN1, 9 } : Reihe{ EN2, 9 };
     return r == 0 ? Reihe{ DE0, 11 } : r == 1 ? Reihe{ DE1, 11 } : Reihe{ DE2, 10 };
 }
 static int breiteSumme(const Reihe& r) { int s = 0; for (int i = 0; i < r.n; i++) s += r.t[i].breite ? r.t[i].breite : 10; return s; }
@@ -48,7 +48,7 @@ static void tasteZeichnen(int r, int i) {
     if (t.art == T_ZEICHEN || t.art == T_LEER) ringRR(bx, by, bw, bh, 12, 2);
     else if (aktiv) display.fillRoundRect(bx, by, bw, bh, 12, SCHWARZ);
     else { display.fillRoundRect(bx, by, bw, bh, 12, SCHWARZ); display.fillRoundRect(bx + 4, by + 4, bw - 8, bh - 8, 9, WEISS); }   // Werkzeug: dicker Rand
-    const char* l = t.art == T_SPRACHE ? (englisch ? "EN" : "DE") : (shift ? t.gross : t.klein);
+    const char* l = t.art == T_SPRACHE ? (EN ? "EN" : "DE") : (shift ? t.gross : t.klein);
     if (t.art == T_LOESCHEN) {   // Pfeil nach links
         int cx = bx + bw / 2, cy = by + bh / 2;
         display.fillTriangle(cx - 16, cy, cx - 4, cy - 10, cx - 4, cy + 10, SCHWARZ);
@@ -58,7 +58,7 @@ static void tasteZeichnen(int r, int i) {
         display.fillTriangle(cx - 12, cy, cx + 12, cy, cx, cy - 14, f);
         display.fillRect(cx - 5, cy, 10, 12, f);
     } else if (t.art == T_LEER) {
-        text(englisch ? "space" : "Leerzeichen", bx + bw / 2, by + bh / 2, &FreeSans9pt7b, MC_DATUM);
+        text(EN ? "space" : "Leerzeichen", bx + bw / 2, by + bh / 2, &FreeSans9pt7b, MC_DATUM);
     } else text(l, bx + bw / 2, by + bh / 2, t.art == T_ZEICHEN ? &FreeSans18pt7b : &FreeSansBold12pt7b, MC_DATUM, aktiv ? WEISS : SCHWARZ);
 }
 static void tastaturZeichnen() {
@@ -96,27 +96,27 @@ static int abstand(const char* a, const char* b) {
 
 static void textZeichnen() {
     display.fillRect(0, TY, W, TH, WEISS);
-    text(englisch ? "Practice:" : "Übung:", 12, TY + 10, &FreeSans9pt7b);
-    text(englisch ? ZIEL_EN : ZIEL_DE, englisch ? 92 : 80, TY + 10, &FreeSans9pt7b);
+    text(EN ? "Practice:" : "Übung:", 12, TY + 10, &FreeSans9pt7b);
+    text(EN ? ZIEL_EN : ZIEL_DE, EN ? 92 : 80, TY + 10, &FreeSans9pt7b);
     // Eingabe: die letzten Zeichen, die in eine Zeile passen
     const char* zeig = textPuffer;
     while (zeichenZahl(zeig) > 42) { zeig++; while ((*zeig & 0xC0) == 0x80) zeig++; }
     char z[180]; snprintf(z, sizeof z, "%s_", zeig);
     text(z, 12, TY + 58, &FreeSans18pt7b, ML_DATUM);
-    text(*ergebnis ? ergebnis : (englisch ? "OK = evaluate  ·  language bottom left" : "OK = auswerten  ·  Sprache unten links"), 12, TY + TH - 14, &FreeSans9pt7b, ML_DATUM);
+    text(*ergebnis ? ergebnis : (EN ? "OK = evaluate  ·  language bottom left" : "OK = auswerten  ·  Sprache unten links"), 12, TY + TH - 14, &FreeSans9pt7b, ML_DATUM);
     display.drawFastHLine(0, KY - 3, W, SCHWARZ);
 }
 
 static void auswerten() {
-    const char* ziel = englisch ? ZIEL_EN : ZIEL_DE;
+    const char* ziel = EN ? ZIEL_EN : ZIEL_DE;
     int n = zeichenZahl(textPuffer);
     if (n < 3) return;
     uint32_t dauer = letzterAnschlag - ersterAnschlag; if (dauer < 1) dauer = 1;
     float min_ = dauer / 60000.0f;
     int zpm = lroundf(n / min_), fehler = abstand(textPuffer, ziel);
-    snprintf(ergebnis, sizeof ergebnis, englisch ? "%d chars/min, %d errors, text refresh %lu ms on average" : "%d Zeichen/min, %d Fehler, Text-Refresh %lu ms im Mittel",
+    snprintf(ergebnis, sizeof ergebnis, EN ? "%d chars/min, %d errors, text refresh %lu ms on average" : "%d Zeichen/min, %d Fehler, Text-Refresh %lu ms im Mittel",
              zpm, fehler, (unsigned long)(refreshs ? refreshMs / refreshs : 0));
-    char notiz[40]; snprintf(notiz, sizeof notiz, "%s %d fehler", englisch ? "en" : "de", fehler);
+    char notiz[40]; snprintf(notiz, sizeof notiz, "%s %d fehler", EN ? "en" : "de", fehler);
     messung("tastatur", "zeichen-pro-min", zpm, "zpm", notiz);
     textPuffer[0] = 0; anschlaege = 0; refreshs = 0; refreshMs = 0; ersterAnschlag = 0;
     dreckig = true;
@@ -141,7 +141,7 @@ static void anschlag(const Taste& t) {
             textPuffer[l] = 0;
             break;
         case T_SHIFT: shift = !shift; tastaturZeichnen(); teil(0, KY, W, H - KY); return;
-        case T_SPRACHE: englisch = !englisch; shift = false; textPuffer[0] = 0; *ergebnis = 0;
+        case T_SPRACHE: EN = !EN; spracheMerken(); shift = false; textPuffer[0] = 0; *ergebnis = 0;
                         tastaturZeichnen(); textZeichnen(); teil(0, TY, W, H - TY); return;
         case T_ENTER: auswerten(); break;
     }
@@ -153,7 +153,7 @@ static void anschlag(const Taste& t) {
 static void betreten() {
     // jede Übung beginnt frisch
     textPuffer[0] = 0; *ergebnis = 0; anschlaege = refreshs = refreshMs = 0; ersterAnschlag = 0; dreckig = false; shift = false;
-    statuszeile("10 · Tastatur");
+    statuszeile(T("10 · Tastatur", "10 · Keyboard"));
     textZeichnen();
     tastaturZeichnen();
 }

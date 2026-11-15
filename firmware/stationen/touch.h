@@ -10,11 +10,15 @@ namespace touch {
 static const int AY = STATUS_H + 4, AH = 386 - AY;                  // Testfläche (ganze Breite)
 static const int PY = 400, PH = 58, PW = 164, PGAP = 8, PX0 = 12;  // Pillen
 enum Modus : uint8_t { M_ZIELEN, M_RUECK, M_KRITZELN, M_ANZAHL };
-static const char* M_NAME[M_ANZAHL] = { "Zielen", "Rückmeldung", "Kritzeln" };
+static const char* M_NAME_DE[M_ANZAHL] = { "Zielen", "Rückmeldung", "Kritzeln" };
+static const char* M_NAME_EN[M_ANZAHL] = { "Aim", "Feedback", "Scribble" };
+#define M_NAME (EN ? M_NAME_EN : M_NAME_DE)
 static Modus modus = M_ZIELEN;
 enum Vorlage : uint8_t { VL_FREI, VL_SPIRALE, VL_LABY, VL_ANZAHL };
 static uint8_t vorlage = VL_FREI;   // Kritzeln: Vorlage zum Nachfahren
-static const char* VL_NAME[VL_ANZAHL] = { "frei", "Spirale", "Labyrinth" };
+static const char* VL_NAME_DE[VL_ANZAHL] = { "frei", "Spirale", "Labyrinth" };
+static const char* VL_NAME_EN[VL_ANZAHL] = { "free", "Spiral", "Maze" };
+#define VL_NAME (EN ? VL_NAME_EN : VL_NAME_DE)
 static const int KPW = 116, KL_X = W - 16 - KPW, KV_X = KL_X - 10 - KPW;
 
 static void pillen() {
@@ -22,8 +26,8 @@ static void pillen() {
     for (int i = 0; i < M_ANZAHL; i++) pille(PX0 + i * (PW + PGAP), PY, PW, PH, M_NAME[i], i == modus ? R_AUSWAHL : R_NEBEN);
     if (modus == M_KRITZELN) {   // zwei kleine Pillen: Vorlage umschalten, Löschen
         pille(KV_X, PY, KPW, PH, VL_NAME[vorlage], vorlage ? R_AUSWAHL : R_NEBEN);
-        pille(KL_X, PY, KPW, PH, "Löschen", R_WERKZEUG);
-    } else pille(W - 16 - PW, PY, PW, PH, "Neu", R_WERKZEUG);
+        pille(KL_X, PY, KPW, PH, T("Löschen", "Clear"), R_WERKZEUG);
+    } else pille(W - 16 - PW, PY, PW, PH, T("Neu", "New"), R_WERKZEUG);
 }
 static void flaecheLeer() { display.fillRect(0, AY, W, AH, WEISS); }
 
@@ -50,7 +54,7 @@ static void zielBox(int x, int y, int& bx, int& by, int& bw, int& bh) {
 static void zielenAnfang() {
     zielNr = 0;
     flaecheLeer();
-    text("Tippe jeweils genau in die Mitte des Ziels (9 Ziele)", W / 2, AY + AH / 2 + 48, &FreeSans9pt7b, MC_DATUM);
+    text(T("Tippe jeweils genau in die Mitte des Ziels (9 Ziele)", "Tap exactly the centre of each target (9 targets)"), W / 2, AY + AH / 2 + 48, &FreeSans9pt7b, MC_DATUM);
     int x, y; zielLage(0, x, y); zielZeichnen(x, y);
 }
 static void zielenErgebnis() {
@@ -63,10 +67,10 @@ static void zielenErgebnis() {
     }
     char t[96];
     const float mm = PANEL.pxProMm;
-    text("Zielen: Ergebnis", 30, AY + 14, &FreeSansBold12pt7b);
-    snprintf(t, sizeof t, "Abweichung im Mittel %.1f px (%.1f mm), höchstens %.0f px (%.1f mm)", sb / 9, sb / 9 / mm, mx, mx / mm);
+    text(T("Zielen: Ergebnis", "Aim: result"), 30, AY + 14, &FreeSansBold12pt7b);
+    snprintf(t, sizeof t, T("Abweichung im Mittel %.1f px (%.1f mm), höchstens %.0f px (%.1f mm)", "Mean error %.1f px (%.1f mm), max %.0f px (%.1f mm)"), sb / 9, sb / 9 / mm, mx, mx / mm);
     text(t, 30, AY + 60, &FreeSans12pt7b);
-    snprintf(t, sizeof t, "Versatz: x %+.1f px, y %+.1f px (+ = rechts/unten)", sx / 9, sy / 9);
+    snprintf(t, sizeof t, T("Versatz: x %+.1f px, y %+.1f px (+ = rechts/unten)", "Offset: x %+.1f px, y %+.1f px (+ = right/down)"), sx / 9, sy / 9);
     text(t, 30, AY + 100, &FreeSans12pt7b);
     // Streubild: alle Treffer relativ zur Zielmitte, 4-fach vergrößert
     int cx = W - 150, cy = AY + AH / 2 + 10;
@@ -74,8 +78,8 @@ static void zielenErgebnis() {
     display.drawFastHLine(cx - ZR * 4 - 8, cy, ZR * 8 + 16, SCHWARZ);
     display.drawFastVLine(cx, cy - ZR * 4 - 8, ZR * 8 + 16, SCHWARZ);
     for (int i = 0; i < 9; i++) display.fillCircle(cx + zdx[i] * 4, cy + zdy[i] * 4, 4, SCHWARZ);
-    text("Streubild x4", cx, cy + ZR * 4 + 22, &FreeSans9pt7b, MC_DATUM);
-    text("Neu = noch einmal", 30, AY + 150, &FreeSans9pt7b);
+    text(T("Streubild x4", "Scatter x4"), cx, cy + ZR * 4 + 22, &FreeSans9pt7b, MC_DATUM);
+    text(T("Neu = noch einmal", "New = again"), 30, AY + 150, &FreeSans9pt7b);
     teil(0, AY, W, AH);
     messung("touch", "ziel-mittel", lround(sb / 9 * 10), "0.1px");
     messung("touch", "ziel-max", lround(mx * 10), "0.1px");
@@ -107,7 +111,9 @@ static void zielenTipp(int x, int y) {
 
 // ---- Rückmeldung ------------------------------------------------------------------------------------
 enum Rueck : uint8_t { R_RAHMEN, R_INVERT, R_PUNKT, R_KLICK, R_ANZAHL };
-static const char* R_NAME[R_ANZAHL] = { "Rahmen", "Invertieren", "Punkt", "nur Klick" };
+static const char* R_NAME_DE[R_ANZAHL] = { "Rahmen", "Invertieren", "Punkt", "nur Klick" };
+static const char* R_NAME_EN[R_ANZAHL] = { "Frame", "Invert", "Dot", "click only" };
+#define R_NAME (EN ? R_NAME_EN : R_NAME_DE)
 static const char* R_CSV[R_ANZAHL] = { "rueck-rahmen", "rueck-invert", "rueck-punkt", "rueck-klick" };
 static const int RW = 180, RH = 150, RGAP = 13, RX0 = 16, RY = AY + 30;
 static long rueckMs[R_ANZAHL] = { -1, -1, -1, -1 };
@@ -125,7 +131,7 @@ static void rueckFeld(int i, bool aktiv) {
 static void rueckAnfang() {
     flaecheLeer();
     for (int i = 0; i < R_ANZAHL; i++) rueckFeld(i, false);
-    text("Zeit = Berührung erkannt bis Bild steht (dazu kommen bis ~35 ms Abfrage des Touch-Chips)",
+    text(T("Zeit = Berührung erkannt bis Bild steht (dazu kommen bis ~35 ms Abfrage des Touch-Chips)", "Time = touch detected until the image is done (plus up to ~35 ms touch polling)"),
          W / 2, AY + 8, &FreeSans9pt7b, TC_DATUM);
 }
 static void rueckTipp(int x, int y, uint32_t t0) {
@@ -230,7 +236,7 @@ static void labyPunkt(int x, int y) {
     if (r == LROWS - 1 && k == LCOLS - 1) {
         labyFertig = true;
         float s = (millis() - labyStart) / 1000.0f;
-        char b[64]; snprintf(b, sizeof b, "Ziel in %.1f s, %lu Wandberührungen", s, (unsigned long)wandTreffer);
+        char b[64]; snprintf(b, sizeof b, T("Ziel in %.1f s, %lu Wandberührungen", "Goal in %.1f s, %lu wall touches"), s, (unsigned long)wandTreffer);
         display.fillRect(W / 2, AY + 2, W / 2 - 2, 24, WEISS);
         text(b, W - 12, AY + 8, &FreeSans9pt7b, TR_DATUM);
         dazu(W / 2, AY + 2); dazu(W - 4, AY + 26);
@@ -243,12 +249,12 @@ static void kritzelnAnfang() {
     display.drawRect(0, AY, W, AH, SCHWARZ);
     if (vorlage == VL_LABY) {
         labyBauen(); labyZeichnen();
-        text("Vom Ring zum Punkt, ohne die Wände zu berühren", 12, AY + 8, &FreeSans9pt7b);
+        text(T("Vom Ring zum Punkt, ohne die Wände zu berühren", "From the ring to the dot without touching walls"), 12, AY + 8, &FreeSans9pt7b);
     } else if (vorlage == VL_SPIRALE) {
         spiraleRechnen();
         for (int i = 0; i + 1 < SPN; i++) if (i % 3 != 2) display.drawLine(spX[i], spY[i], spX[i + 1], spY[i + 1], SCHWARZ);   // gestrichelt
-        text("Spirale von innen nach außen nachfahren", 12, AY + 8, &FreeSans9pt7b);
-    } else text("Mit dem Finger zeichnen. Löschen = leeren", 12, AY + 8, &FreeSans9pt7b);
+        text(T("Spirale von innen nach außen nachfahren", "Trace the spiral from the inside out"), 12, AY + 8, &FreeSans9pt7b);
+    } else text(T("Mit dem Finger zeichnen. Löschen = leeren", "Draw with your finger. Clear = empty"), 12, AY + 8, &FreeSans9pt7b);
     strichAn = false; dreckig = false; abwSumme = 0; abwN = 0;
 }
 static void dazu(int x, int y) {
@@ -291,7 +297,7 @@ static void kritzelnTick() {
         }
         if (vorlage == VL_SPIRALE && abwN > 20) {   // Ergebnis oben rechts einblenden
             float m = abwSumme / abwN;
-            char b[64]; snprintf(b, sizeof b, "Abweichung %.1f px (%.1f mm), %lu Punkte", m, m / PANEL.pxProMm, (unsigned long)abwN);
+            char b[64]; snprintf(b, sizeof b, T("Abweichung %.1f px (%.1f mm), %lu Punkte", "Error %.1f px (%.1f mm), %lu points"), m, m / PANEL.pxProMm, (unsigned long)abwN);
             display.fillRect(W / 2, AY + 2, W / 2 - 2, 24, WEISS);
             text(b, W - 12, AY + 8, &FreeSans9pt7b, TR_DATUM);
             teil(W / 2, AY + 2, W / 2 - 2, 24);

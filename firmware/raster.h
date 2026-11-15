@@ -4,7 +4,9 @@
 #pragma once
 
 enum Verfahren : uint8_t { V_SCHWELLE, V_BAYER4, V_BAYER8, V_FLOYD, V_ATKINSON, V_HALBTON, V_ANZAHL };
-static const char* V_NAMEN[V_ANZAHL] = { "Schwelle", "Bayer 4x4", "Bayer 8x8", "Floyd-Steinberg", "Atkinson", "Halbton" };
+static const char* V_NAMEN[V_ANZAHL] = { "Schwelle", "Bayer 4x4", "Bayer 8x8", "Floyd-Steinberg", "Atkinson", "Halbton" };   // auch CSV
+static const char* V_NAMEN_EN[V_ANZAHL] = { "Threshold", "Bayer 4x4", "Bayer 8x8", "Floyd-Steinberg", "Atkinson", "Halftone" };
+#define V_ANZEIGE(i) (EN ? V_NAMEN_EN[i] : V_NAMEN[i])
 
 static const uint8_t BAYER8[8][8] = {
     { 0, 32, 8, 40, 2, 34, 10, 42 }, { 48, 16, 56, 24, 50, 18, 58, 26 }, { 12, 44, 4, 36, 14, 46, 6, 38 },

@@ -9,7 +9,7 @@
  * Bauen: arduino-cli compile -b "esp32:esp32:XIAO_ESP32S3:PSRAM=opi,CDCOnBoot=cdc"
  *        --build-property build.flash_size=32MB --build-path "%LOCALAPPDATA%\sticky-build\sticky-lab" firmware
  */
-#define LAB_VERSION "0.6.2"
+#define LAB_VERSION "0.7.1"
 
 #include <esp_sleep.h>
 #include <driver/gpio.h>
@@ -54,7 +54,7 @@ static void geheZu(int i) {
     aktuell = i;
     tpPunkt = nullptr;   // nur die Station, die jeden Touch-Punkt braucht, meldet sich wieder an
     display.fillScreen(WEISS);
-    if (i == 0) { char t[48]; snprintf(t, sizeof t, "Übersicht  ·  FW " LAB_VERSION "  ·  %s", panelChip()); statuszeile(t); }
+    if (i == 0) { char t[48]; snprintf(t, sizeof t, T("Übersicht  ·  FW " LAB_VERSION "  ·  %s", "Overview  ·  FW " LAB_VERSION "  ·  %s"), panelChip()); statuszeile(t); }
     STATIONEN[i].betreten();
     voll();
     Serial.printf("STATION %d %s\n", i, STATIONEN[i].name);
@@ -90,7 +90,7 @@ static void vielleichtSchlafen() {
     if (millis() - letzteBedienung < SCHLAF_NACH_MS || usbDa()) return;
     // Schlafbild muss ohne Strom stimmen: „Zzz“ in die Statuszeile, damit niemand das Gerät für tot hält
     display.fillRect(W - 300, 0, 300, STATUS_H - 2, WEISS);
-    text("Zzz  ·  Taste weckt", W - 20, 23, &FreeSansBold12pt7b, MR_DATUM);
+    text(T("Zzz  ·  Taste weckt", "Zzz  ·  press a key"), W - 20, 23, &FreeSansBold12pt7b, MR_DATUM);
     teil(W - 300, 0, 300, STATUS_H - 2);
     messung("system", "schlaf", (millis() - letzteBedienung) / 1000, "s");
     uint32_t t0 = millis();
@@ -142,6 +142,7 @@ void setup() {
     delay(300);
     Serial.printf("\nSticky Lab %s, RX-Puffer %u\n", LAB_VERSION, (unsigned)rxPuffer);
     Wire.begin(PIN_MISC_SDA, PIN_MISC_SCL, 100000);
+    spracheLaden();
     randomSeed(esp_random());   // echte Zufallszahlen (Burgduell-Gelände, Wind)
     akkuInit();
 
@@ -215,6 +216,7 @@ void loop() {
             if (tpSchlange) xQueueSend(tpSchlange, &e, 0);
             if (strichEcho) Serial.printf("P %c %d %d %d\n", c, fx, fy, (int)analogReadMilliVolts(PIN_USB));
         } else if (c == 'a') akkuSeriell();
+        else if (c == 'l') { EN = !EN; spracheMerken(); geheZu(aktuell); }   // Sprache umschalten (DE/EN)
         else if (c == 'c') {   // Messungen von der Karte über USB
             File f = sdEin() ? SD.open("/lab/messungen.csv") : File();
             Serial.println("CSV-ANFANG");

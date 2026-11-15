@@ -18,7 +18,7 @@ static void keilZeile(int i, bool mitZeit) {
     int y = KY0 + i * KDY;
     display.fillRect(0, y - 2, KX - 4, KH + 4, WEISS);
     us[i] = keil(i);
-    text(V_NAMEN[i], 14, y + 14, &FreeSans12pt7b, ML_DATUM);
+    text(V_ANZEIGE(i), 14, y + 14, &FreeSans12pt7b, ML_DATUM);
     char b[24]; snprintf(b, sizeof b, "%lu ms", (unsigned long)(us[i] / 1000));
     if (mitZeit) text(b, 14, y + 38, &FreeSans9pt7b, ML_DATUM);
 }
@@ -41,17 +41,17 @@ static uint8_t kugel(int x, int y) {
 static void bild(int i) {
     display.fillRect(BX[i], BY, BS, BS + 50, WEISS);
     us[i] = dithern(BX[i], BY, BS, BS, BV[i], kugel);
-    text(V_NAMEN[BV[i]], BX[i] + BS / 2, BY + BS + 16, &FreeSans12pt7b, MC_DATUM);
+    text(V_ANZEIGE(BV[i]), BX[i] + BS / 2, BY + BS + 16, &FreeSans12pt7b, MC_DATUM);
     char b[24]; snprintf(b, sizeof b, "%lu ms", (unsigned long)(us[i] / 1000));
     text(b, BX[i] + BS / 2, BY + BS + 40, &FreeSans9pt7b, MC_DATUM);
 }
 
 // ---- Rahmen ---------------------------------------------------------------------------------------------
 static void betreten() {
-    statuszeile(seite == 0 ? "3 · Raster: Graukeil" : "3 · Raster: Kugel");
+    statuszeile(seite == 0 ? T("3 · Raster: Graukeil", "3 · Dither: gray ramp") : T("3 · Raster: Kugel", "3 · Dither: sphere"));
     if (seite == 0) { for (int i = 0; i < V_ANZAHL; i++) keilZeile(i, true); }
     else {
-        text("Dieselbe Kugel, vier Verfahren. Tippen = neu rechnen. ▲▼ = Graukeil", W / 2, 64, &FreeSans9pt7b, MC_DATUM);
+        text(T("Dieselbe Kugel, vier Verfahren. Tippen = neu rechnen. ▲▼ = Graukeil", "Same sphere, four methods. Tap = recompute. ▲▼ = gray ramp"), W / 2, 64, &FreeSans9pt7b, MC_DATUM);
         for (int i = 0; i < 4; i++) bild(i);
     }
 }

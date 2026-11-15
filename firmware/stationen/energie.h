@@ -15,7 +15,9 @@ static const int EX = 400, EY = 200, EW = 400, EH = 280;          // Ergebnisse
 static const int WX = 240, WY = 380, WW = 150, WH = 58;           // „Werte lesen“
 
 enum Versuch : uint8_t { V_RUHE, V_TEIL, V_VOLL, V_SCHLAF, V_ANZAHL };
-static const char* V_NAME[V_ANZAHL] = { "Ruhe 60 s", "Teil x50", "Voll x10", "Schlaf 5 min" };
+static const char* V_NAME_DE[V_ANZAHL] = { "Ruhe 60 s", "Teil x50", "Voll x10", "Schlaf 5 min" };
+static const char* V_NAME_EN[V_ANZAHL] = { "Idle 60 s", "Part. x50", "Full x10", "Sleep 5 min" };
+#define V_NAME (EN ? V_NAME_EN : V_NAME_DE)
 static const char* V_CSV[V_ANZAHL] = { "ruhe-wach", "teil-x50", "voll-x10", "schlaf-leicht" };
 
 struct Ergebnis { bool da; float maMittel; float sek; int n; float uahJe; int msJe; bool usb; };
@@ -38,49 +40,49 @@ static void akkuJetzt() {
     AkkuStand a = akkuLesen();
     char b[64];
     int y = LY + 8;
-    snprintf(b, sizeof b, "%d mV", a.mv); zeile("Spannung", b, y); y += 34;
-    snprintf(b, sizeof b, "%d mA  (Mittel %d)", a.ma, a.maMittel); zeile("Strom", b, y); y += 34;
-    snprintf(b, sizeof b, "%d / %d mAh", a.rest, a.voll); zeile("Rest / voll", b, y); y += 34;
+    snprintf(b, sizeof b, "%d mV", a.mv); zeile(T("Spannung", "Voltage"), b, y); y += 34;
+    snprintf(b, sizeof b, T("%d mA  (Mittel %d)", "%d mA  (avg %d)"), a.ma, a.maMittel); zeile(T("Strom", "Current"), b, y); y += 34;
+    snprintf(b, sizeof b, "%d / %d mAh", a.rest, a.voll); zeile(T("Rest / voll", "Left / full"), b, y); y += 34;
     snprintf(b, sizeof b, "%d mAh", a.design); zeile("Design", b, y); y += 34;
-    snprintf(b, sizeof b, "%d %%  ·  SoH %d %%", a.soc, a.soh); zeile("Ladung", b, y); y += 34;
-    snprintf(b, sizeof b, "%.1f °C  ·  %d Zyklen", a.grad, a.zyklen);
-    zeile("Temperatur", b, y);
+    snprintf(b, sizeof b, "%d %%  ·  SoH %d %%", a.soc, a.soh); zeile(T("Ladung", "Charge"), b, y); y += 34;
+    snprintf(b, sizeof b, T("%.1f °C  ·  %d Zyklen", "%.1f °C  ·  %d cycles"), a.grad, a.zyklen);
+    zeile(T("Temperatur", "Temperature"), b, y);
     y += 34;
-    zeile("USB", usbDa() ? (laedt() ? "ja, lädt, misst mit!" : "ja, misst mit!") : "nein, Akku", y);
+    zeile("USB", usbDa() ? (laedt() ? T("ja, lädt, misst mit!", "yes, charging, skews!") : T("ja, misst mit!", "yes, skews!")) : T("nein, Akku", "no, battery"), y);
 }
 
 static void ergebnisse() {
     display.fillRect(EX, EY, EW, EH, WEISS);
     char b[96];
     int y = EY + 4;
-    text("Ergebnisse", EX + 10, y, &FreeSansBold12pt7b); y += 34;
+    text(T("Ergebnisse", "Results"), EX + 10, y, &FreeSansBold12pt7b); y += 34;
     for (int i = 0; i < V_ANZAHL; i++) {
         const Ergebnis& e = erg[i];
         if (!e.da) snprintf(b, sizeof b, "%s: -", V_NAME[i]);
         else if (i == V_TEIL || i == V_VOLL)
-            snprintf(b, sizeof b, "%s: %.0f uAh je Bild, %d ms%s", i == V_TEIL ? "Teil" : "Voll", e.uahJe, e.msJe, e.usb ? " (USB)" : "");
-        else snprintf(b, sizeof b, "%s: %.1f mA%s", i == V_RUHE ? "Ruhe wach" : "Schlaf", e.maMittel, e.usb ? " (USB)" : "");
+            snprintf(b, sizeof b, T("%s: %.0f uAh je Bild, %d ms%s", "%s: %.0f uAh per frame, %d ms%s"), i == V_TEIL ? T("Teil", "Partial") : T("Voll", "Full"), e.uahJe, e.msJe, e.usb ? " (USB)" : "");
+        else snprintf(b, sizeof b, "%s: %.1f mA%s", i == V_RUHE ? T("Ruhe wach", "Idle awake") : T("Schlaf", "Sleep"), e.maMittel, e.usb ? " (USB)" : "");
         text(b, EX + 10, y, &FreeSans9pt7b); y += 26;
     }
     y += 8;
     int voll = bqWert(BQ_VOLL, 0);
-    if (voll <= 0) { text("Hochrechnung: Kapazität unbekannt", EX + 10, y, &FreeSans9pt7b); return; }
-    snprintf(b, sizeof b, "Hochrechnung (laut Chip %d mAh):", voll);
+    if (voll <= 0) { text(T("Hochrechnung: Kapazität unbekannt", "Estimate: capacity unknown"), EX + 10, y, &FreeSans9pt7b); return; }
+    snprintf(b, sizeof b, T("Hochrechnung (laut Chip %d mAh):", "Estimate (chip says %d mAh):"), voll);
     text(b, EX + 10, y, &FreeSansBold9pt7b); y += 28;
     if (erg[V_TEIL].da && erg[V_TEIL].uahJe > 0) {
-        snprintf(b, sizeof b, "%.0f Teil-Refreshes je Ladung", voll * 1000.0f / erg[V_TEIL].uahJe);
+        snprintf(b, sizeof b, T("%.0f Teil-Refreshes je Ladung", "%.0f partial refreshes per charge"), voll * 1000.0f / erg[V_TEIL].uahJe);
         text(b, EX + 10, y, &FreeSans9pt7b); y += 24;
     }
     if (erg[V_VOLL].da && erg[V_VOLL].uahJe > 0) {
-        snprintf(b, sizeof b, "%.0f Voll-Refreshes je Ladung", voll * 1000.0f / erg[V_VOLL].uahJe);
+        snprintf(b, sizeof b, T("%.0f Voll-Refreshes je Ladung", "%.0f full refreshes per charge"), voll * 1000.0f / erg[V_VOLL].uahJe);
         text(b, EX + 10, y, &FreeSans9pt7b); y += 24;
     }
     if (erg[V_RUHE].da && erg[V_RUHE].maMittel > 0) {
-        snprintf(b, sizeof b, "%.0f h wach ohne Bedienung", voll / erg[V_RUHE].maMittel);
+        snprintf(b, sizeof b, T("%.0f h wach ohne Bedienung", "%.0f h awake, untouched"), voll / erg[V_RUHE].maMittel);
         text(b, EX + 10, y, &FreeSans9pt7b); y += 24;
     }
     if (erg[V_SCHLAF].da && erg[V_SCHLAF].maMittel > 0) {
-        snprintf(b, sizeof b, "%.1f Tage im Leichtschlaf", voll / erg[V_SCHLAF].maMittel / 24.0f);
+        snprintf(b, sizeof b, T("%.1f Tage im Leichtschlaf", "%.1f days in light sleep"), voll / erg[V_SCHLAF].maMittel / 24.0f);
         text(b, EX + 10, y, &FreeSans9pt7b);
     }
 }
@@ -91,10 +93,10 @@ static void pillen() {
 }
 
 static void betreten() {
-    statuszeile("8 · Energie");
+    statuszeile(T("8 · Energie", "8 · Energy"));
     akkuJetzt();
     probeflaeche();
-    pille(WX, WY, WW, WH, "Werte lesen", R_NEBEN);
+    pille(WX, WY, WW, WH, T("Werte lesen", "Read"), R_NEBEN);
     pillen();
     ergebnisse();
 }
@@ -105,9 +107,9 @@ static void laufAnzeigen(int v) {
     laeuft = v;
     pillen();
     display.fillRect(EX, EY, EW, EH, WEISS);
-    text("Messung läuft ...", EX + 10, EY + 10, &FreeSansBold12pt7b);
-    text(usbDa() ? "USB steckt: misst das Netzteil mit" : "Akkubetrieb", EX + 10, EY + 50, &FreeSans9pt7b);
-    text("KI bricht ab", EX + 10, EY + 76, &FreeSans9pt7b);
+    text(T("Messung läuft ...", "Measuring ..."), EX + 10, EY + 10, &FreeSansBold12pt7b);
+    text(usbDa() ? T("USB steckt: misst das Netzteil mit", "USB plugged: measures the charger too") : T("Akkubetrieb", "On battery"), EX + 10, EY + 50, &FreeSans9pt7b);
+    text(T("KI bricht ab", "AI key cancels"), EX + 10, EY + 76, &FreeSans9pt7b);
     teil(BX, BY, 2 * BW + BGAP, 2 * BH + BGAP);
     teil(EX, EY, EW, EH);
 }

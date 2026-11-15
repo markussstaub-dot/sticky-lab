@@ -30,31 +30,31 @@ static void rahmen(int cx, int cy, const char* name) {
 static void klima(int cx) {
     float t, rh;
     bool ok = klimaLesen(t, rh);
-    rahmen(cx, CY, "Klima");
+    rahmen(cx, CY, T("Klima", "Climate"));
     const float a0 = 135 * DEG_TO_RAD, a1 = 405 * DEG_TO_RAD;   // 0…40 °C über 270°
     skala(cx, CY, R - 8, 41, a0, a1);
     char b[32];
     if (ok) {
         zeiger(cx, CY, a0 + (a1 - a0) * constrain(t, 0.0f, 40.0f) / 40, R - 22, 4);
         snprintf(b, sizeof b, "%.1f °C", t); text(b, cx, CY + R + 22, &FreeSansBold12pt7b, MC_DATUM);
-        snprintf(b, sizeof b, "%.0f %%  ·  Tau %.1f °C", rh, taupunkt(t, rh)); text(b, cx, CY + R + 50, &FreeSans9pt7b, MC_DATUM);
-        if (t - taupunkt(t, rh) < 2.5f) text("beschlägt gleich!", cx, CY + R + 74, &FreeSansBold9pt7b, MC_DATUM);
+        snprintf(b, sizeof b, T("%.0f %%  ·  Tau %.1f °C", "%.0f %%  ·  dew %.1f °C"), rh, taupunkt(t, rh)); text(b, cx, CY + R + 50, &FreeSans9pt7b, MC_DATUM);
+        if (t - taupunkt(t, rh) < 2.5f) text(T("beschlägt gleich!", "fogging up soon!"), cx, CY + R + 74, &FreeSansBold9pt7b, MC_DATUM);
         if (millis() - zuletztCsv > 60000 || !zuletztCsv) {
             zuletztCsv = millis();
             snprintf(b, sizeof b, "%.0f%% tau %.1f", rh, taupunkt(t, rh));
             messung("instrumente", "klima", lroundf(t * 10), "0.1C", b);
         }
-    } else text("kein SHT40", cx, CY + R + 22, &FreeSans9pt7b, MC_DATUM);
+    } else text(T("kein SHT40", "no SHT40"), cx, CY + R + 22, &FreeSans9pt7b, MC_DATUM);
 }
 
 static void waage(int cx) {
     float ax, ay, az;
     bool ok = lageLesen(ax, ay, az);
-    rahmen(cx, CY, "Wasserwaage");
+    rahmen(cx, CY, T("Wasserwaage", "Level"));
     display.drawCircle(cx, CY, 20, SCHWARZ);
     display.drawFastHLine(cx - R + 10, CY, 2 * R - 20, SCHWARZ);
     display.drawFastVLine(cx, CY - R + 10, 2 * R - 20, SCHWARZ);
-    if (!ok) { text("kein LSM6DS3", cx, CY + R + 22, &FreeSans9pt7b, MC_DATUM); return; }
+    if (!ok) { text(T("kein LSM6DS3", "no LSM6DS3"), cx, CY + R + 22, &FreeSans9pt7b, MC_DATUM); return; }
     // Blase: wandert gegen die Neigung, 1 g = Rand
     int bx = cx + constrain(-ax, -1.0f, 1.0f) * (R - 22), by = CY + constrain(ay, -1.0f, 1.0f) * (R - 22);
     display.fillCircle(bx, by, 15, SCHWARZ);
@@ -70,13 +70,13 @@ static void waage(int cx) {
 static void uhr(int cx) {
     Uhrzeit u;
     bool ok = uhrLesen(u);
-    rahmen(cx, CY, "Uhr");
+    rahmen(cx, CY, T("Uhr", "Clock"));
     for (int i = 0; i < 12; i++) {   // Stundenstriche, Braun-ABW-artig: schlicht
         float a = i * 30 * DEG_TO_RAD - HALF_PI;
         int l = i % 3 == 0 ? 14 : 8;
         display.drawWideLine(cx + cosf(a) * (R - 10 - l), CY + sinf(a) * (R - 10 - l), cx + cosf(a) * (R - 10), CY + sinf(a) * (R - 10), i % 3 == 0 ? 4 : 2, SCHWARZ);
     }
-    if (!ok) { text("kein PCF8563", cx, CY + R + 22, &FreeSans9pt7b, MC_DATUM); return; }
+    if (!ok) { text(T("kein PCF8563", "no PCF8563"), cx, CY + R + 22, &FreeSans9pt7b, MC_DATUM); return; }
     float am = (u.m + u.s / 60.0f) * 6 * DEG_TO_RAD - HALF_PI;
     float ah = ((u.h % 12) + u.m / 60.0f) * 30 * DEG_TO_RAD - HALF_PI;
     zeiger(cx, CY, ah, R - 40, 7);
@@ -85,12 +85,12 @@ static void uhr(int cx) {
     snprintf(b, sizeof b, "%02d:%02d", u.h, u.m); text(b, cx, CY + R + 22, &FreeSansBold12pt7b, MC_DATUM);
     snprintf(b, sizeof b, "%02d.%02d.%04d%s", u.tag, u.monat, u.jahr, u.gueltig ? "" : " (?)");
     text(b, cx, CY + R + 50, &FreeSans9pt7b, MC_DATUM);
-    if (!u.gueltig) text("Uhr war ohne Strom", cx, CY + R + 74, &FreeSans9pt7b, MC_DATUM);
+    if (!u.gueltig) text(T("Uhr war ohne Strom", "clock lost power"), cx, CY + R + 74, &FreeSans9pt7b, MC_DATUM);
 }
 
 static void akku(int cx) {
     AkkuStand a = akkuLesen();
-    rahmen(cx, CY, "Akku");
+    rahmen(cx, CY, T("Akku", "Battery"));
     // Spannungsskala 3,3 … 4,2 V über 270°
     const float a0 = 135 * DEG_TO_RAD, a1 = 405 * DEG_TO_RAD;
     skala(cx, CY, R - 8, 19, a0, a1);
@@ -98,7 +98,7 @@ static void akku(int cx) {
     if (a.mv > 0) zeiger(cx, CY, a0 + (a1 - a0) * constrain((v - 3.3f) / 0.9f, 0.0f, 1.0f), R - 22, 4);
     char b[40];
     snprintf(b, sizeof b, "%.2f V", v); text(b, cx, CY + R + 22, &FreeSansBold12pt7b, MC_DATUM);
-    snprintf(b, sizeof b, "%d mA  ·  %s", a.ma, usbDa() ? (laedt() ? "lädt" : "USB") : "Akku");
+    snprintf(b, sizeof b, "%d mA  ·  %s", a.ma, usbDa() ? (laedt() ? T("lädt", "charging") : "USB") : T("Akku", "battery"));
     text(b, cx, CY + R + 50, &FreeSans9pt7b, MC_DATUM);
     text("3,3", cx - 34, CY + 66, &FreeSans9pt7b, MC_DATUM);
     text("4,2", cx + 34, CY + 66, &FreeSans9pt7b, MC_DATUM);
@@ -112,9 +112,9 @@ static void alle() {
     Serial.printf("Instrumente: %lu µs\n", (unsigned long)(micros() - t0));
 }
 static void betreten() {
-    statuszeile("7 · Instrumente");
+    statuszeile(T("7 · Instrumente", "7 · Gauges"));
     alle();
-    text("alle 10 s neu  ·  Tippen = jetzt  ·  Klima jede Minute in die CSV", W / 2, 462, &FreeSans9pt7b, MC_DATUM);
+    text(T("alle 10 s neu  ·  Tippen = jetzt  ·  Klima jede Minute in die CSV", "every 10 s  ·  tap = now  ·  climate logged every minute"), W / 2, 462, &FreeSans9pt7b, MC_DATUM);
 }
 static void tick() {
     if (millis() - zuletzt < 10000) return;

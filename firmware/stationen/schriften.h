@@ -18,14 +18,15 @@ namespace schriften {
 struct Eintrag { const char* name; const GFXfont* f; };
 static const Eintrag SEITE1[] = {
     { "Sans 9", &FreeSans9pt7b }, { "Sans 12", &FreeSans12pt7b }, { "Sans 18", &FreeSans18pt7b },
-    { "Sans 24", &FreeSans24pt7b }, { "Sans fett 12", &FreeSansBold12pt7b }, { "Sans fett 24", &FreeSansBold24pt7b },
+    { "Sans 24", &FreeSans24pt7b }, { "Sans B 12", &FreeSansBold12pt7b }, { "Sans B 24", &FreeSansBold24pt7b },
 };
 static const Eintrag SEITE2[] = {
     { "Tom Thumb", &TomThumb }, { "Serif 9", &FreeSerif9pt7b }, { "Serif 12", &FreeSerif12pt7b },
     { "Serif 18", &FreeSerif18pt7b }, { "Serif 24", &FreeSerif24pt7b }, { "Mono 9", &FreeMono9pt7b },
-    { "Mono 12", &FreeMono12pt7b }, { "Mono fett 18", &FreeMonoBold18pt7b },
+    { "Mono 12", &FreeMono12pt7b }, { "Mono B 18", &FreeMonoBold18pt7b },
 };
 static const char* PROBE = "Grundfaulheit 0123 Äpfel";
+static const char* PROBE_EN = "Sphinx of black quartz 0123";
 static int seite = 0;
 static bool lupeAn = false;
 
@@ -39,10 +40,10 @@ static void seiteZeichnen() {
         char b[40];
         snprintf(b, sizeof b, "%s · %d px", e[i].name, cap);
         text(b, 12, y + zh / 2, &FreeSans9pt7b, ML_DATUM);
-        text(PROBE, 170, y + zh / 2, e[i].f, ML_DATUM);
+        text(T(PROBE, PROBE_EN), 170, y + zh / 2, e[i].f, ML_DATUM);
         y += max(zh, 22) + (seite == 0 ? 6 : 2);
     }
-    text("Tippen = Lupe 4x  ·  ▲▼ Seite", W - 12, H - 14, &FreeSans9pt7b, MR_DATUM);
+    text(T("Tippen = Lupe 4x  ·  ▲▼ Seite", "Tap = magnifier 4x  ·  ▲▼ page"), W - 12, H - 14, &FreeSans9pt7b, MR_DATUM);
 }
 
 // Lupe: Ausschnitt 100 × 60 px um den Tipp, 4-fach, in einem Kasten auf der anderen Bildhälfte
@@ -64,7 +65,7 @@ static void lupe(int x, int y) {
 }
 
 static void betreten() {
-    statuszeile(seite == 0 ? "2 · Schrift: Sans" : "2 · Schrift: Serif, Mono");
+    statuszeile(seite == 0 ? T("2 · Schrift: Sans", "2 · Fonts: Sans") : T("2 · Schrift: Serif, Mono", "2 · Fonts: Serif, Mono"));
     seiteZeichnen();
     lupeAn = false;
 }

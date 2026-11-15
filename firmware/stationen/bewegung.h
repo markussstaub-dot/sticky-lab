@@ -8,7 +8,9 @@
 namespace bewegung {
 
 enum Anim : uint8_t { A_BALKEN, A_ZEIGER, A_ROLLE, A_ANZAHL };
-static const char* A_NAME[A_ANZAHL] = { "Balken", "Zeiger", "Rolle" };
+static const char* A_NAME_DE[A_ANZAHL] = { "Balken", "Zeiger", "Rolle" };
+static const char* A_NAME_EN[A_ANZAHL] = { "Bar", "Hand", "Counter" };
+#define A_NAME (EN ? A_NAME_EN : A_NAME_DE)
 static const char* A_CSV[A_ANZAHL] = { "anim-balken", "anim-zeiger", "anim-rolle" };
 static Anim anim = A_BALKEN;
 static bool wach = false;
@@ -57,18 +59,18 @@ static void bild(int k, int n, int& x, int& y, int& w, int& h) {
 
 static void unten() {
     display.fillRect(0, ERG_Y - 16, W, H - ERG_Y + 16, WEISS);
-    text(*ergebnis ? ergebnis : "Los spielt 12 Bilder ab und misst. wach = Panel bleibt zwischen den Bildern wach.",
+    text(*ergebnis ? ergebnis : T("Los spielt 12 Bilder ab und misst. wach = Panel bleibt zwischen den Bildern wach.", "Go plays 12 frames and measures. awake = panel stays awake between frames."),
          W / 2, ERG_Y, &FreeSans9pt7b, MC_DATUM);
     for (int i = 0; i < A_ANZAHL; i++) pille(PX0 + i * (PW + PGAP), PY, PW, PH, A_NAME[i], i == anim ? R_AUSWAHL : R_NEBEN);
     schalter(SWX, SWY, SWW, SWH, wach);
-    text("wach", SWX + SWW / 2, SWY - 12, &FreeSans9pt7b, MC_DATUM);
-    doppelring(LOS_X, LOS_Y, LOS_R, "Los");
+    text(T("wach", "awake"), SWX + SWW / 2, SWY - 12, &FreeSans9pt7b, MC_DATUM);
+    doppelring(LOS_X, LOS_Y, LOS_R, T("Los", "Go"));
 }
 static void buehne() {
     display.fillRect(0, BUEHNE_Y, W, BUEHNE_H, WEISS);
     int x, y, w, h; bild(0, 12, x, y, w, h);
 }
-static void betreten() { statuszeile("5 · Bewegung"); buehne(); unten(); }
+static void betreten() { statuszeile(T("5 · Bewegung", "5 · Motion")); buehne(); unten(); }
 
 static void abspielen() {
     const int n = 12;
@@ -83,8 +85,8 @@ static void abspielen() {
     int bilder = k - 1;
     float s = (millis() - t0) / 1000.0f;
     if (bilder > 0) {
-        snprintf(ergebnis, sizeof ergebnis, "%s%s: %d Bilder in %.1f s = %.2f Bilder/s (%lu ms je Teil-Refresh)",
-                 A_NAME[anim], wach ? " wach" : "", bilder, s, bilder / s, (unsigned long)(summe / bilder));
+        snprintf(ergebnis, sizeof ergebnis, T("%s%s: %d Bilder in %.1f s = %.2f Bilder/s (%lu ms je Teil-Refresh)", "%s%s: %d frames in %.1f s = %.2f frames/s (%lu ms per partial refresh)"),
+                 A_NAME[anim], wach ? T(" wach", " awake") : "", bilder, s, bilder / s, (unsigned long)(summe / bilder));
         char notiz[40]; snprintf(notiz, sizeof notiz, "%.2f bilder/s%s", bilder / s, wach ? " wach" : "");
         messung("bewegung", A_CSV[anim], summe / bilder, "ms", notiz);
     }

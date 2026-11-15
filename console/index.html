@@ -96,78 +96,81 @@ body.screenpad .fw{break-inside:avoid;margin-bottom:10px}
 </style></head><body>
 <header>
  <span class="punkt" id="punkt"></span><h1>Sticky Console</h1>
- <button id="verbinden" class="voll">Verbinden</button>
- <nav class="reiter"><button class="voll" data-tab="steuerung">Steuerung</button><button data-tab="inventar">Tech-Inventar</button><button data-tab="firmware">Firmware</button></nav>
- <span id="info">nicht verbunden</span>
+ <button id="verbinden" class="voll" data-en="Connect">Verbinden</button>
+ <button id="sprache" title="Deutsch / English">EN</button>
+ <nav class="reiter"><button class="voll" data-tab="steuerung" data-en="Control">Steuerung</button><button data-tab="inventar" data-en="Tech inventory">Tech-Inventar</button><button data-tab="firmware">Firmware</button></nav>
+ <span id="info" data-en="not connected">nicht verbunden</span>
 </header>
 <section id="firmware" hidden>
- <p class="lead">Firmware auf den angeschlossenen Sticky spielen: das eigene <b>Sticky Lab</b> und alles aus dem
+ <p class="lead" data-en-html="Flash firmware onto the connected Sticky: our own <b>Sticky Lab</b> and everything from the <b>Seeed Playground</b>. Over USB straight from the browser (Edge/Chrome on a computer). Full images from address 0 also overwrite data in flash (e.g. logbook, settings) – the SD card stays.">Firmware auf den angeschlossenen Sticky spielen: das eigene <b>Sticky Lab</b> und alles aus dem
  <b>Seeed-Playground</b>. Per USB direkt aus dem Browser (Edge/Chrome am Rechner). Ganze Abbilder ab Adresse 0 überschreiben
  auch Daten im Flash (z. B. Bordbuch, Einstellungen) – die SD-Karte bleibt.</p>
- <div class="reihe fwkopf"><input id="fwsuche" type="search" placeholder="suchen …"><span class="hinweis" id="fwstatus">lädt …</span></div>
+ <div class="reihe fwkopf"><input id="fwsuche" type="search" placeholder="suchen …" data-en-ph="search …"><span class="hinweis" id="fwstatus" data-en="loading …">lädt …</span></div>
  <div id="fwfortschritt" hidden><div class="balken"><span></span></div><span class="hinweis" id="fwtext"></span></div>
  <div id="fwliste"></div>
 </section>
 <section id="inventar" hidden>
- <p class="lead">Was der Kleine bietet und wo seine Grenzen liegen. <b>bekannt</b> = aus Schaltplan und EDC-Erfahrung,
+ <p class="lead" data-en-html="What the little one offers and where its limits are. <b>known</b> = from the schematic and EDC experience, <b>measured</b> = in the lab (updates live from measurements), <b>open</b> = question for the lab.">Was der Kleine bietet und wo seine Grenzen liegen. <b>bekannt</b> = aus Schaltplan und EDC-Erfahrung,
  <b>gemessen</b> = im Lab (laufen live aus den Messungen ein), <b>offen</b> = Frage fürs Lab.</p>
  <div id="inv"></div>
 </section>
 <main id="steuerung">
  <section>
   <div class="karte spiegel">
-   <h2>Spiegel · Klick = Tippen, Ziehen = Zeichnen am Sticky</h2>
+   <h2 data-en="Mirror · click = tap, drag = draw on the Sticky">Spiegel · Klick = Tippen, Ziehen = Zeichnen am Sticky</h2>
    <div class="reihe zoom">
-    <button data-zoom="original" title="so groß wie das echte Display (3,97″, 86,5 × 51,9 mm)">Originalgröße</button>
-    <button data-zoom="pixel" title="ein Sticky-Pixel = ein Bildschirm-Pixel">1:1 Pixel</button>
-    <button data-zoom="einpassen">Einpassen</button>
+    <button data-zoom="original" title="so groß wie das echte Display (3,97″, 86,5 × 51,9 mm)" data-en-title="as large as the real display (3.97″, 86.5 × 51.9 mm)" data-en="Actual size">Originalgröße</button>
+    <button data-zoom="pixel" title="ein Sticky-Pixel = ein Bildschirm-Pixel" data-en-title="one Sticky pixel = one screen pixel">1:1 Pixel</button>
+    <button data-zoom="einpassen" data-en="Fit">Einpassen</button>
     <button id="kleiner" aria-label="kleiner">−</button>
     <button id="groesser" aria-label="größer">+</button>
     <span class="hinweis" id="zoomtext"></span>
    </div>
    <div id="buehne"><canvas id="spiegel" width="800" height="480"></canvas></div>
-   <div id="lineal" title="50 mm – mit einem Lineal nachmessen"><span></span><em>50 mm</em></div>
-   <details class="hinweis"><summary>Originalgröße stimmt nicht?</summary>
-    Den Balken oben mit einem Lineal messen. Physische Bildschirm-Pixel je mm:
-    <input id="pxmm" type="number" step="0.01" min="2" max="40" style="width:6em"> (Zenbook-Bildschirme ≈ 11,2;
-    zeigt der Balken z. B. 45 statt 50 mm, den Wert mit 50/45 malnehmen). Fenster-Zoom von Edge auf 100 % lassen.
+   <div id="lineal" title="50 mm – mit einem Lineal nachmessen" data-en-title="50 mm – check with a ruler"><span></span><em>50 mm</em></div>
+   <details class="hinweis"><summary data-en="Actual size is off?">Originalgröße stimmt nicht?</summary>
+    <span data-en="Measure the bar with a ruler. Physical screen pixels per mm:">
+    Den Balken oben mit einem Lineal messen. Physische Bildschirm-Pixel je mm:</span>
+    <input id="pxmm" type="number" step="0.01" min="2" max="40" style="width:6em"> <span data-en="(Zenbook screens ≈ 11.2; if the bar shows e.g. 45 instead of 50 mm, multiply by 50/45). Keep the browser zoom at 100 %.">(Zenbook-Bildschirme ≈ 11,2;
+    zeigt der Balken z. B. 45 statt 50 mm, den Wert mit 50/45 malnehmen). Fenster-Zoom von Edge auf 100 % lassen.</span>
    </details>
    <div class="reihe">
-    <button data-cmd="f">Foto holen</button>
-    <label><input type="checkbox" id="auto" checked> nach jeder Aktion</label>
-    <button id="png">PNG speichern</button>
-    <button data-cmd="p">Foto auf SD</button>
+    <button data-cmd="f" data-en="Get photo">Foto holen</button>
+    <label><input type="checkbox" id="auto" checked> <span data-en="after each action">nach jeder Aktion</span></label>
+    <button id="png" data-en="Save PNG">PNG speichern</button>
+    <button data-cmd="p" data-en="Photo to SD">Foto auf SD</button>
     <span class="hinweis" id="fotozeit"></span>
    </div>
   </div>
   <div class="karte fern" style="margin-top:16px">
-   <h2>Fernbedienung</h2>
+   <h2 data-en="Remote">Fernbedienung</h2>
    <div class="reihe">
-    <button data-cmd="k">KI · Übersicht</button>
+    <button data-cmd="k" data-en="AI · overview">KI · Übersicht</button>
     <button data-cmd="s1;">1 Refresh</button>
-    <button data-cmd="s2;">2 Schrift</button>
-    <button data-cmd="s3;">3 Raster</button>
-    <button data-cmd="s4;">4 Braun</button>
-    <button data-cmd="s5;">5 Bewegung</button>
+    <button data-cmd="s2;" data-en="2 Fonts">2 Schrift</button>
+    <button data-cmd="s3;" data-en="3 Dither">3 Raster</button>
+    <button data-cmd="s4;" data-en="4 Braun kit">4 Braun</button>
+    <button data-cmd="s5;" data-en="5 Motion">5 Bewegung</button>
     <button data-cmd="s6;">6 Touch</button>
-    <button data-cmd="s7;">7 Instrumente</button>
-    <button data-cmd="s8;">8 Energie</button>
-    <button data-cmd="s9;">9 Burgduell</button>
-    <button data-cmd="s10;">10 Tastatur</button>
-    <button data-cmd="a">Akku lesen</button>
+    <button data-cmd="s7;" data-en="7 Gauges">7 Instrumente</button>
+    <button data-cmd="s8;" data-en="8 Energy">8 Energie</button>
+    <button data-cmd="s9;" data-en="9 Castle duel">9 Burgduell</button>
+    <button data-cmd="s10;" data-en="10 Keyboard">10 Tastatur</button>
+    <button data-cmd="a" data-en="Read battery">Akku lesen</button>
     <button data-cmd="u">▲</button>
     <button data-cmd="d">▼</button>
-    <button id="los" class="haupt">Los</button>
-    <button id="serie">Serie ×10</button>
+    <button id="los" class="haupt" data-en="Go">Los</button>
+    <button id="serie" data-en="Series ×10">Serie ×10</button>
+    <button data-cmd="l" data-en="Sticky: DE/EN">Sticky: DE/EN</button>
    </div>
-   <p class="hinweis">„Los“ tippt auf den Doppelring im Refresh-Labor. Die Serie wartet jeweils auf die Messung.</p>
+   <p class="hinweis" data-en="“Go” taps the double ring in the refresh lab. The series waits for each measurement.">„Los“ tippt auf den Doppelring im Refresh-Labor. Die Serie wartet jeweils auf die Messung.</p>
   </div>
  </section>
  <aside>
   <div class="karte">
-   <h2>Messungen</h2>
-   <div class="scroll"><table><thead><tr><th>s</th><th>Art</th><th>Wert</th><th>seit voll</th></tr></thead><tbody id="mess"></tbody></table></div>
-   <div class="reihe"><button id="csv">CSV speichern</button><span class="hinweis" id="schnitt"></span></div>
+   <h2 data-en="Measurements">Messungen</h2>
+   <div class="scroll"><table><thead><tr><th>s</th><th data-en="Type">Art</th><th data-en="Value">Wert</th><th data-en="since full">seit voll</th></tr></thead><tbody id="mess"></tbody></table></div>
+   <div class="reihe"><button id="csv" data-en="Save CSV">CSV speichern</button><span class="hinweis" id="schnitt"></span></div>
   </div>
   <div class="karte" style="margin-top:16px">
    <h2>Log</h2>
@@ -177,6 +180,17 @@ body.screenpad .fw{break-inside:avoid;margin-bottom:10px}
 </main>
 <script>
 const $ = s => document.querySelector(s);
+// ---- Sprache: Deutsch/Englisch, Standard aus dem Browser, Schalter oben, gemerkt im Browser ----
+const SPRACHE = (() => { try { return localStorage.getItem('sprache'); } catch { return null; } })() || (/^de/i.test(navigator.language) ? 'de' : 'en');
+const t = (de, en) => SPRACHE === 'en' ? en : de;
+document.documentElement.lang = SPRACHE;
+function spracheAnwenden() {
+  if (SPRACHE !== 'en') return;
+  document.querySelectorAll('[data-en]').forEach(e => e.textContent = e.dataset.en);
+  document.querySelectorAll('[data-en-html]').forEach(e => e.innerHTML = e.dataset.enHtml);
+  document.querySelectorAll('[data-en-title]').forEach(e => e.title = e.dataset.enTitle);
+  document.querySelectorAll('[data-en-ph]').forEach(e => e.placeholder = e.dataset.enPh);
+}
 const enc = new TextEncoder(), dec = new TextDecoder();
 let port = null, writer = null, reader = null;
 let puffer = new Uint8Array(0);
@@ -219,7 +233,7 @@ function zeile(t){
       if (c.width !== panel.w || c.height !== panel.h) { c.width = panel.w; c.height = panel.h; }
       zoomSetzen();
     }
-    $('#info').textContent = `FW ${v} · Station ${st} · Akku ${akku} % · ${usb === '1' ? 'USB' : 'Akku'} · ${sd === 'sd' ? 'SD' : 'keine SD'}`;
+    $('#info').textContent = `FW ${v} · Station ${st} · ${t('Akku', 'battery')} ${akku} % · ${usb === '1' ? 'USB' : t('Akku', 'battery')} · ${sd === 'sd' ? 'SD' : t('keine SD', 'no SD')}`;
   }
   if (t.startsWith('STATION ') && $('#auto').checked) setTimeout(() => senden('f'), 150);
 }
@@ -253,7 +267,7 @@ function zeichne(bits){
     img.data[o] = v; img.data[o+1] = v; img.data[o+2] = s ? 17 : 236; img.data[o+3] = 255;
   }
   g.putImageData(img, 0, 0);
-  $('#fotozeit').textContent = 'Stand ' + new Date().toLocaleTimeString('de-DE');
+  $('#fotozeit').textContent = t('Stand ', 'as of ') + new Date().toLocaleTimeString(SPRACHE);
 }
 
 function zeigeMessungen(){
@@ -325,17 +339,17 @@ async function verbinden(){
     try {
       trennen_an = false;
       await verbindenUsb();
-      $('#punkt').classList.add('an'); $('#verbinden').textContent = 'Trennen';
+      $('#punkt').classList.add('an'); $('#verbinden').textContent = t('Trennen', 'Disconnect');
       setTimeout(() => { senden('i'); senden('f'); }, 300);
     } catch (e) { log('USB verbinden: ' + e.message); usb = null; }
     return;
   }
-  if (!('serial' in navigator)) { alert('Web Serial/WebUSB gibt es nur in Edge oder Chrome.'); return; }
+  if (!('serial' in navigator)) { alert(t('Web Serial/WebUSB gibt es nur in Edge oder Chrome.', 'Web Serial/WebUSB is only available in Edge or Chrome.')); return; }
   try {
     port = await navigator.serial.requestPort();
     await port.open({ baudRate: 115200, bufferSize: 65536 });
     writer = port.writable.getWriter();
-    $('#punkt').classList.add('an'); $('#verbinden').textContent = 'Trennen';
+    $('#punkt').classList.add('an'); $('#verbinden').textContent = t('Trennen', 'Disconnect');
     trennen_an = false;
     leseschleife = lesen();
     setTimeout(() => { senden('i'); senden('f'); }, 300);
@@ -347,8 +361,8 @@ async function trennen(){
   if (usb) {
     try { await usb.dev.close(); } catch (e) { log('USB schließen: ' + e.message); }
     usb = null;
-    $('#punkt').classList.remove('an'); $('#verbinden').textContent = 'Verbinden';
-    $('#info').textContent = 'getrennt';
+    $('#punkt').classList.remove('an'); $('#verbinden').textContent = t('Verbinden', 'Connect');
+    $('#info').textContent = t('getrennt', 'disconnected');
     return;
   }
   try { if (reader) await reader.cancel(); } catch {}
@@ -356,8 +370,8 @@ async function trennen(){
   try { if (writer) writer.releaseLock(); } catch {}
   try { await port.close(); } catch (e) { log('Schließen: ' + e.message); }
   port = null; writer = null; reader = null;
-  $('#punkt').classList.remove('an'); $('#verbinden').textContent = 'Verbinden';
-  $('#info').textContent = 'getrennt (Port frei zum Flashen)';
+  $('#punkt').classList.remove('an'); $('#verbinden').textContent = t('Verbinden', 'Connect');
+  $('#info').textContent = t('getrennt (Port frei zum Flashen)', 'disconnected (port free for flashing)');
 }
 
 $('#verbinden').onclick = verbinden;
@@ -401,6 +415,9 @@ $('#csv').onclick = () => {
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([t], {type:'text/csv'})); a.download = 'messungen.csv'; a.click();
 };
 setInterval(() => { if (verbunden()) senden('i'); }, 30000);
+$('#sprache').textContent = SPRACHE === 'en' ? 'DE' : 'EN';
+$('#sprache').onclick = () => { try { localStorage.setItem('sprache', SPRACHE === 'en' ? 'de' : 'en'); } catch {} location.reload(); };
+spracheAnwenden();
 
 // ---- Zoom des Spiegels ----
 // Display: 3,97″ bei 800 × 480 → 9,25 px/mm → 86,5 × 51,9 mm. Originalgröße braucht die Pixeldichte des Bildschirms
@@ -415,9 +432,9 @@ let pxmm = +(merk('pxmm') || 11.2);
 function zoomSetzen(){
   const c = $('#spiegel');
   let breite = null, text = '';
-  if (zoomArt === 'original') { breite = STICKY_MM * pxmm / devicePixelRatio * zoomFaktor; text = zoomFaktor === 1 ? 'Originalgröße' : `Original × ${zoomFaktor.toFixed(2)}`; }
+  if (zoomArt === 'original') { breite = STICKY_MM * pxmm / devicePixelRatio * zoomFaktor; text = zoomFaktor === 1 ? t('Originalgröße', 'actual size') : `${t('Original', 'actual')} × ${zoomFaktor.toFixed(2)}`; }
   else if (zoomArt === 'pixel') { breite = 800 / devicePixelRatio * zoomFaktor; text = `${Math.round(zoomFaktor * 100)} % Pixel`; }
-  else text = 'eingepasst';
+  else text = t('eingepasst', 'fitted');
   c.style.width = breite ? breite + 'px' : '100%';
   c.style.maxWidth = breite ? 'none' : '100%';
   c.classList.toggle('scharf', zoomArt !== 'einpassen' && breite >= 800 / devicePixelRatio);
@@ -451,76 +468,81 @@ document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
   if (b.dataset.tab === 'inventar') inventar();
 });
 
-// ---- Tech-Inventar ----
-// Quellen: Schaltplan 260609, reterminal-sticky SPEC/STAND (FW 0.31.8), Sticky-Lab-Messungen. [wert, stand]
+// ---- Tech-Inventar (zweisprachig) ----
+// Quellen: Schaltplan 260609, reterminal-sticky SPEC/STAND, Seeed sticky-esp-idf-peripherals, Sticky-Lab-Messungen.
+// Jede Zeile: [Merkmal, [Wert, Stand]] mit Stand bekannt | gemessen | offen (Klassennamen bleiben deutsch).
 function mittel(art){
   const v = messungen.filter(m => m.art === art && m.einheit === 'ms' && m.wert > 0).map(m => m.wert);
   return v.length ? [`${Math.round(v.reduce((a, b) => a + b, 0) / v.length)} ms (${v.length}×, live)`, 'gemessen'] : null;
 }
+const STAND = { bekannt: t('bekannt', 'known'), gemessen: t('gemessen', 'measured'), offen: t('offen', 'open') };
 const INV = () => [
- { name: 'Rechner', rolle: 'Seeed XIAO ESP32-S3', zeilen: [
-   ['Kerne', ['2 × Xtensa LX7, bis 240 MHz (Lab: 80 MHz wie EDC)', 'bekannt']],
-   ['RAM', ['512 KB intern + 8 MB Octal-PSRAM', 'bekannt']],
-   ['Flash', ['32 MB: 2 × 4 MB App, ~24 MB LittleFS', 'bekannt']],
-   ['Funk', ['BLE 5 und WLAN 2,4 GHz, kein klassisches Bluetooth', 'bekannt']],
-  ], grenze: ['offen', 'Wie viel bringen 240 MHz bei Dithering und Zeichnen, und was kostet es an Strom?'] },
- { name: 'Anzeige', rolle: `e-Ink 3,97″, 800 × 480 (9,25 px/mm, 86,5 × 51,9 mm), 1 bpp (Schwarz/Weiß), über Seeed_GFX2${panel.chip ? ' · Controller ' + panel.chip + ' (dieses Gerät)' : ''}`, zeilen: [
-   ['Voll-Refresh', mittel('Voll') || ['2277 ms (Lab 15.11.)', 'gemessen']],
-   ['Teil-Refresh', mittel('Teil') || ['952 ms für 368 × 300 px (Lab 15.11.)', 'gemessen']],
-   ['Fläche', ['fast egal: 28 × 28 px 838 ms, 180 × 150 px 950 ms, 368 × 300 px 952 ms – die Zeit steckt im Panel-Ablauf', 'gemessen']],
-   ['Teil wach', mittel('Teil wach') || ['853 ms, ohne die zwei 100-ms-Schlafpausen', 'gemessen']],
-   ['Schnell', ['gibt es nicht: der Sticky hat SSD1677 oder SSD2677 (je Gerät zufällig), beide Treiber ohne Schnell-Modus – updateFast() bricht sofort ab, kein Refresh', 'gemessen']],
-   ['ohne Strom', ['Bild bleibt stehen (auch ein falsches)', 'bekannt']],
-   ['Controller', panel.chip ? [`${panel.chip}; Graustufen-Refresh (4 Stufen) laut Treiber: ${panel.grau4 ? 'ja' : 'nein'}`, 'gemessen'] : ['SSD1677 oder SSD2677, je Gerät zufällig – „Verbinden“ zeigt, welcher', 'bekannt']],
-   ['Graustufen', ['nur über Raster/Dithering (Station 3: Bayer, Floyd-Steinberg, Atkinson, Halbton, je ~0,1 s für 590 × 50 px); Graustufen-Modus der Bibliothek ungetestet', 'gemessen']],
-   ['Animation', (() => { const v = ['anim-balken','anim-zeiger','anim-rolle'].map(a => messungen.filter(x => x.art === a).pop()).filter(Boolean);
-      return v.length ? [v.map(m => `${m.art.slice(5)} ${m.notiz}`).join(', '), 'gemessen'] : ['höchstens ~1,2 Bilder/s (Lab 15.11., Station 5: 760–860 ms je Bild)', 'gemessen']; })()],
-   ['Schriften', ['FreeSans/Serif/Mono 9–24 pt und TomThumb, nur ASCII; Umlaute, ±, µ, ° setzt die Firmware selbst', 'gemessen']],
-  ], grenze: ['offen', 'Ab wie vielen Teil-Refreshes sieht man Reste? Hängt Teil-Refresh von der Fläche ab? Wie viele Bilder pro Sekunde gehen für Animation?'] },
- { name: 'Touch', rolle: 'Goodix GT911, kapazitiv', zeilen: [
-   ['Finger', ['bis 5 gleichzeitig (Lab nutzt 1)', 'bekannt']],
-   ['Anschluss', ['I²C 0x5D an GPIO 2/3, INT 21, RST 41, Strom 42', 'bekannt']],
-   ['Abfrage', ['alle 25 ms', 'bekannt']],
-   ['Treffer', (m => m ? [`im Mittel ${(m.wert / 10).toFixed(1)} px (${(m.wert / 10 / panel.pxmm).toFixed(1)} mm)`, 'gemessen'] : ['Station 6 → Zielen', 'offen'])(messungen.filter(x => x.art === 'ziel-mittel').pop())],
-   ['Rückmeldung', (() => { const n = {'rueck-rahmen':'Rahmen','rueck-invert':'Invert','rueck-punkt':'Punkt'};
+ { name: t('Rechner', 'Processor'), rolle: 'Seeed XIAO ESP32-S3', zeilen: [
+   [t('Kerne', 'Cores'), [t('2 × Xtensa LX7, bis 240 MHz (Lab: 80 MHz wie EDC)', '2 × Xtensa LX7, up to 240 MHz (Lab: 80 MHz like EDC)'), 'bekannt']],
+   ['RAM', [t('512 KB intern + 8 MB Octal-PSRAM', '512 KB internal + 8 MB octal PSRAM'), 'bekannt']],
+   ['Flash', [t('32 MB: 2 × 4 MB App, ~24 MB LittleFS', '32 MB: 2 × 4 MB app, ~24 MB LittleFS'), 'bekannt']],
+   [t('Funk', 'Radio'), [t('BLE 5 und WLAN 2,4 GHz, kein klassisches Bluetooth', 'BLE 5 and Wi-Fi 2.4 GHz, no classic Bluetooth'), 'bekannt']],
+  ], grenze: t('Wie viel bringen 240 MHz bei Dithering und Zeichnen, und was kostet es an Strom?', 'How much do 240 MHz gain for dithering and drawing, and what does it cost in power?') },
+ { name: t('Anzeige', 'Display'), rolle: t(`e-Ink 3,97″, 800 × 480 (9,25 px/mm, 86,5 × 51,9 mm), 1 bpp (Schwarz/Weiß), über Seeed_GFX2${panel.chip ? ' · Controller ' + panel.chip + ' (dieses Gerät)' : ''}`,
+                                              `e-ink 3.97″, 800 × 480 (9.25 px/mm, 86.5 × 51.9 mm), 1 bpp (black/white), via Seeed_GFX2${panel.chip ? ' · controller ' + panel.chip + ' (this device)' : ''}`), zeilen: [
+   [t('Voll-Refresh', 'Full refresh'), mittel('Voll') || [t('2277 ms (Lab 15.11.)', '2277 ms (lab, 15 Nov)'), 'gemessen']],
+   [t('Teil-Refresh', 'Partial refresh'), mittel('Teil') || [t('952 ms für 368 × 300 px (Lab 15.11.)', '952 ms for 368 × 300 px (lab, 15 Nov)'), 'gemessen']],
+   [t('Fläche', 'Area'), [t('fast egal: 28 × 28 px 838 ms, 180 × 150 px 950 ms, 368 × 300 px 952 ms – die Zeit steckt im Panel-Ablauf', 'hardly matters: 28 × 28 px 838 ms, 180 × 150 px 950 ms, 368 × 300 px 952 ms – the time is in the panel waveform'), 'gemessen']],
+   [t('Teil wach', 'Partial, awake'), mittel('Teil wach') || [t('853 ms, ohne die zwei 100-ms-Schlafpausen', '853 ms, without the two 100 ms sleep pauses'), 'gemessen']],
+   [t('Schnell', 'Fast'), [t('gibt es nicht: SSD1677/SSD2677-Treiber ohne Schnell-Modus – updateFast() bricht sofort ab, kein Refresh', 'does not exist: SSD1677/SSD2677 drivers have no fast mode – updateFast() returns at once, no refresh'), 'gemessen']],
+   [t('ohne Strom', 'unpowered'), [t('Bild bleibt stehen (auch ein falsches)', 'image stays (even a wrong one)'), 'bekannt']],
+   ['Controller', panel.chip ? [t(`${panel.chip}; Graustufen-Refresh (4 Stufen) laut Treiber: ${panel.grau4 ? 'ja' : 'nein'}`, `${panel.chip}; 4-level gray refresh per driver: ${panel.grau4 ? 'yes' : 'no'}`), 'gemessen']
+                             : [t('SSD1677 oder SSD2677, je Gerät zufällig – „Verbinden“ zeigt, welcher', 'SSD1677 or SSD2677, random per unit – “Connect” shows which'), 'bekannt']],
+   [t('Graustufen', 'Grayscale'), [t('über Raster/Dithering (Station 3, je ~0,1 s für 590 × 50 px); echter 4-Stufen-Modus noch ungetestet', 'via dithering (station 3, ~0.1 s per 590 × 50 px); real 4-level mode not yet tested'), 'gemessen']],
+   ['Animation', (() => { const v = ['anim-balken', 'anim-zeiger', 'anim-rolle'].map(a => messungen.filter(x => x.art === a).pop()).filter(Boolean);
+      return v.length ? [v.map(m => `${m.art.slice(5)} ${m.notiz}`).join(', '), 'gemessen'] : [t('höchstens ~1,2 Bilder/s (Station 5: 760–860 ms je Bild)', 'at most ~1.2 frames/s (station 5: 760–860 ms per frame)'), 'gemessen']; })()],
+   [t('Schriften', 'Fonts'), [t('FreeSans/Serif/Mono 9–24 pt und TomThumb, nur ASCII; Umlaute, ±, µ, ° setzt die Firmware selbst', 'FreeSans/Serif/Mono 9–24 pt and TomThumb, ASCII only; umlauts, ±, µ, ° are composed by the firmware'), 'gemessen']],
+  ], grenze: t('Ab wie vielen Teil-Refreshes sieht man Reste? Wie sieht echter 4-Stufen-Grau aus?', 'After how many partial refreshes does ghosting show? What does real 4-level gray look like?') },
+ { name: 'Touch', rolle: t('Goodix GT911, kapazitiv', 'Goodix GT911, capacitive'), zeilen: [
+   [t('Finger', 'Fingers'), [t('bis 5 gleichzeitig (Lab nutzt 1)', 'up to 5 at once (lab uses 1)'), 'bekannt']],
+   [t('Anschluss', 'Wiring'), [t('I²C 0x5D an GPIO 2/3, INT 21, RST 41, Strom 42', 'I²C 0x5D on GPIO 2/3, INT 21, RST 41, power 42'), 'bekannt']],
+   [t('Abfrage', 'Polling'), [t('eigene Aufgabe alle 15 ms, auch während eines Refreshs (wie Seeeds Beispiele)', 'own task every 15 ms, also during a refresh (like Seeed’s examples)'), 'gemessen']],
+   [t('Treffer', 'Accuracy'), (m => m ? [t(`im Mittel ${(m.wert / 10).toFixed(1)} px (${(m.wert / 10 / panel.pxmm).toFixed(1)} mm)`, `mean ${(m.wert / 10).toFixed(1)} px (${(m.wert / 10 / panel.pxmm).toFixed(1)} mm)`), 'gemessen'] : [t('Station 6 → Zielen', 'station 6 → Aim'), 'offen'])(messungen.filter(x => x.art === 'ziel-mittel').pop())],
+   [t('Rückmeldung', 'Feedback'), (() => { const n = { 'rueck-rahmen': t('Rahmen', 'frame'), 'rueck-invert': t('Invert', 'invert'), 'rueck-punkt': t('Punkt', 'dot') };
       const v = Object.keys(n).map(a => { const m = messungen.filter(x => x.art === a).pop(); return m ? `${n[a]} ${m.wert} ms` : null; }).filter(Boolean);
-      return v.length ? [v.join(', '), 'gemessen'] : ['Station 6 → Rückmeldung', 'offen']; })()],
-   ['Kritzeln', (m => m ? [`${m.wert} ms je Teilbild (${m.notiz})`, 'gemessen'] : ['Station 6 → Kritzeln', 'offen'])(messungen.filter(x => x.art === 'kritzel-teil').pop())],
-   ['Stift', ['nur leitende Spitze, kein Kuli', 'bekannt']],
-  ], grenze: ['offen', 'Latenz Berührung → sichtbare Rückmeldung? Treffergenauigkeit am Rand?'] },
- { name: 'Tasten', rolle: 'KI, ▲, ▼ an der rechten Seite', zeilen: [
-   ['Pins', ['GPIO 4 / 5 / 6, aktiv low', 'bekannt']],
-   ['Wecken', ['jede Taste weckt aus dem Leichtschlaf', 'bekannt']],
-   ['Stolperfalle', ['erst nach display.begin() einrichten', 'bekannt']],
+      return v.length ? [v.join(', '), 'gemessen'] : [t('Rahmen 950, Invertieren 1001, Punkt 838 ms; Klick sofort', 'frame 950, invert 1001, dot 838 ms; click instantly'), 'gemessen']; })()],
+   [t('Kritzeln', 'Scribble'), (m => m ? [t(`${m.wert} ms je Teilbild (${m.notiz})`, `${m.wert} ms per partial frame (${m.notiz})`), 'gemessen'] : [t('Station 6 → Kritzeln', 'station 6 → Scribble'), 'offen'])(messungen.filter(x => x.art === 'kritzel-teil').pop())],
+   [t('Tastatur', 'Keyboard'), (m => m ? [t(`${m.wert} Zeichen/min (${m.notiz})`, `${m.wert} chars/min (${m.notiz})`), 'gemessen'] : [t('49 Zeichen/min, 3 Fehler (erster Mensch, Station 10)', '49 chars/min, 3 errors (first human, station 10)'), 'gemessen'])(messungen.filter(x => x.art === 'zeichen-pro-min' && x.wert < 200).pop())],
+   [t('Stift', 'Stylus'), [t('nur leitende Spitze; der S Pen (EMR) geht nicht – dafür auf dem Spiegel der Console zeichnen', 'conductive tip only; the S Pen (EMR) does not work – draw on the console mirror instead'), 'bekannt']],
+  ], grenze: t('Treffergenauigkeit am Rand? Wie schnell tippt man mit Übung?', 'Accuracy at the edges? How fast does one type with practice?') },
+ { name: t('Tasten', 'Keys'), rolle: t('KI, ▲, ▼ an der rechten Seite', 'AI, ▲, ▼ on the right side'), zeilen: [
+   ['Pins', [t('GPIO 4 / 5 / 6, aktiv low; KI ist zugleich die Power-Taste', 'GPIO 4 / 5 / 6, active low; AI is also the power key'), 'bekannt']],
+   [t('Wecken', 'Wake'), [t('jede Taste weckt aus dem Leichtschlaf', 'any key wakes from light sleep'), 'bekannt']],
+   [t('Stolperfalle', 'Pitfall'), [t('erst nach display.begin() einrichten', 'set up only after display.begin()'), 'bekannt']],
   ] },
- { name: 'Sensoren', rolle: 'alle am MISC-I²C (GPIO 0/1)', zeilen: [
-   ['Bewegung', ['LSM6DS3TR-C, 6 Achsen, 0x6A, Interrupt GPIO 7 (weckt)', 'bekannt']],
-   ['Klima', (m => m ? [`SHT40, 0x44: ${(m.wert / 10).toFixed(1)} °C, ${m.notiz.replace('tau', 'Taupunkt')} °C (live)`, 'gemessen'] : ['SHT40, Temperatur und Feuchte, 0x44 – Station 7 zeigt sie', 'bekannt'])(messungen.filter(x => x.art === 'klima').pop())],
-   ['Uhr', ['PCF8563, 0x51; sein Wecker schaltet die 3,3 V ein → Einschalten aus „ganz aus“', 'bekannt']],
-  ], grenze: ['offen', 'Misst der SHT40 im Gehäuse die Eigenwärme mit? Wie fein reagiert der Bewegungssensor im Schlaf?'] },
- { name: 'Energie', rolle: 'Li-Po-Akku mit Ladechip und Füllstandsmesser', zeilen: [
-   ['Füllstand', ['BQ27220, 0x55: Spannung verlässlich; meldet 7500 mAh Design/voll, 0 Zyklen – wohl nie auf diesen Akku eingestellt, Prozent und Strom darum fraglich (Lab 15.11.)', 'gemessen']],
-   ['Laden', ['BQ25616, nur 0–45 °C; /CE an GPIO 39 aktiv LOW halten, sonst lädt er nie', 'bekannt']],
-   ['Selbsthaltung', ['PWR_HOLD GPIO 45 und PWR_LOCK GPIO 46, beide HIGH (laut Seeed). Ohne GPIO 46 ging das Lab-Gerät beim Abziehen sofort aus; EDC setzt 46 nicht', 'gemessen']],
-   ['Kapazität', akku ? [`voll ${akku.voll} mAh, Design ${akku.design} mAh, Rest ${akku.rest} mAh (${akku.zeit})`, 'gemessen']
-                      : ['„Akku lesen“ in der Steuerung holt sie aus dem BQ27220', 'offen']],
-   ['jetzt', akku ? [`${akku.mv} mV, ${akku.ma} mA (Mittel ${akku.mittel}), ${akku.soc} %, ${akku.grad} °C, ${akku.zyklen} Zyklen${akku.usb === '1' ? ', am USB' : ''}`, 'gemessen'] : ['–', 'offen']],
-   ...['ruhe-wach', 'schlaf-leicht'].map(a => { const m = messungen.filter(x => x.art === a && x.einheit === '0.1mA').pop();
-      return [a === 'ruhe-wach' ? 'Grundlast wach' : 'Leichtschlaf', m ? [`${(m.wert / 10).toFixed(1)} mA (${m.notiz})`, 'gemessen'] : ['Station 8 misst es (Kabel ab)', 'offen']]; }),
-   ...['teil-x50', 'voll-x10'].map(a => { const m = messungen.filter(x => x.art === a && x.einheit === 'uAh/bild').pop();
-      return [a === 'teil-x50' ? 'je Teil-Refresh' : 'je Voll-Refresh', m ? [`${m.wert} µAh (${m.notiz})`, 'gemessen'] : ['Station 8 misst es (Kabel ab)', 'offen']]; }),
-   ['Laufzeit', ['~24 h als EDC mit Schlummern und BLE', 'bekannt']],
-   ['Tiefentladung', ['danach meldet der BQ27220 Unsinn, bis einmal voll geladen', 'bekannt']],
-  ], grenze: ['offen', 'Was kostet ein Voll- bzw. Teil-Refresh in mAh? Grundverbrauch wach, Leichtschlaf, Tiefschlaf? Wie viele Refreshes schafft eine Ladung?'] },
- { name: 'Ton und Mikro', rolle: 'Summer und PDM-Mikrofon', zeilen: [
-   ['Summer', ['GPIO 48, tone(); Klick 2,7 kHz / 30 ms', 'bekannt']],
-   ['Mikro', ['MSM261 PDM, CLK 19, DATA 20, Strom 38; 16 kHz mono in EDC', 'bekannt']],
-  ], grenze: ['offen', 'Welche Klänge trägt der Summer (Tick, Anschlag, Bestätigung aus der Designsprache)?'] },
- { name: 'Speicher und USB', rolle: 'microSD und USB-C', zeilen: [
-   ['microSD', ['SPI am Bus des Displays, CS 8, Strom 10, Erkennung 11', 'bekannt']],
-   ['Lab-Ordner', ['/lab/messungen.csv, /lab/fotos/*.pbm', 'bekannt']],
-   ['USB-C', ['Laden und serielle Konsole 115200 (diese Console)', 'bekannt']],
-   ['USB erkennen', ['VIN über Teiler an GPIO 9, per ADC (> 1,5 V)', 'bekannt']],
+ { name: t('Sensoren', 'Sensors'), rolle: t('alle am MISC-I²C (GPIO 0/1)', 'all on MISC I²C (GPIO 0/1)'), zeilen: [
+   [t('Bewegung', 'Motion'), [t('LSM6DS3TR-C, 6 Achsen, 0x6A, Interrupt GPIO 7 (weckt); erste Werte ~30 ms nach dem Einschalten', 'LSM6DS3TR-C, 6 axes, 0x6A, interrupt GPIO 7 (wakes); first values ~30 ms after enabling'), 'gemessen']],
+   [t('Klima', 'Climate'), (m => m ? [t(`SHT40, 0x44: ${(m.wert / 10).toFixed(1)} °C, ${m.notiz.replace('tau', 'Taupunkt')} °C (live)`, `SHT40, 0x44: ${(m.wert / 10).toFixed(1)} °C, ${m.notiz.replace('tau', 'dew point')} °C (live)`), 'gemessen']
+                                       : [t('SHT40, Temperatur und Feuchte, 0x44 – Station 7 zeigt sie', 'SHT40, temperature and humidity, 0x44 – station 7 shows it'), 'bekannt'])(messungen.filter(x => x.art === 'klima').pop())],
+   [t('Uhr', 'Clock'), [t('PCF8563, 0x51; sein Wecker schaltet die 3,3 V ein → Einschalten aus „ganz aus“', 'PCF8563, 0x51; its alarm switches the 3.3 V on → wake from “fully off”'), 'bekannt']],
+  ], grenze: t('Misst der SHT40 im Gehäuse die Eigenwärme mit?', 'Does the SHT40 pick up the device’s own heat?') },
+ { name: t('Energie', 'Energy'), rolle: t('Li-Po-Akku mit Ladechip und Füllstandsmesser', 'Li-Po battery with charger and fuel gauge'), zeilen: [
+   [t('Füllstand', 'Fuel gauge'), [t('BQ27220, 0x55: Spannung verlässlich; meldet 7500 mAh und 0 Zyklen – wohl nie auf diesen Akku eingestellt, Prozent fraglich', 'BQ27220, 0x55: voltage reliable; reports 7500 mAh and 0 cycles – probably never configured for this cell, percent doubtful'), 'gemessen']],
+   [t('Laden', 'Charging'), [t('BQ25616, nur 0–45 °C, ~1 A; /CE an GPIO 39 aktiv LOW halten, sonst lädt er nie', 'BQ25616, 0–45 °C only, ~1 A; hold /CE on GPIO 39 low, otherwise it never charges'), 'gemessen']],
+   [t('Selbsthaltung', 'Power hold'), [t('GPIO 45 (HOLD) und GPIO 46 (LOCK) HIGH, laut Seeed. Ohne 46 ging ein Gerät beim Abziehen sofort aus; EDC setzt 46 seit 0.31.9', 'GPIO 45 (HOLD) and GPIO 46 (LOCK) high, per Seeed. Without 46 one unit switched off when unplugged; EDC sets 46 since 0.31.9'), 'gemessen']],
+   [t('Kapazität', 'Capacity'), akku ? [t(`voll ${akku.voll} mAh, Design ${akku.design} mAh, Rest ${akku.rest} mAh (${akku.zeit})`, `full ${akku.voll} mAh, design ${akku.design} mAh, left ${akku.rest} mAh (${akku.zeit})`), 'gemessen']
+                                    : [t('„Akku lesen“ in der Steuerung holt sie aus dem BQ27220', '“Read battery” in Control fetches it from the BQ27220'), 'offen']],
+   [t('jetzt', 'now'), akku ? [t(`${akku.mv} mV, ${akku.ma} mA (Mittel ${akku.mittel}), ${akku.soc} %, ${akku.grad} °C, ${akku.zyklen} Zyklen${akku.usb === '1' ? ', am USB' : ''}`, `${akku.mv} mV, ${akku.ma} mA (avg ${akku.mittel}), ${akku.soc} %, ${akku.grad} °C, ${akku.zyklen} cycles${akku.usb === '1' ? ', on USB' : ''}`), 'gemessen'] : ['–', 'offen']],
+   [t('Leichtschlaf', 'Light sleep'), (m => m ? [`${(m.wert / 10).toFixed(1)} mA (${m.notiz})`, 'gemessen'] : ['6.1 mA (Lab 15.11.)', 'gemessen'])(messungen.filter(x => x.art === 'schlaf-leicht' && x.einheit === '0.1mA').pop())],
+   [t('Grundlast wach', 'Idle, awake'), (m => m ? [`${(m.wert / 10).toFixed(1)} mA (${m.notiz})`, 'gemessen'] : [t('Station 8 misst es (Kabel ab)', 'station 8 measures it (unplugged)'), 'offen'])(messungen.filter(x => x.art === 'ruhe-wach' && x.einheit === '0.1mA' && x.wert < 100000).pop())],
+   ...['teil-x50', 'voll-x10'].map(a => { const m = messungen.filter(x => x.art === a && x.einheit === 'uAh/bild' && x.wert < 5000).pop();
+      return [a === 'teil-x50' ? t('je Teil-Refresh', 'per partial refresh') : t('je Voll-Refresh', 'per full refresh'), m ? [`${m.wert} µAh (${m.notiz})`, 'gemessen'] : [t('Station 8 misst es (Kabel ab)', 'station 8 measures it (unplugged)'), 'offen']]; }),
+   [t('Laufzeit', 'Runtime'), [t('~24 h als EDC mit Schlummern und BLE', '~24 h as EDC with dozing and BLE'), 'bekannt']],
+  ], grenze: t('Was kostet ein Refresh in µAh? Wie viele Refreshes schafft eine Ladung? Echte Akku-Kapazität?', 'What does a refresh cost in µAh? How many refreshes per charge? Real battery capacity?') },
+ { name: t('Ton und Mikro', 'Sound and mic'), rolle: t('Summer und PDM-Mikrofon', 'Buzzer and PDM microphone'), zeilen: [
+   [t('Summer', 'Buzzer'), [t('GPIO 48, tone(); Klick 2,7 kHz / 30 ms', 'GPIO 48, tone(); click 2.7 kHz / 30 ms'), 'bekannt']],
+   [t('Mikro', 'Mic'), [t('MSM261 PDM, CLK 19, DATA 20, Strom 38; 16 kHz mono in EDC', 'MSM261 PDM, CLK 19, DATA 20, power 38; 16 kHz mono in EDC'), 'bekannt']],
+  ], grenze: t('Welche Klänge trägt der Summer (Tick, Anschlag, Bestätigung)?', 'Which sounds suit the buzzer (tick, stop, confirm)?') },
+ { name: t('Speicher und USB', 'Storage and USB'), rolle: t('microSD und USB-C', 'microSD and USB-C'), zeilen: [
+   ['microSD', [t('SPI am Bus des Displays, CS 8, Strom 10, Erkennung 11', 'SPI on the display bus, CS 8, power 10, detect 11'), 'bekannt']],
+   [t('Lab-Ordner', 'Lab folder'), ['/lab/messungen.csv, /lab/fotos/*.pbm', 'bekannt']],
+   ['USB-C', [t('CH343-Brücke (seriell 115200, Empfangspuffer 8 KB) und Laden', 'CH343 bridge (serial 115200, 8 KB receive buffer) and charging'), 'gemessen']],
+   [t('USB erkennen', 'USB detect'), [t('VIN über Teiler an GPIO 9, per ADC (> 1,5 V)', 'VIN via divider on GPIO 9, by ADC (> 1.5 V)'), 'bekannt']],
   ] },
 ];
 // ScreenPad: Mausrad blättert das Inventar waagerecht
@@ -530,16 +552,16 @@ $('#inv').addEventListener('wheel', e => {
 }, { passive: false });
 function inventar(){
   $('#inv').innerHTML = INV().map(b => `<div class="karte bau"><h3>${b.name}</h3><div class="rolle">${b.rolle}</div><dl>` +
-    b.zeilen.map(([k, [w, s]]) => `<dt>${k}</dt><dd>${w}<span class="tag ${s}">${s}</span></dd>`).join('') + `</dl>` +
-    (b.grenze ? `<div class="grenze"><b>Grenze ausloten:</b> ${b.grenze[1]}</div>` : '') + `</div>`).join('');
+    b.zeilen.map(([k, [w, s]]) => `<dt>${k}</dt><dd>${w}<span class="tag ${s}">${STAND[s] || s}</span></dd>`).join('') + `</dl>` +
+    (b.grenze ? `<div class="grenze"><b>${t('Grenze ausloten:', 'Limit to probe:')}</b> ${b.grenze}</div>` : '') + `</div>`).join('');
 }
 </script>
 <script type="module">
 // ---- Firmware: Sticky Lab + Seeed-Playground, Aufspielen mit esptool-js über Web Serial ----
 import { ESPLoader, Transport } from "https://cdn.jsdelivr.net/npm/esptool-js@0.7.0/+esm";
 const REPO = 'Seeed-Projects/reterminal-sticky-playground-registry', ROH = `https://raw.githubusercontent.com/${REPO}/main/`;
-const EIGEN = [{ id: 'sticky-lab', name: 'Sticky Lab', summary: 'Diese Werkbank: Stationen zu e-Ink, Akku und Design, dazu Burgduell. Spielt nur die App ein, Flash-Daten und SD bleiben.',
-  author: { name: 'eigenes Projekt' }, status: 'aktuell', versions: [{ version: 'aktuell', manifest: new URL('fw/sticky-lab/manifest.json', location.href).href }] }];
+const EIGEN = [{ id: 'sticky-lab', name: 'Sticky Lab', summary: t('Diese Werkbank: Stationen zu e-Ink, Akku und Design, dazu Burgduell und Tastatur. Spielt nur die App ein, Flash-Daten und SD bleiben.', 'This workbench: stations on e-ink, battery and design, plus castle duel and keyboard. Flashes only the app; flash data and SD stay.'),
+  author: { name: t('eigenes Projekt', 'own project') }, status: t('aktuell', 'current'), versions: [{ version: t('aktuell', 'current'), manifest: new URL('fw/sticky-lab/manifest.json', location.href).href }] }];
 let liste = [], geladen = false, laeuft = false;
 const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -558,15 +580,15 @@ window.fwLaden = async () => {
       } catch { return null; }
     }));
     liste = alle.filter(Boolean).sort((a, b) => ((a.group === 'official' ? 0 : 1) - (b.group === 'official' ? 0 : 1)) || a.name.localeCompare(b.name));
-    $('#fwstatus').textContent = `${liste.length} Firmwares im Playground · Stand GitHub ${new Date().toLocaleDateString('de-DE')}`;
-  } catch (e) { $('#fwstatus').textContent = 'Playground nicht erreichbar: ' + e.message; }
+    $('#fwstatus').textContent = t(`${liste.length} Firmwares im Playground · Stand GitHub ${new Date().toLocaleDateString('de-DE')}`, `${liste.length} firmwares in the Playground · GitHub as of ${new Date().toLocaleDateString('en-GB')}`);
+  } catch (e) { $('#fwstatus').textContent = t('Playground nicht erreichbar: ', 'Playground unreachable: ') + e.message; }
   zeigen();
 };
 
 function karte(f, eigen) {
   const v = f.versions || [];
   const knopf = v.length ? `<select>${v.map((x, i) => `<option value="${i}">${esc(x.version)}${x.channel ? ' · ' + esc(x.channel) : ''}</option>`).join('')}</select>
-    <button class="voll" data-fw="${esc(f.id)}">Aufspielen</button>` : `<span class="hinweis">${f.nurOnline ? 'nur über den Seeed-Playground' : 'kein Abbild'}</span>`;
+    <button class="voll" data-fw="${esc(f.id)}">${t('Aufspielen', 'Flash')}</button>` : `<span class="hinweis">${f.nurOnline ? t('nur über den Seeed-Playground', 'only via the Seeed Playground') : t('kein Abbild', 'no image')}</span>`;
   return `<div class="karte fw${eigen ? ' eigen' : ''}"><h3>${esc(f.name)}</h3>
     <div class="wer">${esc(f.author?.name)}${f.status ? ' · ' + esc(f.status) : ''}${f.category ? ' · ' + esc(f.category) : ''}</div>
     <p>${esc(f.summary)}</p>${f.source?.url ? `<p><a href="${esc(f.source.url)}" target="_blank" rel="noopener">Quelle</a></p>` : ''}
@@ -591,16 +613,16 @@ function fortschritt(anteil, text) {
 
 async function aufspielen(f, v) {
   if (laeuft) return;
-  if (!('serial' in navigator) || ANDROID) { alert('Aufspielen geht nur am Rechner mit Edge oder Chrome (Web Serial).'); return; }
-  if (usb) { alert('Bitte erst „Trennen“ – Aufspielen läuft über Web Serial.'); return; }
+  if (!('serial' in navigator) || ANDROID) { alert(t('Aufspielen geht nur am Rechner mit Edge oder Chrome (Web Serial).', 'Flashing works only on a computer with Edge or Chrome (Web Serial).')); return; }
+  if (usb) { alert(t('Bitte erst „Trennen“ – Aufspielen läuft über Web Serial.', 'Please “Disconnect” first – flashing uses Web Serial.')); return; }
   let m;
-  try { m = await (await fetch(v.manifest)).json(); } catch (e) { alert('Manifest nicht lesbar: ' + e.message); return; }
+  try { m = await (await fetch(v.manifest)).json(); } catch (e) { alert(t('Manifest nicht lesbar: ', 'Manifest not readable: ') + e.message); return; }
   const teile = m.builds?.find(b => /ESP32-S3/i.test(b.chipFamily))?.parts || [];
-  if (!teile.length) { alert('Kein ESP32-S3-Abbild im Manifest.'); return; }
+  if (!teile.length) { alert(t('Kein ESP32-S3-Abbild im Manifest.', 'No ESP32-S3 image in the manifest.')); return; }
   const ganz = teile.some(t => t.offset === 0 && (t.size || 0) > (1 << 20));
-  if (!confirm(`${f.name} ${v.version} auf den angeschlossenen Sticky spielen?\n\n` +
-      (ganz ? 'Achtung: ganzes Abbild ab Adresse 0 – überschreibt auch Daten im Flash (Bordbuch, Einstellungen). Die SD-Karte bleibt.'
-            : 'Nur App und Startdateien – Flash-Daten und SD-Karte bleiben.'))) return;
+  if (!confirm(t(`${f.name} ${v.version} auf den angeschlossenen Sticky spielen?`, `Flash ${f.name} ${v.version} onto the connected Sticky?`) + '\n\n' +
+      (ganz ? t('Achtung: ganzes Abbild ab Adresse 0 – überschreibt auch Daten im Flash (Bordbuch, Einstellungen). Die SD-Karte bleibt.', 'Caution: full image from address 0 – also overwrites data in flash (logbook, settings). The SD card stays.')
+            : t('Nur App und Startdateien – Flash-Daten und SD-Karte bleiben.', 'Only app and boot files – flash data and SD card stay.')))) return;
   laeuft = true;
   let p = port;   // laufende Console-Verbindung freigeben, esptool öffnet den Port selbst
   try {
@@ -608,26 +630,26 @@ async function aufspielen(f, v) {
     if (!p) p = await navigator.serial.requestPort();
     const basis = new URL('.', v.manifest).href;
     const dateien = [];
-    for (const t of teile) {
-      fortschritt(0, `lade ${t.path} (${Math.round((t.size || 0) / 1024)} KB) …`);
-      const d = new Uint8Array(await (await fetch(new URL(t.path, basis))).arrayBuffer());
-      dateien.push({ data: d, address: t.offset });
+    for (const teil of teile) {
+      fortschritt(0, t(`lade ${teil.path}`, `loading ${teil.path}`) + ` (${Math.round((teil.size || 0) / 1024)} KB) …`);
+      const d = new Uint8Array(await (await fetch(new URL(teil.path, basis))).arrayBuffer());
+      dateien.push({ data: d, address: teil.offset });
     }
     const transport = new Transport(p, false);
-    const loader = new ESPLoader({ transport, baudrate: 460800, terminal: { clean() {}, writeLine: t => log(t), write: () => {} } });
-    fortschritt(0, 'verbinde mit dem Sticky (Bootloader) …');
+    const loader = new ESPLoader({ transport, baudrate: 460800, terminal: { clean() {}, writeLine: z => log(z), write: () => {} } });
+    fortschritt(0, t('verbinde mit dem Sticky (Bootloader) …', 'connecting to the Sticky (bootloader) …'));
     log('Chip: ' + await loader.main());
     const gesamt = dateien.reduce((a, d) => a + d.data.length, 0);
     const vorher = i => dateien.slice(0, i).reduce((a, d) => a + d.data.length, 0);
     await loader.writeFlash({ fileArray: dateien, flashMode: 'keep', flashFreq: 'keep', flashSize: 'keep', eraseAll: false, compress: true,
       reportProgress: (i, geschrieben, total) => fortschritt((vorher(i) + geschrieben / total * dateien[i].data.length) / gesamt,
-        `schreibe ${teile[i].path} … ${Math.round(geschrieben / total * 100)} %`) });
+        `${t('schreibe', 'writing')} ${teile[i].path} … ${Math.round(geschrieben / total * 100)} %`) });
     await loader.after('hard_reset');
     await transport.disconnect();
-    fortschritt(1, `${f.name} ${v.version} ist drauf. Der Sticky startet neu.`);
+    fortschritt(1, t(`${f.name} ${v.version} ist drauf. Der Sticky startet neu.`, `${f.name} ${v.version} is on. The Sticky restarts.`));
     log(`Aufgespielt: ${f.name} ${v.version}`);
   } catch (e) {
-    fortschritt(0, 'Fehler: ' + e.message);
+    fortschritt(0, t('Fehler: ', 'Error: ') + e.message);
     log('Aufspielen: ' + e.message);
   } finally { laeuft = false; }
 }

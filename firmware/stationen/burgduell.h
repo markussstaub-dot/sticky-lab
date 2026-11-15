@@ -36,7 +36,7 @@ static void neueWelt() {
     hp[0] = hp[1] = 3; am = 0; zuege = 0; vorbei = false; spurN = 0;
     wind = random(-5, 6);
     winkel[0] = winkel[1] = 45; kraft[0] = kraft[1] = 55;
-    snprintf(meldung, sizeof meldung, "Tipp ins Feld = zielen, ▲▼ = fein, Ring = Feuer");
+    snprintf(meldung, sizeof meldung, "%s", T("Tipp ins Feld = zielen, ▲▼ = fein, Ring = Feuer", "Tap the field = aim, ▲▼ = fine, ring = fire"));
 }
 static void kanone(int b, int& x, int& y) { x = burgX[b] + (b == 0 ? 10 : -10); y = boden[burgX[b]] - BH - 10; }
 
@@ -66,7 +66,7 @@ static void feldZeichnen(bool zielhilfe) {
     for (int i = 0; i < spurN; i += 3) display.fillCircle(spurX[i], spurY[i], 2, SCHWARZ);   // letzte Flugbahn
     // Wind oben in der Mitte
     char b[24];
-    if (wind == 0) snprintf(b, sizeof b, "Wind still");
+    if (wind == 0) snprintf(b, sizeof b, "%s", T("Wind still", "No wind"));
     else snprintf(b, sizeof b, "Wind %d", abs(wind));
     text(b, W / 2, FY + 16, &FreeSans9pt7b, MC_DATUM);
     if (wind) {
@@ -87,24 +87,24 @@ static void feldZeichnen(bool zielhilfe) {
 static void hud() {
     display.fillRect(0, HUD_Y, W, H - HUD_Y, WEISS);
     display.drawFastHLine(0, HUD_Y, W, SCHWARZ);
-    pille(GX, GY, GW, GH, gegenSticky ? "gegen Sticky" : "2 Spieler", R_NEBEN);
+    pille(GX, GY, GW, GH, gegenSticky ? T("gegen Sticky", "vs. Sticky") : T("2 Spieler", "2 players"), R_NEBEN);
     // zwei Zeilen links vom Feuer-Knopf: wer, Winkel, Kraft – darunter die Meldung
     char b[80];
     const int tx = GX + GW + 14;
     if (vorbei) {
         text(meldung, tx, GY + 14, &FreeSansBold12pt7b, ML_DATUM);
-        text("Tippen = neues Spiel", tx, GY + 40, &FreeSans9pt7b, ML_DATUM);
+        text(T("Tippen = neues Spiel", "Tap = new game"), tx, GY + 40, &FreeSans9pt7b, ML_DATUM);
     } else {
-        snprintf(b, sizeof b, "%s  ·  Winkel %d°  ·  Kraft %d",
-                 am == 0 ? "Voll-Fahne" : (gegenSticky ? "Sticky" : "Ring-Fahne"), winkel[am], kraft[am]);
+        snprintf(b, sizeof b, T("%s  ·  Winkel %d°  ·  Kraft %d", "%s  ·  angle %d°  ·  power %d"),
+                 am == 0 ? T("Voll-Fahne", "Solid flag") : (gegenSticky ? "Sticky" : T("Ring-Fahne", "Ring flag")), winkel[am], kraft[am]);
         text(b, tx, GY + 14, &FreeSansBold9pt7b, ML_DATUM);
         text(meldung, tx, GY + 40, &FreeSans9pt7b, ML_DATUM);
     }
-    if (!vorbei) doppelring(FEUER_X, FEUER_Y, FEUER_R, "Feuer");
+    if (!vorbei) doppelring(FEUER_X, FEUER_Y, FEUER_R, T("Feuer", "Fire"));
 }
 static void statusZug() {
     char t[48];
-    snprintf(t, sizeof t, "9 · Burgduell  ·  %d:%d", hp[0], hp[1]);
+    snprintf(t, sizeof t, T("9 · Burgduell  ·  %d:%d", "9 · Castle duel  ·  %d:%d"), hp[0], hp[1]);
     statuszeile(t);
 }
 static void allesNeu() { statusZug(); feldZeichnen(true); hud(); }
@@ -140,14 +140,14 @@ static void feuer() {
     if (vorbei) return;
     int ex, ey;
     int treffer = simuliere(am, winkel[am], kraft[am], ex, ey, true);
-    const char* wer = am == 0 ? "Voll-Fahne" : (gegenSticky ? "Sticky" : "Ring-Fahne");
+    const char* wer = am == 0 ? T("Voll-Fahne", "Solid flag") : (gegenSticky ? "Sticky" : T("Ring-Fahne", "Ring flag"));
     if (treffer >= 0) {
         hp[treffer] = max(0, hp[treffer] - 1);
         krater(ex, boden[burgX[treffer]], 10);
-        if (hp[treffer] == 0) { vorbei = true; snprintf(meldung, sizeof meldung, "%s gewinnt!", treffer == 0 ? (gegenSticky ? "Sticky" : "Ring-Fahne") : "Voll-Fahne"); }
-        else snprintf(meldung, sizeof meldung, "%s trifft!", wer);
-    } else if (treffer == -1) { krater(ex, ey, 16); snprintf(meldung, sizeof meldung, "%s: daneben", wer); }
-    else snprintf(meldung, sizeof meldung, "%s: ins Aus", wer);
+        if (hp[treffer] == 0) { vorbei = true; snprintf(meldung, sizeof meldung, T("%s gewinnt!", "%s wins!"), treffer == 0 ? (gegenSticky ? "Sticky" : T("Ring-Fahne", "Ring flag")) : T("Voll-Fahne", "Solid flag")); }
+        else snprintf(meldung, sizeof meldung, T("%s trifft!", "%s hits!"), wer);
+    } else if (treffer == -1) { krater(ex, ey, 16); snprintf(meldung, sizeof meldung, T("%s: daneben", "%s: missed"), wer); }
+    else snprintf(meldung, sizeof meldung, T("%s: ins Aus", "%s: out"), wer);
     zuege++;
     if (!vorbei) { am = 1 - am; int dw = random(-2, 3); wind = constrain(wind + dw, -6, 6); }   // random() nie in constrain(): Makro
     allesNeu();
@@ -165,7 +165,7 @@ static void stickyZieht() {
     }
     int streu = max(2, 14 - zuege);
     winkel[1] = w; int dk = random(-streu, streu + 1); kraft[1] = constrain(beste + dk, 10, 100);
-    snprintf(meldung, sizeof meldung, "Sticky zielt ...");
+    snprintf(meldung, sizeof meldung, "%s", T("Sticky zielt ...", "Sticky aims ..."));
     hud(); teil(0, HUD_Y, W, H - HUD_Y);
     delay(400);
     feuer();
@@ -192,7 +192,7 @@ static void tipp(int x, int y) {
         float ddx = (x - kx) * (am == 0 ? 1 : -1), ddy = ky - y;
         winkel[am] = constrain((int)lroundf(atan2f(ddy, max(ddx, 1.0f)) * RAD_TO_DEG), 5, 85);
         kraft[am] = constrain((int)(sqrtf(ddx * ddx + ddy * ddy) / 2.6f), 10, 100);
-        snprintf(meldung, sizeof meldung, "zielt");
+        snprintf(meldung, sizeof meldung, "%s", T("zielt", "aiming"));
         feldZeichnen(true); hud(); teil(0, FY, W, H - FY);
     }
 }

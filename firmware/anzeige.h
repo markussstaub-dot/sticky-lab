@@ -12,6 +12,15 @@ extern bool gfxPartialWachHalten;   // aus dem Bibliotheks-Patch (reterminal-sti
 
 static const uint32_t SCHWARZ = TFT_BLACK, WEISS = TFT_WHITE;
 
+// ---- Sprache ----------------------------------------------------------------------------------------------
+// Alles, was auf dem Display steht, gibt es deutsch und englisch: T("deutsch", "english"). Umschalten in der
+// Übersicht mit ▲ (oder in der Tastatur), gemerkt im NVS-Namensraum „lab“. Die Messdatei bleibt deutsch.
+#include <Preferences.h>
+static bool EN = false;
+#define T(de, en) (EN ? (en) : (de))
+static void spracheLaden() { Preferences p; p.begin("lab", true); EN = p.getBool("en", false); p.end(); }
+static void spracheMerken() { Preferences p; p.begin("lab", false); p.putBool("en", EN); p.end(); }
+
 // ---- Panel-Profil -------------------------------------------------------------------------------------
 // Alles, was vom Panel abhängt, steht hier. Ein späterer Sticky mit anderem Panel (z. B. Farbe) bekommt ein
 // eigenes Profil; Stationen und Console lesen Größe, Farben und Pixeldichte von hier statt sie fest anzunehmen.
@@ -30,7 +39,9 @@ static bool panelGrau4() { return display.panel().driver().supportsGrayRefresh(4
 
 // ---- Refresh-Arten ---------------------------------------------------------------
 enum Art : uint8_t { ART_TEIL = 0, ART_TEIL_WACH, ART_SCHNELL, ART_VOLL, ART_ANZAHL };
-static const char* ART_NAME[ART_ANZAHL] = { "Teil", "Teil wach", "Schnell", "Voll" };
+static const char* ART_NAME[ART_ANZAHL] = { "Teil", "Teil wach", "Schnell", "Voll" };   // auch Schlüssel in der CSV
+static const char* ART_NAME_EN[ART_ANZAHL] = { "Partial", "Awake", "Fast", "Full" };
+#define ART_ANZEIGE(i) (EN ? ART_NAME_EN[i] : ART_NAME[i])
 static uint32_t teilSeitVoll = 0;   // Teil- und Schnell-Refreshes seit dem letzten Voll-Refresh
 
 /** Teil-Refresh eines Rechtecks; x und Breite werden auf ganze Bytes (8 px) erweitert. Gibt die Dauer in ms zurück. */

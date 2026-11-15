@@ -154,3 +154,12 @@ Erkenntnisse mit Datum. Rohdaten: `/lab/messungen.csv` auf der SD-Karte bzw. CSV
   Anschlag geht während eines Refreshs verloren (Touch-Sammler). Menschliche Messung steht aus.
 - Schwäche: die Schrift kennt kein ß, es erscheint als „ss“ (wird aber als ß gespeichert und gezählt).
 - **Erste Menschenmessung (Markus): 49 Zeichen/min, 3 Fehler** (u. a. ein verschlucktes Leerzeichen) – Notiz-Tempo, ~10 Wörter/min.
+
+## 15.11.2026 – FW 0.7.x: Deutsch und Englisch
+
+- Firmware: globaler Schalter `EN`, Makro `T("de", "en")` für alle Displaytexte, Namenslisten als DE/EN-Paare;
+  umschalten in der Übersicht mit ▲ (oder Tastatur, oder USB `l`), gemerkt im NVS. Messdatei bleibt deutsch.
+  Alle zehn Stationen auf Englisch fotografiert, nichts läuft über (nur „Part. awake“ → „Awake“).
+- Console: `data-en`-Attribute für feste Texte, `t()` für den Rest, Tech-Inventar komplett zweisprachig;
+  Sprache aus dem Browser, Schalter DE/EN oben. Neuer Knopf „Sticky: DE/EN“ schaltet die Sprache am Gerät.
+- README englisch (mit deutschem Teil) – Voraussetzung, um das Lab später in den Seeed-Playground zu bringen.

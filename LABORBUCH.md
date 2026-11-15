@@ -55,3 +55,11 @@ Erkenntnisse mit Datum. Rohdaten: `/lab/messungen.csv` auf der SD-Karte bzw. CSV
   LSM6DS3TR-C liefert nach dem Einschalten erst nach ~30 ms Werte, Uhr PCF8563 stimmt (von EDC gestellt).
 - **Schrift:** `textWidth()` von Seeed_GFX2 lässt ein Leerzeichen am Ende weg; die Umlaut-Punkte saßen deshalb
   eine Leerzeichenbreite zu weit links. Jetzt eigene Breite aus den Glyphen-Vorschüben.
+
+## 15.11.2026 – „Schnell“ geklärt
+
+- Seeed_GFX2 wählt für den Sticky beim Start zwischen **SSD1677 und SSD2677** (je Gerät zufällig verbaut, erkannt
+  über Befehl 0x70). Keiner der beiden Treiber meldet `supportsFastRefresh()`, darum liefert `updateFast()` sofort
+  „NotSupported“ und frischt **gar nicht** auf. Die 0 ms im Refresh-Labor heißen also „kein Refresh“. EDCs
+  „falsches Bild beim schnellen Modus“ passt dazu (es blieb das alte Bild stehen).
+- Offen: einen eigenen schnellen Modus (kürzere Wellenform/LUT) für SSD1677/SSD2677 bauen und messen.

@@ -424,7 +424,7 @@ const INV = () => [
    ['Teil-Refresh', mittel('Teil') || ['952 ms für 368 × 300 px (Lab 15.11.)', 'gemessen']],
    ['Fläche', ['fast egal: 28 × 28 px 838 ms, 180 × 150 px 950 ms, 368 × 300 px 952 ms – die Zeit steckt im Panel-Ablauf', 'gemessen']],
    ['Teil wach', mittel('Teil wach') || ['853 ms, ohne die zwei 100-ms-Schlafpausen', 'gemessen']],
-   ['Schnell', ['kehrt nach 0 ms zurück, läuft wohl im Hintergrund; EDC sah falsche Bilder', 'offen']],
+   ['Schnell', ['gibt es nicht: der Sticky hat SSD1677 oder SSD2677 (je Gerät zufällig), beide Treiber ohne Schnell-Modus – updateFast() bricht sofort ab, kein Refresh', 'gemessen']],
    ['ohne Strom', ['Bild bleibt stehen (auch ein falsches)', 'bekannt']],
    ['Graustufen', ['nur über Raster/Dithering (Station 3: Bayer, Floyd-Steinberg, Atkinson, Halbton, je ~0,1 s für 590 × 50 px); Graustufen-Modus der Bibliothek ungetestet', 'gemessen']],
    ['Animation', (() => { const v = ['anim-balken','anim-zeiger','anim-rolle'].map(a => messungen.filter(x => x.art === a).pop()).filter(Boolean);

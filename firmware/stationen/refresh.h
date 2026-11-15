@@ -87,6 +87,8 @@ static void los() {
     }
     if (art == ART_VOLL) probe = 0; else probe++;
     letzte[art] = ms;
+    // Hinweis: „Schnell“ gibt es auf dem Sticky nicht (SSD1677/SSD2677 ohne Fast-Refresh), updateFast() bricht
+    // sofort ab – die 0 ms sind also „kein Refresh“. Bleibt als Pille, damit man es sieht.
     messung("refresh", ART_NAME[art], ms, "ms");
     werte();
     teil(VX, VY, VW, VH - 56);

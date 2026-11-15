@@ -103,3 +103,11 @@ Erkenntnisse mit Datum. Rohdaten: `/lab/messungen.csv` auf der SD-Karte bzw. CSV
   **Nachtrag (Markus):** die Magnete halten nur Rücken an Front – gestapelt, das untere Display ist verdeckt.
   Nebeneinander und Rücken an Rücken gehen also nicht magnetisch. Bleibt: Stapel als „Paket“ (oben zeigt, unten
   schläft) oder ein gedruckter Halter für nebeneinander. Offen: ob die Magnete Touch oder Sensoren stören.
+
+## 15.11.2026 – erste Energie-Messung auf Akku (FW 0.4.3)
+
+- **Leichtschlaf: 6,1 mA** (30 × 10 s, Strom nach jedem Wecken gelesen). Hochgerechnet ~ 2 Tage pro 300 mAh – die
+  echte Kapazität ist weiter offen (Chip meldet 7500 mAh).
+- Ruhe/Teil/Voll waren unbrauchbar: im Sammler lief `int16 × uint32` über (negativer Entladestrom → +4,3 Mio. je
+  Probe). Behoben in 0.4.4, Messung wiederholen.
+- Akku-Chip nach ~17 min Akkubetrieb: Rest 7433 von 7500 mAh (−67 „mAh“ laut Chip, nicht verlässlich).

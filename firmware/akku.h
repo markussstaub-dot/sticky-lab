@@ -60,7 +60,8 @@ static void sammlerAufgabe(void*) {
         if (sammeln) {
             int16_t ma;
             if (bqLesen(BQ_STROM, ma)) {
-                sammelMas = sammelMas + ma * (jetzt - zuletzt) / 1000.0;
+                // double rechnen: int16 (negativ beim Entladen) mal uint32 liefe sonst über (+4,3 Mio. je Probe)
+                sammelMas = sammelMas + (double)ma * (double)(jetzt - zuletzt) / 1000.0;
                 if (!sammelProben || ma < sammelMin) sammelMin = ma;
                 if (!sammelProben || ma > sammelMax) sammelMax = ma;
                 sammelProben = sammelProben + 1;

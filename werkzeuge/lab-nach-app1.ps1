@@ -1,4 +1,4 @@
-# Sticky Lab in den zweiten Firmware-Platz (app1, 0x410000) schreiben – EDC in app0 bleibt, wie sie ist.
+﻿# Sticky Lab in den zweiten Firmware-Platz (app1, 0x410000) schreiben – EDC in app0 bleibt, wie sie ist.
 # SPEC Abschnitt 6 „EDC und Lab auf einem Gerät“. Danach startet der Sticky weiter mit EDC; ins Lab geht es
 # über die Menü-Kachel „Sticky Lab“ (EDC ab 0.33.0) oder mit ▲ beim Einschalten (1 s halten).
 #

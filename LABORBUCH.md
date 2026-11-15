@@ -86,3 +86,12 @@ Erkenntnisse mit Datum. Rohdaten: `/lab/messungen.csv` auf der SD-Karte bzw. CSV
 - Warum der andere Sticky ohne GPIO46 hält, ist offen (Platinen-Version, oder der Pin landet dort zufällig HIGH).
 - **Folge für EDC:** dieselbe Zeile gehört in die EDC-Firmware, sonst geht ein Gerät wie dieses ohne Kabel aus.
 - Nebenfund im Seeed-README: eine SHT40-Messung beim Start setzt die Wellenform-Temperatur des Panels.
+
+## 15.11.2026 – FW 0.4.3: welcher Display-Controller?
+
+- Die Firmware meldet jetzt beim Start den von Seeed_GFX2 erkannten Controller (`system,panel` in der CSV, `INFO`,
+  Statuszeile der Übersicht, Tech-Inventar).
+- Markus' Sticky: **SSD1677**, Treiber meldet **Graustufen-Refresh mit 4 Stufen: ja**. Das Lab-Gerät: noch offen
+  (beim nächsten Anstecken). Ist es ein SSD2677, deutet das auf zwei Bauserien hin (vgl. GPIO46).
+- Neue Frage fürs Lab: echte Graustufen (4 Stufen, `updateGray`) statt Dithering – wie sieht es aus, wie lange
+  dauert es? Kandidat für Station 3.

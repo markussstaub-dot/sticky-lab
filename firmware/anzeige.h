@@ -24,6 +24,10 @@ struct Panel {
 };
 static const Panel PANEL = { "Sticky 3.97in SW", 800, 480, 2, 9.25f, true };
 
+/** Erkannter Display-Controller: der Sticky hat je Gerät SSD1677 oder SSD2677 (Seeed_GFX2 erkennt ihn bei begin()) */
+static const char* panelChip() { return display.panel().driver().name(); }
+static bool panelGrau4() { return display.panel().driver().supportsGrayRefresh(4); }
+
 // ---- Refresh-Arten ---------------------------------------------------------------
 enum Art : uint8_t { ART_TEIL = 0, ART_TEIL_WACH, ART_SCHNELL, ART_VOLL, ART_ANZAHL };
 static const char* ART_NAME[ART_ANZAHL] = { "Teil", "Teil wach", "Schnell", "Voll" };

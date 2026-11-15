@@ -187,7 +187,8 @@ function zeile(t){
     if (!$('#inventar').hidden) inventar();
   }
   if (t.startsWith('INFO ')) {
-    const [, v, st, akku, usb, sd, pw, ph, pf, pmm] = t.split(' ');
+    const [, v, st, akku, usb, sd, pw, ph, pf, pmm, chip, grau4] = t.split(' ');
+    if (chip) { panel.chip = chip; panel.grau4 = grau4 === '1'; }
     if (pw && +pmm > 0) {
       panel = { w: +pw, h: +ph, farben: +pf, pxmm: +pmm };
       STICKY_MM = panel.w / panel.pxmm;
@@ -419,13 +420,14 @@ const INV = () => [
    ['Flash', ['32 MB: 2 × 4 MB App, ~24 MB LittleFS', 'bekannt']],
    ['Funk', ['BLE 5 und WLAN 2,4 GHz, kein klassisches Bluetooth', 'bekannt']],
   ], grenze: ['offen', 'Wie viel bringen 240 MHz bei Dithering und Zeichnen, und was kostet es an Strom?'] },
- { name: 'Anzeige', rolle: 'e-Ink 3,97″, 800 × 480 (9,25 px/mm, 86,5 × 51,9 mm), 1 bpp (Schwarz/Weiß), über Seeed_GFX2', zeilen: [
+ { name: 'Anzeige', rolle: `e-Ink 3,97″, 800 × 480 (9,25 px/mm, 86,5 × 51,9 mm), 1 bpp (Schwarz/Weiß), über Seeed_GFX2${panel.chip ? ' · Controller ' + panel.chip + ' (dieses Gerät)' : ''}`, zeilen: [
    ['Voll-Refresh', mittel('Voll') || ['2277 ms (Lab 15.11.)', 'gemessen']],
    ['Teil-Refresh', mittel('Teil') || ['952 ms für 368 × 300 px (Lab 15.11.)', 'gemessen']],
    ['Fläche', ['fast egal: 28 × 28 px 838 ms, 180 × 150 px 950 ms, 368 × 300 px 952 ms – die Zeit steckt im Panel-Ablauf', 'gemessen']],
    ['Teil wach', mittel('Teil wach') || ['853 ms, ohne die zwei 100-ms-Schlafpausen', 'gemessen']],
    ['Schnell', ['gibt es nicht: der Sticky hat SSD1677 oder SSD2677 (je Gerät zufällig), beide Treiber ohne Schnell-Modus – updateFast() bricht sofort ab, kein Refresh', 'gemessen']],
    ['ohne Strom', ['Bild bleibt stehen (auch ein falsches)', 'bekannt']],
+   ['Controller', panel.chip ? [`${panel.chip}; Graustufen-Refresh (4 Stufen) laut Treiber: ${panel.grau4 ? 'ja' : 'nein'}`, 'gemessen'] : ['SSD1677 oder SSD2677, je Gerät zufällig – „Verbinden“ zeigt, welcher', 'bekannt']],
    ['Graustufen', ['nur über Raster/Dithering (Station 3: Bayer, Floyd-Steinberg, Atkinson, Halbton, je ~0,1 s für 590 × 50 px); Graustufen-Modus der Bibliothek ungetestet', 'gemessen']],
    ['Animation', (() => { const v = ['anim-balken','anim-zeiger','anim-rolle'].map(a => messungen.filter(x => x.art === a).pop()).filter(Boolean);
       return v.length ? [v.map(m => `${m.art.slice(5)} ${m.notiz}`).join(', '), 'gemessen'] : ['höchstens ~1,2 Bilder/s (Lab 15.11., Station 5: 760–860 ms je Bild)', 'gemessen']; })()],

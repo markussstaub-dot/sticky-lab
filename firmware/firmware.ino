@@ -8,7 +8,7 @@
  * Bauen: arduino-cli compile -b "esp32:esp32:XIAO_ESP32S3:PSRAM=opi,CDCOnBoot=cdc"
  *        --build-property build.flash_size=32MB --build-path "%LOCALAPPDATA%\sticky-build\sticky-lab" firmware
  */
-#define LAB_VERSION "0.4.2"
+#define LAB_VERSION "0.4.3"
 
 #include <esp_sleep.h>
 #include <driver/gpio.h>
@@ -48,7 +48,7 @@ static void geheZu(int i) {
     if (i < 0 || i >= ANZAHL || !STATIONEN[i].betreten) return;
     aktuell = i;
     display.fillScreen(WEISS);
-    if (i == 0) statuszeile("Übersicht  ·  FW " LAB_VERSION);
+    if (i == 0) { char t[48]; snprintf(t, sizeof t, "Übersicht  ·  FW " LAB_VERSION "  ·  %s", panelChip()); statuszeile(t); }
     STATIONEN[i].betreten();
     voll();
     Serial.printf("STATION %d %s\n", i, STATIONEN[i].name);
@@ -143,6 +143,11 @@ void setup() {
     touchInit();
     bedient();
     messung("system", "start", (int)esp_reset_reason(), "grund", usbDa() ? "usb" : "akku");
+    {   // welcher Display-Controller steckt in diesem Gerät?
+        char p[48];
+        snprintf(p, sizeof p, "%s grau4 %s", panelChip(), panelGrau4() ? "ja" : "nein");
+        messung("system", "panel", 0, "-", p);
+    }
     {   // Fehlersuche: gelernte Ruhepegel und aktuelle Pegel der Tasten
         char p[48];
         snprintf(p, sizeof p, "ruhe %d%d%d jetzt %d%d%d", tasten[0].ruhe, tasten[1].ruhe, tasten[2].ruhe,
@@ -200,7 +205,7 @@ void loop() {
             Serial.println("CSV-ENDE");
         }
         else if (c == 'i') {
-            Serial.printf("INFO %s %d %d %d %s %d %d %d %.2f\n", LAB_VERSION, aktuell, akkuProzent(), usbDa() ? 1 : 0, sdDa ? "sd" : "-", PANEL.w, PANEL.h, PANEL.farben, PANEL.pxProMm);
+            Serial.printf("INFO %s %d %d %d %s %d %d %d %.2f %s %d\n", LAB_VERSION, aktuell, akkuProzent(), usbDa() ? 1 : 0, sdDa ? "sd" : "-", PANEL.w, PANEL.h, PANEL.farben, PANEL.pxProMm, panelChip(), panelGrau4() ? 1 : 0);
         }
     }
     vielleichtSchlafen();

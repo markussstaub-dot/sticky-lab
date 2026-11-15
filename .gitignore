@@ -13,3 +13,6 @@ SPICKZETTEL-EDC.md
 
 # Firmware zum Aufspielen aus der Console (GitHub Pages)
 !console/fw/**/*.bin
+
+# Playground-Paket und Vermarktung: nicht ins Repo
+vermarktung/

@@ -122,3 +122,11 @@ Erkenntnisse mit Datum. Rohdaten: `/lab/messungen.csv` auf der SD-Karte bzw. CSV
   Beispielen) und sammelt in einer Warteschlange (256 Ereignisse); die Linie bekommt alle Punkte. Mit dem Finger
   noch zu prüfen.
 - Nebenbei: Statuszeile zeigte nach dem Akkutest kurz **3 %** (Akku-Chip, unkonfiguriert – Prozent bleibt fraglich).
+
+## 15.11.2026 – FW 0.5.3: Vorlagen beim Kritzeln, Firmware-Reiter
+
+- Kritzeln hat Vorlagen (Pille wechselt frei → Spirale → Labyrinth, Idee Markus): **Spirale** nachfahren misst die
+  mittlere Abweichung in px/mm; **Labyrinth** (bei jedem Start neu gewürfelt, 21 × 8 Zellen à 36 px) misst Zeit
+  vom Ring zum Punkt und Wandberührungen. Mit dem Finger noch zu messen.
+- Console: Reiter **Firmware** listet das eigene Lab und alle 37 Playground-Firmwares (36 aufspielbar) und spielt
+  per esptool-js über Web Serial auf. Im Browser geprüft: Liste lädt; Aufspielen braucht Markus' Klick.

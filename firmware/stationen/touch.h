@@ -8,15 +8,22 @@
 namespace touch {
 
 static const int AY = STATUS_H + 4, AH = 386 - AY;                  // Testfläche (ganze Breite)
-static const int PY = 400, PH = 58, PW = 172, PGAP = 10, PX0 = 16;  // Pillen
+static const int PY = 400, PH = 58, PW = 164, PGAP = 8, PX0 = 12;  // Pillen
 enum Modus : uint8_t { M_ZIELEN, M_RUECK, M_KRITZELN, M_ANZAHL };
 static const char* M_NAME[M_ANZAHL] = { "Zielen", "Rückmeldung", "Kritzeln" };
 static Modus modus = M_ZIELEN;
+enum Vorlage : uint8_t { VL_FREI, VL_SPIRALE, VL_LABY, VL_ANZAHL };
+static uint8_t vorlage = VL_FREI;   // Kritzeln: Vorlage zum Nachfahren
+static const char* VL_NAME[VL_ANZAHL] = { "frei", "Spirale", "Labyrinth" };
+static const int KPW = 116, KL_X = W - 16 - KPW, KV_X = KL_X - 10 - KPW;
 
 static void pillen() {
     display.fillRect(0, PY - 4, W, PH + 8, WEISS);
     for (int i = 0; i < M_ANZAHL; i++) pille(PX0 + i * (PW + PGAP), PY, PW, PH, M_NAME[i], i == modus ? R_AUSWAHL : R_NEBEN);
-    pille(W - 16 - PW, PY, PW, PH, modus == M_KRITZELN ? "Löschen" : "Neu", R_WERKZEUG);
+    if (modus == M_KRITZELN) {   // zwei kleine Pillen: Vorlage umschalten, Löschen
+        pille(KV_X, PY, KPW, PH, VL_NAME[vorlage], vorlage ? R_AUSWAHL : R_NEBEN);
+        pille(KL_X, PY, KPW, PH, "Löschen", R_WERKZEUG);
+    } else pille(W - 16 - PW, PY, PW, PH, "Neu", R_WERKZEUG);
 }
 static void flaecheLeer() { display.fillRect(0, AY, W, AH, WEISS); }
 
@@ -154,11 +161,95 @@ static int lx, ly;                              // letzter Punkt
 static int dx0, dy0, dx1, dy1; static bool dreckig = false;   // noch nicht gezeigter Bereich
 static uint32_t letzterRefresh = 0, strichStart = 0, strichRefreshs = 0, strichMs = 0;
 
+// Spirale (archimedisch, 3 Windungen) als Vorlage: Punkte vorberechnet, Abweichung = Abstand zum nächsten Punkt
+static const int SPN = 600;
+static int16_t spX[SPN], spY[SPN];
+static double abwSumme = 0; static uint32_t abwN = 0;
+static void spiraleRechnen() {
+    const float cx = W / 2, cy = AY + AH / 2 + 6, rMax = AH / 2 - 22, wind = 3;
+    for (int i = 0; i < SPN; i++) {
+        float t = (float)i / (SPN - 1), th = t * wind * TWO_PI, r = 8 + t * (rMax - 8);
+        spX[i] = cx + r * cosf(th); spY[i] = cy + r * sinf(th);
+    }
+}
+static float spiraleAbstand(int x, int y) {
+    long best = 1L << 30;
+    for (int i = 0; i < SPN; i++) { long dx = x - spX[i], dy = y - spY[i]; long d = dx * dx + dy * dy; if (d < best) best = d; }
+    return sqrtf((float)best);
+}
+
+static void dazu(int x, int y);   // weiter unten: Bereich für den nächsten Teil-Refresh merken
+// Labyrinth (Tiefensuche mit Zufall): Start links oben, Ziel rechts unten. Gemessen: Zeit bis zum Ziel und
+// wie oft der Finger eine Wand berührt (näher als 3 px an einer Wandlinie).
+static const int LC = 36, LCOLS = 21, LROWS = 8;
+static const int LX0 = (W - LC * LCOLS) / 2, LY0 = AY + 34;
+static uint8_t lwand[LROWS][LCOLS];   // Bits: 1 = oben, 2 = rechts, 4 = unten, 8 = links
+static bool labyLaeuft = false, labyFertig = false, anWand = false;
+static uint32_t labyStart = 0, wandTreffer = 0;
+static void labyBauen() {
+    static bool besucht[LROWS][LCOLS];
+    static int16_t stapel[LROWS * LCOLS];
+    memset(besucht, 0, sizeof besucht);
+    memset(lwand, 15, sizeof lwand);
+    int n = 0; stapel[n++] = 0; besucht[0][0] = true;
+    while (n) {
+        int c = stapel[n - 1], r = c / LCOLS, k = c % LCOLS;
+        int frei[4], f = 0;
+        const int dr[4] = { -1, 0, 1, 0 }, dk[4] = { 0, 1, 0, -1 };
+        for (int d = 0; d < 4; d++) {
+            int rr = r + dr[d], kk = k + dk[d];
+            if (rr >= 0 && rr < LROWS && kk >= 0 && kk < LCOLS && !besucht[rr][kk]) frei[f++] = d;
+        }
+        if (!f) { n--; continue; }
+        int d = frei[random(f)], rr = r + dr[d], kk = k + dk[d];
+        lwand[r][k] &= ~(1 << d); lwand[rr][kk] &= ~(1 << ((d + 2) % 4));
+        besucht[rr][kk] = true; stapel[n++] = rr * LCOLS + kk;
+    }
+    labyLaeuft = labyFertig = anWand = false; wandTreffer = 0;
+}
+static void labyZeichnen() {
+    for (int r = 0; r < LROWS; r++) for (int k = 0; k < LCOLS; k++) {
+        int x = LX0 + k * LC, y = LY0 + r * LC;
+        if (lwand[r][k] & 1) display.fillRect(x, y, LC + 2, 2, SCHWARZ);
+        if (lwand[r][k] & 2) display.fillRect(x + LC, y, 2, LC + 2, SCHWARZ);
+        if (lwand[r][k] & 4) display.fillRect(x, y + LC, LC + 2, 2, SCHWARZ);
+        if (lwand[r][k] & 8) display.fillRect(x, y, 2, LC + 2, SCHWARZ);
+    }
+    display.drawCircle(LX0 + LC / 2, LY0 + LC / 2, 8, SCHWARZ);                       // Start: Ring
+    display.fillCircle(LX0 + (LCOLS - 1) * LC + LC / 2, LY0 + (LROWS - 1) * LC + LC / 2, 8, SCHWARZ);   // Ziel: Punkt
+}
+static void labyPunkt(int x, int y) {
+    if (labyFertig) return;
+    int k = (x - LX0) / LC, r = (y - LY0) / LC;
+    if (x < LX0 || y < LY0 || k >= LCOLS || r >= LROWS) return;
+    if (!labyLaeuft) { if (r == 0 && k == 0) { labyLaeuft = true; labyStart = millis(); } else return; }
+    int ux = x - LX0 - k * LC, uy = y - LY0 - r * LC, w = lwand[r][k];
+    bool trifft = ((w & 1) && uy < 3) || ((w & 2) && ux > LC - 3) || ((w & 4) && uy > LC - 3) || ((w & 8) && ux < 3);
+    if (trifft && !anWand) wandTreffer++;
+    anWand = trifft;
+    if (r == LROWS - 1 && k == LCOLS - 1) {
+        labyFertig = true;
+        float s = (millis() - labyStart) / 1000.0f;
+        char b[64]; snprintf(b, sizeof b, "Ziel in %.1f s, %lu Wandberührungen", s, (unsigned long)wandTreffer);
+        display.fillRect(W / 2, AY + 2, W / 2 - 2, 24, WEISS);
+        text(b, W - 12, AY + 8, &FreeSans9pt7b, TR_DATUM);
+        dazu(W / 2, AY + 2); dazu(W - 4, AY + 26);
+        char n[32]; snprintf(n, sizeof n, "%lu wand", (unsigned long)wandTreffer);
+        messung("touch", "labyrinth", lroundf(s * 10), "0.1s", n);
+    }
+}
 static void kritzelnAnfang() {
     flaecheLeer();
     display.drawRect(0, AY, W, AH, SCHWARZ);
-    text("Mit dem Finger zeichnen. Löschen = leeren", 12, AY + 8, &FreeSans9pt7b);
-    strichAn = false; dreckig = false;
+    if (vorlage == VL_LABY) {
+        labyBauen(); labyZeichnen();
+        text("Vom Ring zum Punkt, ohne die Wände zu berühren", 12, AY + 8, &FreeSans9pt7b);
+    } else if (vorlage == VL_SPIRALE) {
+        spiraleRechnen();
+        for (int i = 0; i + 1 < SPN; i++) if (i % 3 != 2) display.drawLine(spX[i], spY[i], spX[i + 1], spY[i + 1], SCHWARZ);   // gestrichelt
+        text("Spirale von innen nach außen nachfahren", 12, AY + 8, &FreeSans9pt7b);
+    } else text("Mit dem Finger zeichnen. Löschen = leeren", 12, AY + 8, &FreeSans9pt7b);
+    strichAn = false; dreckig = false; abwSumme = 0; abwN = 0;
 }
 static void dazu(int x, int y) {
     if (!dreckig) { dx0 = dx1 = x; dy0 = dy1 = y; dreckig = true; }
@@ -176,6 +267,8 @@ static void punkt(int x, int y, bool neu) {
     display.drawWideLine(lx, ly, x, y, 4, SCHWARZ);
     dazu(lx, ly); dazu(x, y);
     lx = x; ly = y;
+    if (vorlage == VL_SPIRALE) { abwSumme += spiraleAbstand(x, y); abwN++; }
+    if (vorlage == VL_LABY) labyPunkt(x, y);
 }
 static void kritzelnTick() {
     if (modus != M_KRITZELN) return;
@@ -195,6 +288,15 @@ static void kritzelnTick() {
             char notiz[48];
             snprintf(notiz, sizeof notiz, "%.1f bilder/s, %.1fs", strichRefreshs / max(s, 0.1f), s);
             messung("touch", "kritzel-teil", strichMs / strichRefreshs, "ms", notiz);
+        }
+        if (vorlage == VL_SPIRALE && abwN > 20) {   // Ergebnis oben rechts einblenden
+            float m = abwSumme / abwN;
+            char b[64]; snprintf(b, sizeof b, "Abweichung %.1f px (%.1f mm), %lu Punkte", m, m / PANEL.pxProMm, (unsigned long)abwN);
+            display.fillRect(W / 2, AY + 2, W / 2 - 2, 24, WEISS);
+            text(b, W - 12, AY + 8, &FreeSans9pt7b, TR_DATUM);
+            teil(W / 2, AY + 2, W / 2 - 2, 24);
+            char n[24]; snprintf(n, sizeof n, "%lu punkte", (unsigned long)abwN);
+            messung("touch", "spirale", lroundf(m * 10), "0.1px", n);
         }
     }
 }
@@ -225,7 +327,11 @@ static void tipp(int x, int y) {
     uint32_t t0 = millis();
     if (y >= PY - 4) {
         for (int i = 0; i < M_ANZAHL; i++) if (drin(x, y, PX0 + i * (PW + PGAP), PY, PW, PH)) { wechsel(i); return; }
-        if (drin(x, y, W - 16 - PW, PY, PW, PH)) { modusAnfang(); teil(0, AY, W, AH); }
+        if (modus == M_KRITZELN) {
+            if (drin(x, y, KV_X, PY, KPW, PH)) vorlage = (vorlage + 1) % VL_ANZAHL;
+            else if (!drin(x, y, KL_X, PY, KPW, PH)) return;
+            modusAnfang(); pillen(); teil(0, AY, W, H - AY);
+        } else if (drin(x, y, W - 16 - PW, PY, PW, PH)) { modusAnfang(); teil(0, AY, W, AH); }
         return;
     }
     if (modus == M_ZIELEN) zielenTipp(x, y);

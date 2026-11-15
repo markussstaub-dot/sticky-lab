@@ -19,6 +19,20 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;padding:16p
 #buehne{overflow:auto;max-width:100%}
 /* ScreenPad (Zenbook Pro Duo, 3840 × 1100): links liegt die ScreenXpert-Leiste über dem Fenster */
 body.screenpad{padding-left:76px}
+/* ScreenPad: niedrig und sehr breit → alles nebeneinander statt untereinander */
+body.screenpad header{padding:6px 12px}
+body.screenpad main{padding:8px 12px;grid-template-columns:minmax(0,1fr) 320px}
+body.screenpad main > section{display:flex;gap:12px;align-items:flex-start}
+body.screenpad .fern{margin-top:0 !important;flex:0 0 260px}
+body.screenpad .fern .reihe{margin-top:0}
+body.screenpad .fern p{display:none}
+body.screenpad .spiegel{flex:1 1 auto;display:grid;grid-template-columns:auto minmax(200px,1fr);column-gap:14px;align-items:start}
+body.screenpad .spiegel h2{grid-column:1/-1}
+body.screenpad .spiegel #buehne{grid-column:1;grid-row:2 / span 4}
+body.screenpad .spiegel #lineal{grid-column:1;grid-row:6}
+body.screenpad .spiegel .reihe,body.screenpad .spiegel details{grid-column:2;margin-top:0;margin-bottom:8px}
+body.screenpad .scroll{max-height:150px}
+body.screenpad #log{max-height:90px}
 canvas{width:100%;height:auto;display:block;background:#f4f2ec;border-radius:6px;cursor:crosshair;image-rendering:auto}
 canvas.scharf{image-rendering:pixelated}
 .zoom{margin:0 0 10px}
@@ -68,7 +82,7 @@ th{color:var(--muted);font-weight:normal}
 </section>
 <main id="steuerung">
  <section>
-  <div class="karte">
+  <div class="karte spiegel">
    <h2>Spiegel · Klick = Tippen am Sticky</h2>
    <div class="reihe zoom">
     <button data-zoom="original" title="so groß wie das echte Display (3,97″, 86,5 × 51,9 mm)">Originalgröße</button>
@@ -93,7 +107,7 @@ th{color:var(--muted);font-weight:normal}
     <span class="hinweis" id="fotozeit"></span>
    </div>
   </div>
-  <div class="karte" style="margin-top:16px">
+  <div class="karte fern" style="margin-top:16px">
    <h2>Fernbedienung</h2>
    <div class="reihe">
     <button data-cmd="k">KI · Übersicht</button>

@@ -8,7 +8,7 @@
  * Bauen: arduino-cli compile -b "esp32:esp32:XIAO_ESP32S3:PSRAM=opi,CDCOnBoot=cdc"
  *        --build-property build.flash_size=32MB --build-path "%LOCALAPPDATA%\sticky-build\sticky-lab" firmware
  */
-#define LAB_VERSION "0.4.0"
+#define LAB_VERSION "0.4.1"
 
 #include <esp_sleep.h>
 #include <driver/gpio.h>
@@ -66,6 +66,7 @@ static void fotoMachen() {
 }
 
 static void tasteCb(Knopf k, bool unten) {
+    if (!usbDa()) messung("diag", "taste", k * 10 + (unten ? 1 : 0), "k*10+unten");   // Fehlersuche Akkubetrieb
     if (k == K_KI) {
         if (unten) { kiSeit = millis(); kiFotoGemacht = false; }
         else if (!kiFotoGemacht) geheZu(0);
@@ -138,10 +139,26 @@ void setup() {
     touchInit();
     bedient();
     messung("system", "start", (int)esp_reset_reason(), "grund", usbDa() ? "usb" : "akku");
+    {   // Fehlersuche: gelernte Ruhepegel und aktuelle Pegel der Tasten
+        char p[48];
+        snprintf(p, sizeof p, "ruhe %d%d%d jetzt %d%d%d", tasten[0].ruhe, tasten[1].ruhe, tasten[2].ruhe,
+                 digitalRead(PIN_BTN_KI), digitalRead(PIN_BTN_UP), digitalRead(PIN_BTN_DOWN));
+        messung("diag", "tasten", 0, "-", p);
+    }
     geheZu(0);
 }
 
 void loop() {
+    {   // Fehlersuche: im Akkubetrieb in den ersten 2 Minuten alle 5 s ein Lebenszeichen auf die Karte
+        static uint32_t runden = 0, zuletzt = 0;
+        runden++;
+        if (!usbDa() && millis() < 120000 && millis() - zuletzt > 5000) {
+            zuletzt = millis();
+            char p[48];
+            snprintf(p, sizeof p, "pegel %d%d%d rx %d", digitalRead(PIN_BTN_KI), digitalRead(PIN_BTN_UP), digitalRead(PIN_BTN_DOWN), Serial.available());
+            messung("diag", "lebt", runden, "runden", p);
+        }
+    }
     tastenPoll(tasteCb);
     if (tasteUnten(K_KI) && !kiFotoGemacht && millis() - kiSeit > 800) fotoMachen();
     static uint32_t tp = 0;

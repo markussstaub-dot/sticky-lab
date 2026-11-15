@@ -63,3 +63,13 @@ Erkenntnisse mit Datum. Rohdaten: `/lab/messungen.csv` auf der SD-Karte bzw. CSV
   „NotSupported“ und frischt **gar nicht** auf. Die 0 ms im Refresh-Labor heißen also „kein Refresh“. EDCs
   „falsches Bild beim schnellen Modus“ passt dazu (es blieb das alte Bild stehen).
 - Offen: einen eigenen schnellen Modus (kürzere Wellenform/LUT) für SSD1677/SSD2677 bauen und messen.
+
+## 15.11.2026 – Akkubetrieb: das Lab-Gerät hält den Strom nicht
+
+- Ohne Kabel startet das Gerät nur, solange KI (zugleich Power-Taste) gedrückt ist; beim Loslassen ist es aus
+  (Protokoll: „start … akku“, danach kein einziges Lebenszeichen; lässt man mitten im Voll-Refresh los: Streifen).
+- **Gegentest mit der EDC-Firmware 0.31.8: genauso.** Also kein Fehler der Lab-Firmware, sondern dieses Gerät:
+  die Selbsthaltung über PWR_HOLD (GPIO45 HIGH) wirkt hier nicht. Beim anderen Sticky klappt dieselbe Firmware.
+- Die Werks-Firmware meldet „HAL init done (power latched inside)“ – die Selbsthaltung ist also vorgesehen. Offen:
+  ob die Werks-Firmware auf diesem Gerät hält (anderer Pin, andere Polarität, oder Hardwarefehler).
+- Folge: Energie-Messungen (Station 8) gehen auf diesem Gerät erst, wenn das geklärt ist.

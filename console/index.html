@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sticky Console</title>
+<style>
+:root{--bg:#ecebe6;--surface:#f7f6f2;--ink:#151515;--muted:#6b6a66;--line:#c9c7c0;--accent:#151515;--good:#2f7d4f;--bad:#b3261e;
+ --f-body:"Helvetica Neue",Helvetica,Arial,sans-serif;--f-mono:Consolas,"IBM Plex Mono",monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#191918;--surface:#232321;--ink:#ecebe6;--muted:#9a988f;--line:#3a3936;--accent:#ecebe6}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 var(--f-body)}
+header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+header h1{font-size:18px;margin:0;letter-spacing:.02em}
+.punkt{width:12px;height:12px;border-radius:50%;background:var(--bad)}
+.punkt.an{background:var(--good)}
+#info{color:var(--muted);font:13px var(--f-mono);margin-left:auto}
+main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;padding:16px}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.karte{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px}
+.karte h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px}
+canvas{width:100%;height:auto;display:block;background:#f4f2ec;border-radius:6px;cursor:crosshair;image-rendering:pixelated}
+.reihe{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}
+button{font:inherit;min-height:44px;padding:0 18px;border-radius:999px;border:2px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+button.voll{background:var(--ink);color:var(--surface)}
+button.haupt{box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--ink)}
+button:disabled{opacity:.35;cursor:default}
+label{color:var(--muted);font-size:14px;display:flex;gap:6px;align-items:center}
+table{width:100%;border-collapse:collapse;font:13px var(--f-mono)}
+td,th{text-align:left;padding:3px 4px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:normal}
+.scroll{max-height:260px;overflow:auto}
+#log{font:12px var(--f-mono);white-space:pre-wrap;color:var(--muted);max-height:220px;overflow:auto;margin:0}
+.hinweis{color:var(--muted);font-size:13px}
+.reiter{display:flex;gap:6px;margin-left:16px}
+.reiter button{min-height:36px;padding:0 14px;font-size:14px}
+#inventar{padding:16px;max-width:1200px}
+.lead{margin:0 0 16px;color:var(--muted)}
+#inv{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px}
+.bau h3{margin:0 0 2px;font-size:17px}
+.bau .rolle{color:var(--muted);font-size:13px;margin-bottom:8px}
+.bau dl{display:grid;grid-template-columns:max-content 1fr;gap:3px 12px;margin:0;font-size:14px}
+.bau dt{color:var(--muted)}
+.bau dd{margin:0;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;font-size:11px;padding:0 6px;border-radius:999px;border:1px solid var(--line);margin-left:6px;vertical-align:1px}
+.tag.gemessen{border-color:var(--good);color:var(--good)}
+.tag.offen{border-style:dashed}
+.grenze{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);font-size:13px}
+.grenze b{font-weight:600}
+</style></head><body>
+<header>
+ <span class="punkt" id="punkt"></span><h1>Sticky Console</h1>
+ <button id="verbinden" class="voll">Verbinden</button>
+ <nav class="reiter"><button class="voll" data-tab="steuerung">Steuerung</button><button data-tab="inventar">Tech-Inventar</button></nav>
+ <span id="info">nicht verbunden</span>
+</header>
+<section id="inventar" hidden>
+ <p class="lead">Was der Kleine bietet und wo seine Grenzen liegen. <b>bekannt</b> = aus Schaltplan und EDC-Erfahrung,
+ <b>gemessen</b> = im Lab (laufen live aus den Messungen ein), <b>offen</b> = Frage fürs Lab.</p>
+ <div id="inv"></div>
+</section>
+<main id="steuerung">
+ <section>
+  <div class="karte">
+   <h2>Spiegel · Klick = Tippen am Sticky</h2>
+   <canvas id="spiegel" width="800" height="480"></canvas>
+   <div class="reihe">
+    <button data-cmd="f">Foto holen</button>
+    <label><input type="checkbox" id="auto" checked> nach jeder Aktion</label>
+    <button id="png">PNG speichern</button>
+    <button data-cmd="p">Foto auf SD</button>
+    <span class="hinweis" id="fotozeit"></span>
+   </div>
+  </div>
+  <div class="karte" style="margin-top:16px">
+   <h2>Fernbedienung</h2>
+   <div class="reihe">
+    <button data-cmd="k">KI · Übersicht</button>
+    <button data-cmd="1">1 Refresh</button>
+    <button data-cmd="8">8 Energie</button>
+    <button data-cmd="a">Akku lesen</button>
+    <button data-cmd="u">▲</button>
+    <button data-cmd="d">▼</button>
+    <button id="los" class="haupt">Los</button>
+    <button id="serie">Serie ×10</button>
+   </div>
+   <p class="hinweis">„Los“ tippt auf den Doppelring im Refresh-Labor. Die Serie wartet jeweils auf die Messung.</p>
+  </div>
+ </section>
+ <aside>
+  <div class="karte">
+   <h2>Messungen</h2>
+   <div class="scroll"><table><thead><tr><th>s</th><th>Art</th><th>Wert</th><th>seit voll</th></tr></thead><tbody id="mess"></tbody></table></div>
+   <div class="reihe"><button id="csv">CSV speichern</button><span class="hinweis" id="schnitt"></span></div>
+  </div>
+  <div class="karte" style="margin-top:16px">
+   <h2>Log</h2>
+   <pre id="log"></pre>
+  </div>
+ </aside>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const enc = new TextEncoder(), dec = new TextDecoder();
+let port = null, writer = null, reader = null;
+let puffer = new Uint8Array(0);
+let fotoErwartet = 0;           // Bytes, die nach „FOTO n“ + Kopf kommen
+let messungen = [];
+let warteMessung = null;
+let akku = null;   // letzte AKKU-Zeile vom Sticky
+
+function anhaengen(a){ const n = new Uint8Array(puffer.length + a.length); n.set(puffer); n.set(a, puffer.length); puffer = n; }
+function log(t){ const l = $('#log'); l.textContent += t + '\n'; if (l.textContent.length > 20000) l.textContent = l.textContent.slice(-15000); l.scrollTop = l.scrollHeight; }
+
+async function senden(t){
+  if (usb) { try { await usb.dev.transferOut(usb.aus, enc.encode(t)); } catch (e) { log('USB senden: ' + e.message); } return; }
+  if (writer) await writer.write(enc.encode(t));
+}
+const verbunden = () => !!(port || usb);
+
+function zeile(t){
+  log(t);
+  if (t.startsWith('FOTO ')) { const n = +t.split(' ')[1]; if (n > 0) fotoErwartet = n; return 'foto'; }
+  if (t.startsWith('MESSUNG ')) {
+    const f = t.slice(8).split(',');
+    const m = {s:f[0], station:f[1], art:f[2], wert:+f[3], einheit:f[4], seit:f[5], notiz:f[6]||''};
+    messungen.push(m); zeigeMessungen();
+    if (warteMessung) { warteMessung(); warteMessung = null; }
+    if ($('#auto').checked) setTimeout(() => senden('f'), 150);
+  }
+  if (t.startsWith('AKKU ')) {
+    const [mv, ma, mittel, rest, voll, design, soc, soh, zyklen, grad, usb, laedt] = t.split(' ').slice(1);
+    akku = {mv, ma, mittel, rest, voll, design, soc, soh, zyklen, grad, usb, laedt, zeit: new Date().toLocaleTimeString('de-DE')};
+    if (!$('#inventar').hidden) inventar();
+  }
+  if (t.startsWith('INFO ')) {
+    const [, v, st, akku, usb, sd] = t.split(' ');
+    $('#info').textContent = `FW ${v} · Station ${st} · Akku ${akku} % · ${usb === '1' ? 'USB' : 'Akku'} · ${sd === 'sd' ? 'SD' : 'keine SD'}`;
+  }
+  if (t.startsWith('STATION ') && $('#auto').checked) setTimeout(() => senden('f'), 150);
+}
+
+function verarbeiten(){
+  while (true) {
+    if (fotoErwartet) {
+      // Kopf „P4\n800 480\n“ überspringen, dann Rohdaten
+      if (puffer.length < 11 + fotoErwartet) return;
+      let p = 0, nl = 0;
+      while (nl < 2 && p < puffer.length) { if (puffer[p] === 10) nl++; p++; }
+      if (puffer.length < p + fotoErwartet) return;
+      zeichne(puffer.slice(p, p + fotoErwartet));
+      puffer = puffer.slice(p + fotoErwartet);
+      fotoErwartet = 0;
+      continue;
+    }
+    const i = puffer.indexOf(10);
+    if (i < 0) return;
+    const t = dec.decode(puffer.slice(0, i)).replace(/\r$/, '');
+    puffer = puffer.slice(i + 1);
+    zeile(t);
+  }
+}
+
+function zeichne(bits){
+  const c = $('#spiegel'), g = c.getContext('2d'), img = g.createImageData(800, 480);
+  for (let i = 0; i < 800 * 480; i++) {
+    const s = bits[i >> 3] & (0x80 >> (i & 7));
+    const o = i * 4, v = s ? 17 : 244;
+    img.data[o] = v; img.data[o+1] = v; img.data[o+2] = s ? 17 : 236; img.data[o+3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  $('#fotozeit').textContent = 'Stand ' + new Date().toLocaleTimeString('de-DE');
+}
+
+function zeigeMessungen(){
+  const tb = $('#mess');
+  tb.innerHTML = messungen.slice(-200).reverse().map(m =>
+    `<tr><td>${m.s}</td><td>${m.art}</td><td>${m.wert} ${m.einheit}${m.notiz ? ' · ' + m.notiz : ''}</td><td>${m.seit}</td></tr>`).join('');
+  const je = {};
+  messungen.filter(m => m.einheit === 'ms').forEach(m => (je[m.art] ||= []).push(m.wert));
+  $('#schnitt').textContent = Object.entries(je).map(([a, v]) => `${a} Ø ${Math.round(v.reduce((x, y) => x + y, 0) / v.length)}`).join(' · ');
+}
+
+let trennen_an = false, leseschleife = null;
+async function lesen(){
+  try {
+    while (port && port.readable && !trennen_an) {
+      reader = port.readable.getReader();
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          anhaengen(value); verarbeiten();
+        }
+      } finally { reader.releaseLock(); reader = null; }
+    }
+  } catch (e) { if (!trennen_an) log('Lesefehler: ' + e.message); }
+}
+
+// ---- WebUSB für Android (Fold): CH343 (1A86:55D3) als CDC-ACM direkt ansprechen ----
+// Chrome auf Android hat kein Web Serial für USB, aber WebUSB. Gleiche Idee wie Googles web-serial-polyfill, nur klein.
+const ANDROID = /Android/i.test(navigator.userAgent);
+let usb = null;   // { dev, ein, aus, ctrl }
+async function verbindenUsb(){
+  const dev = await navigator.usb.requestDevice({ filters: [{ vendorId: 0x1A86 }, { vendorId: 0x303A }] });
+  await dev.open();
+  if (!dev.configuration) await dev.selectConfiguration(1);
+  let daten = null, ctrl = null;
+  for (const itf of dev.configuration.interfaces) {
+    const alt = itf.alternates[0];
+    const ein = alt.endpoints.find(e => e.direction === 'in' && e.type === 'bulk');
+    const aus = alt.endpoints.find(e => e.direction === 'out' && e.type === 'bulk');
+    if (ein && aus && !daten) daten = { nr: itf.interfaceNumber, ein: ein.endpointNumber, aus: aus.endpointNumber, groesse: ein.packetSize };
+    if (alt.interfaceClass === 2 && ctrl === null) ctrl = itf.interfaceNumber;
+  }
+  if (!daten) throw new Error('keine Bulk-Endpunkte gefunden');
+  if (ctrl !== null) { try { await dev.claimInterface(ctrl); } catch (e) { log('Steuer-Interface: ' + e.message); } }
+  await dev.claimInterface(daten.nr);
+  const idx = ctrl ?? daten.nr;
+  try {
+    // SET_LINE_CODING 115200 8N1, dann SET_CONTROL_LINE_STATE DTR+RTS (wie ein PC-Terminal; beide gleich = kein Reset)
+    const lc = new Uint8Array([0x00, 0xC2, 0x01, 0x00, 0, 0, 8]);
+    await dev.controlTransferOut({ requestType: 'class', recipient: 'interface', request: 0x20, value: 0, index: idx }, lc);
+    await dev.controlTransferOut({ requestType: 'class', recipient: 'interface', request: 0x22, value: 0x03, index: idx });
+  } catch (e) { log('Leitungseinstellung: ' + e.message); }
+  usb = { dev, ein: daten.ein, aus: daten.aus, groesse: Math.max(64, daten.groesse) };
+  log(`USB: ${dev.productName || 'Gerät'} ${dev.vendorId.toString(16)}:${dev.productId.toString(16)}, Daten-Interface ${daten.nr}`);
+  (async () => {
+    while (usb && !trennen_an) {
+      try {
+        const r = await usb.dev.transferIn(usb.ein, 16384);
+        if (r.data && r.data.byteLength) { anhaengen(new Uint8Array(r.data.buffer, r.data.byteOffset, r.data.byteLength)); verarbeiten(); }
+      } catch (e) { if (!trennen_an) log('USB-Lesefehler: ' + e.message); break; }
+    }
+  })();
+}
+
+async function verbinden(){
+  if (port || usb) { await trennen(); return; }
+  if ((ANDROID || !('serial' in navigator)) && 'usb' in navigator) {
+    try {
+      trennen_an = false;
+      await verbindenUsb();
+      $('#punkt').classList.add('an'); $('#verbinden').textContent = 'Trennen';
+      setTimeout(() => { senden('i'); senden('f'); }, 300);
+    } catch (e) { log('USB verbinden: ' + e.message); usb = null; }
+    return;
+  }
+  if (!('serial' in navigator)) { alert('Web Serial/WebUSB gibt es nur in Edge oder Chrome.'); return; }
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200, bufferSize: 65536 });
+    writer = port.writable.getWriter();
+    $('#punkt').classList.add('an'); $('#verbinden').textContent = 'Trennen';
+    trennen_an = false;
+    leseschleife = lesen();
+    setTimeout(() => { senden('i'); senden('f'); }, 300);
+  } catch (e) { log('Verbinden: ' + e.message); port = null; }
+}
+async function trennen(){
+  // erst die Leseschleife sauber beenden, dann Schreiber freigeben, dann schließen – sonst bleibt der Port belegt
+  trennen_an = true;
+  if (usb) {
+    try { await usb.dev.close(); } catch (e) { log('USB schließen: ' + e.message); }
+    usb = null;
+    $('#punkt').classList.remove('an'); $('#verbinden').textContent = 'Verbinden';
+    $('#info').textContent = 'getrennt';
+    return;
+  }
+  try { if (reader) await reader.cancel(); } catch {}
+  try { await leseschleife; } catch {}
+  try { if (writer) writer.releaseLock(); } catch {}
+  try { await port.close(); } catch (e) { log('Schließen: ' + e.message); }
+  port = null; writer = null; reader = null;
+  $('#punkt').classList.remove('an'); $('#verbinden').textContent = 'Verbinden';
+  $('#info').textContent = 'getrennt (Port frei zum Flashen)';
+}
+
+$('#verbinden').onclick = verbinden;
+document.querySelectorAll('[data-cmd]').forEach(b => b.onclick = () => senden(b.dataset.cmd));
+$('#los').onclick = () => senden('t 690 410\n');
+$('#serie').onclick = async () => {
+  const b = $('#serie'); b.disabled = true;
+  for (let i = 0; i < 10 && verbunden(); i++) {
+    await new Promise(r => { warteMessung = r; senden('t 690 410\n'); setTimeout(r, 6000); });
+    await new Promise(r => setTimeout(r, 900));   // Werte-Refresh abwarten
+  }
+  b.disabled = false;
+};
+$('#spiegel').onclick = e => {
+  const r = e.target.getBoundingClientRect();
+  const x = Math.round((e.clientX - r.left) / r.width * 800), y = Math.round((e.clientY - r.top) / r.height * 480);
+  senden(`t ${x} ${y}\n`);
+};
+$('#png').onclick = () => $('#spiegel').toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'sticky-' + Date.now() + '.png'; a.click(); });
+$('#csv').onclick = () => {
+  const t = 'laufzeit_s,station,art,wert,einheit,teil_seit_voll,notiz\n' + messungen.map(m => [m.s, m.station, m.art, m.wert, m.einheit, m.seit, m.notiz].join(',')).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([t], {type:'text/csv'})); a.download = 'messungen.csv'; a.click();
+};
+setInterval(() => { if (verbunden()) senden('i'); }, 30000);
+
+// ---- Reiter ----
+document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('voll', x === b));
+  $('#steuerung').hidden = b.dataset.tab !== 'steuerung';
+  $('#inventar').hidden = b.dataset.tab !== 'inventar';
+  if (b.dataset.tab === 'inventar') inventar();
+});
+
+// ---- Tech-Inventar ----
+// Quellen: Schaltplan 260609, reterminal-sticky SPEC/STAND (FW 0.31.8), Sticky-Lab-Messungen. [wert, stand]
+function mittel(art){
+  const v = messungen.filter(m => m.art === art && m.einheit === 'ms' && m.wert > 0).map(m => m.wert);
+  return v.length ? [`${Math.round(v.reduce((a, b) => a + b, 0) / v.length)} ms (${v.length}×, live)`, 'gemessen'] : null;
+}
+const INV = () => [
+ { name: 'Rechner', rolle: 'Seeed XIAO ESP32-S3', zeilen: [
+   ['Kerne', ['2 × Xtensa LX7, bis 240 MHz (Lab: 80 MHz wie EDC)', 'bekannt']],
+   ['RAM', ['512 KB intern + 8 MB Octal-PSRAM', 'bekannt']],
+   ['Flash', ['32 MB: 2 × 4 MB App, ~24 MB LittleFS', 'bekannt']],
+   ['Funk', ['BLE 5 und WLAN 2,4 GHz, kein klassisches Bluetooth', 'bekannt']],
+  ], grenze: ['offen', 'Wie viel bringen 240 MHz bei Dithering und Zeichnen, und was kostet es an Strom?'] },
+ { name: 'Anzeige', rolle: 'e-Ink 800 × 480, 1 bpp (Schwarz/Weiß), über Seeed_GFX2', zeilen: [
+   ['Voll-Refresh', mittel('Voll') || ['2277 ms (Lab 15.11.)', 'gemessen']],
+   ['Teil-Refresh', mittel('Teil') || ['952 ms für 368 × 300 px (Lab 15.11.)', 'gemessen']],
+   ['Teil wach', mittel('Teil wach') || ['853 ms, ohne die zwei 100-ms-Schlafpausen', 'gemessen']],
+   ['Schnell', ['kehrt nach 0 ms zurück, läuft wohl im Hintergrund; EDC sah falsche Bilder', 'offen']],
+   ['ohne Strom', ['Bild bleibt stehen (auch ein falsches)', 'bekannt']],
+   ['Graustufen', ['nur über Raster/Dithering; Graustufen-Modus der Bibliothek ungetestet', 'offen']],
+  ], grenze: ['offen', 'Ab wie vielen Teil-Refreshes sieht man Reste? Hängt Teil-Refresh von der Fläche ab? Wie viele Bilder pro Sekunde gehen für Animation?'] },
+ { name: 'Touch', rolle: 'Goodix GT911, kapazitiv', zeilen: [
+   ['Finger', ['bis 5 gleichzeitig (Lab nutzt 1)', 'bekannt']],
+   ['Anschluss', ['I²C 0x5D an GPIO 2/3, INT 21, RST 41, Strom 42', 'bekannt']],
+   ['Abfrage', ['alle 25 ms', 'bekannt']],
+   ['Stift', ['nur leitende Spitze, kein Kuli', 'bekannt']],
+  ], grenze: ['offen', 'Latenz Berührung → sichtbare Rückmeldung? Treffergenauigkeit am Rand?'] },
+ { name: 'Tasten', rolle: 'KI, ▲, ▼ an der rechten Seite', zeilen: [
+   ['Pins', ['GPIO 4 / 5 / 6, aktiv low', 'bekannt']],
+   ['Wecken', ['jede Taste weckt aus dem Leichtschlaf', 'bekannt']],
+   ['Stolperfalle', ['erst nach display.begin() einrichten', 'bekannt']],
+  ] },
+ { name: 'Sensoren', rolle: 'alle am MISC-I²C (GPIO 0/1)', zeilen: [
+   ['Bewegung', ['LSM6DS3TR-C, 6 Achsen, 0x6A, Interrupt GPIO 7 (weckt)', 'bekannt']],
+   ['Klima', ['SHT40, Temperatur und Feuchte, 0x44', 'bekannt']],
+   ['Uhr', ['PCF8563, 0x51; sein Wecker schaltet die 3,3 V ein → Einschalten aus „ganz aus“', 'bekannt']],
+  ], grenze: ['offen', 'Misst der SHT40 im Gehäuse die Eigenwärme mit? Wie fein reagiert der Bewegungssensor im Schlaf?'] },
+ { name: 'Energie', rolle: 'Li-Po-Akku mit Ladechip und Füllstandsmesser', zeilen: [
+   ['Füllstand', ['BQ27220, 0x55: Spannung verlässlich; meldet 7500 mAh Design/voll, 0 Zyklen – wohl nie auf diesen Akku eingestellt, Prozent und Strom darum fraglich (Lab 15.11.)', 'gemessen']],
+   ['Laden', ['BQ25616, nur 0–45 °C; /CE an GPIO 39 aktiv LOW halten, sonst lädt er nie', 'bekannt']],
+   ['Selbsthaltung', ['PWR_HOLD GPIO 45, ohne sie geht er im Akkubetrieb aus', 'bekannt']],
+   ['Kapazität', akku ? [`voll ${akku.voll} mAh, Design ${akku.design} mAh, Rest ${akku.rest} mAh (${akku.zeit})`, 'gemessen']
+                      : ['„Akku lesen“ in der Steuerung holt sie aus dem BQ27220', 'offen']],
+   ['jetzt', akku ? [`${akku.mv} mV, ${akku.ma} mA (Mittel ${akku.mittel}), ${akku.soc} %, ${akku.grad} °C, ${akku.zyklen} Zyklen${akku.usb === '1' ? ', am USB' : ''}`, 'gemessen'] : ['–', 'offen']],
+   ...['ruhe-wach', 'schlaf-leicht'].map(a => { const m = messungen.filter(x => x.art === a && x.einheit === '0.1mA').pop();
+      return [a === 'ruhe-wach' ? 'Grundlast wach' : 'Leichtschlaf', m ? [`${(m.wert / 10).toFixed(1)} mA (${m.notiz})`, 'gemessen'] : ['Station 8 misst es (Kabel ab)', 'offen']]; }),
+   ...['teil-x50', 'voll-x10'].map(a => { const m = messungen.filter(x => x.art === a && x.einheit === 'uAh/bild').pop();
+      return [a === 'teil-x50' ? 'je Teil-Refresh' : 'je Voll-Refresh', m ? [`${m.wert} µAh (${m.notiz})`, 'gemessen'] : ['Station 8 misst es (Kabel ab)', 'offen']]; }),
+   ['Laufzeit', ['~24 h als EDC mit Schlummern und BLE', 'bekannt']],
+   ['Tiefentladung', ['danach meldet der BQ27220 Unsinn, bis einmal voll geladen', 'bekannt']],
+  ], grenze: ['offen', 'Was kostet ein Voll- bzw. Teil-Refresh in mAh? Grundverbrauch wach, Leichtschlaf, Tiefschlaf? Wie viele Refreshes schafft eine Ladung?'] },
+ { name: 'Ton und Mikro', rolle: 'Summer und PDM-Mikrofon', zeilen: [
+   ['Summer', ['GPIO 48, tone(); Klick 2,7 kHz / 30 ms', 'bekannt']],
+   ['Mikro', ['MSM261 PDM, CLK 19, DATA 20, Strom 38; 16 kHz mono in EDC', 'bekannt']],
+  ], grenze: ['offen', 'Welche Klänge trägt der Summer (Tick, Anschlag, Bestätigung aus der Designsprache)?'] },
+ { name: 'Speicher und USB', rolle: 'microSD und USB-C', zeilen: [
+   ['microSD', ['SPI am Bus des Displays, CS 8, Strom 10, Erkennung 11', 'bekannt']],
+   ['Lab-Ordner', ['/lab/messungen.csv, /lab/fotos/*.pbm', 'bekannt']],
+   ['USB-C', ['Laden und serielle Konsole 115200 (diese Console)', 'bekannt']],
+   ['USB erkennen', ['VIN über Teiler an GPIO 9, per ADC (> 1,5 V)', 'bekannt']],
+  ] },
+];
+function inventar(){
+  $('#inv').innerHTML = INV().map(b => `<div class="karte bau"><h3>${b.name}</h3><div class="rolle">${b.rolle}</div><dl>` +
+    b.zeilen.map(([k, [w, s]]) => `<dt>${k}</dt><dd>${w}<span class="tag ${s}">${s}</span></dd>`).join('') + `</dl>` +
+    (b.grenze ? `<div class="grenze"><b>Grenze ausloten:</b> ${b.grenze[1]}</div>` : '') + `</div>`).join('');
+}
+</script>
+</body></html>

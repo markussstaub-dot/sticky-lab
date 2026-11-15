@@ -1,0 +1,9 @@
+# Projektstand fürs lokale Cockpit (persönliche Notizen) – nicht ins öffentliche Repo
+STAND.md
+
+# Builds und Python-Reste
+build/
+*.elf
+*.map
+*.bin
+__pycache__/

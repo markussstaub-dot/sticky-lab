@@ -93,12 +93,40 @@ th{color:var(--muted);font-weight:normal}
 body.screenpad #firmware{padding:6px 12px;max-width:none}
 body.screenpad #fwliste{display:block;columns:300px;column-gap:12px;height:calc(100vh - 150px);overflow-x:auto}
 body.screenpad .fw{break-inside:avoid;margin-bottom:10px}
+/* Spickzettel-Reiter: Liste · Karte · Vorschau nebeneinander (ScreenPad: niedrig und breit) */
+#spick:not([hidden]){display:grid;grid-template-columns:250px minmax(280px,1fr) auto;gap:14px;padding:14px;align-items:start}
+@media (max-width:1100px){#spick:not([hidden]){grid-template-columns:220px 1fr}#spick .spvor{grid-column:1/-1}}
+#spSzenen{display:flex;flex-wrap:wrap;gap:6px}
+#spSzenen button{min-height:36px;padding:0 12px;font-size:14px}
+#spListe{list-style:none;margin:10px 0 0;padding:0;max-height:calc(100vh - 250px);overflow:auto}
+#spListe li{margin-bottom:4px}
+#spListe li.leer{color:var(--muted);font-size:13px}
+.sptitel{width:100%;text-align:left;border-radius:8px;border-width:1px;border-color:var(--line);min-height:40px;padding:4px 10px;display:flex;flex-direction:column;justify-content:center}
+.sptitel small{color:var(--muted);font-size:11px}
+#spListe li.gewaehlt .sptitel{border:2px solid var(--ink)}
+.spfeld{display:block;margin-bottom:8px}
+.spfeld span{display:block;color:var(--muted);font-size:12px;margin-bottom:2px}
+.spfeld input,.spfeld textarea{width:100%;font:15px/1.45 var(--f-mono);padding:8px 10px;border-radius:8px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.spfeld input:focus,.spfeld textarea:focus{outline:none;border-color:var(--ink)}
+#spTitel{font:bold 17px var(--f-body)}
+#spZeilen{resize:vertical;min-height:200px;height:calc(100vh - 380px)}
+#spBild{width:auto;height:min(480px,calc(100vh - 200px));aspect-ratio:5/3;max-width:100%;cursor:default;border:1px solid var(--line)}
+#spMeldung{min-height:1.4em}
+body.screenpad #spick:not([hidden]){padding:6px 12px;gap:10px}
+body.screenpad #spListe{max-height:calc(100vh - 170px)}
+body.screenpad #spZeilen{height:calc(100vh - 262px);min-height:90px}
+body.screenpad .spfeld span{display:none}
+body.screenpad .spfeld{margin-bottom:6px}
+body.screenpad #spBild{height:calc(100vh - 205px)}
+body.screenpad #spPruef,body.screenpad #spMeldung{margin:4px 0;font-size:12px}
+body.screenpad #spick .reihe{margin-top:6px;gap:6px}
+body.screenpad #spick .reihe button{min-height:36px;padding:0 12px;font-size:14px}
 </style></head><body>
 <header>
  <span class="punkt" id="punkt"></span><h1>Sticky Console</h1>
  <button id="verbinden" class="voll" data-en="Connect">Verbinden</button>
  <button id="sprache" title="Deutsch / English">EN</button>
- <nav class="reiter"><button class="voll" data-tab="steuerung" data-en="Control">Steuerung</button><button data-tab="inventar" data-en="Tech inventory">Tech-Inventar</button><button data-tab="firmware">Firmware</button></nav>
+ <nav class="reiter"><button class="voll" data-tab="steuerung" data-en="Control">Steuerung</button><button data-tab="inventar" data-en="Tech inventory">Tech-Inventar</button><button data-tab="firmware">Firmware</button><button data-tab="spick" data-en="Cheat sheets">Spickzettel</button></nav>
  <span id="info" data-en="not connected">nicht verbunden</span>
 </header>
 <section id="firmware" hidden>
@@ -113,6 +141,36 @@ body.screenpad .fw{break-inside:avoid;margin-bottom:10px}
  <p class="lead" data-en-html="What the little one offers and where its limits are. <b>known</b> = from the schematic and EDC experience, <b>measured</b> = in the lab (updates live from measurements), <b>open</b> = question for the lab.">Was der Kleine bietet und wo seine Grenzen liegen. <b>bekannt</b> = aus Schaltplan und EDC-Erfahrung,
  <b>gemessen</b> = im Lab (laufen live aus den Messungen ein), <b>offen</b> = Frage fürs Lab.</p>
  <div id="inv"></div>
+</section>
+<section id="spick" hidden>
+ <div class="karte">
+  <h2 data-en="Scene">Szene</h2>
+  <div id="spSzenen"></div>
+  <ul id="spListe"></ul>
+  <div class="reihe"><button id="spNeu" class="voll" title="Strg+Enter" data-en="+ New card">+ Neue Karte</button><span class="hinweis" id="spAnzahl"></span></div>
+ </div>
+ <div class="karte">
+  <h2 data-en="Card · Alt+↑/↓ reorder · Alt+PgUp/PgDn switch · Ctrl+S save">Karte · Alt+↑/↓ sortieren · Alt+Bild↑/↓ wechseln · Strg+S speichern</h2>
+  <label class="spfeld"><span data-en="Title">Titel</span><input id="spTitel" spellcheck="false" placeholder="Titel" data-en-ph="Title"></label>
+  <label class="spfeld"><span data-en="Scene tags (#micro #workshop …, none = every scene)">Szenen-Marken (#micro #werkstatt …, keine = jede Szene)</span><input id="spMarken" spellcheck="false" placeholder="#micro #notfall – leer = jede Szene" data-en-ph="#micro #emergency – empty = every scene"></label>
+  <label class="spfeld"><span data-en="Lines (3–10, ! at the start = bold)">Zeilen (3–10, ! am Anfang = fett)</span><textarea id="spZeilen" spellcheck="true" placeholder="Zeilen, ! am Anfang = fett" data-en-ph="Lines, ! at the start = bold"></textarea></label>
+  <div class="reihe"><button id="spHoch" aria-label="nach oben">↑</button><button id="spRunter" aria-label="nach unten">↓</button><button id="spLoeschen" data-en="Delete">Löschen</button></div>
+ </div>
+ <div class="karte spvor">
+  <h2 data-en="Preview 800 × 480, as the app draws it">Vorschau 800 × 480, wie die App sie zeichnet</h2>
+  <canvas id="spBild" width="800" height="480"></canvas>
+  <p class="hinweis" id="spPruef"></p>
+  <div class="reihe">
+   <button id="spKopieren" class="haupt" data-en="Copy for the app">In Zwischenablage</button>
+   <button id="spHolen" data-en="Get from clipboard">Aus Zwischenablage holen</button>
+   <button id="spOeffnen" data-en="Open file">Datei öffnen</button>
+   <button id="spSpeichern" title="Strg+S" data-en="Save">Speichern</button>
+   <button id="spWieder" hidden></button>
+   <input id="spWahl" type="file" accept=".md,.txt" hidden>
+   <span class="hinweis" id="spDatei"></span>
+  </div>
+  <p class="hinweis" id="spMeldung"></p>
+ </div>
 </section>
 <main id="steuerung">
  <section>
@@ -464,6 +522,8 @@ document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
   $('#steuerung').hidden = b.dataset.tab !== 'steuerung';
   $('#inventar').hidden = b.dataset.tab !== 'inventar';
   $('#firmware').hidden = b.dataset.tab !== 'firmware';
+  $('#spick').hidden = b.dataset.tab !== 'spick';
+  if (b.dataset.tab === 'spick') window.spickZeigen?.();
   if (b.dataset.tab === 'firmware') window.fwLaden?.();
   if (b.dataset.tab === 'inventar') inventar();
 });
@@ -654,4 +714,5 @@ async function aufspielen(f, v) {
   } finally { laeuft = false; }
 }
 </script>
+<script src="spickzettel.js"></script>
 </body></html>

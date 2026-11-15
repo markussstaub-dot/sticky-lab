@@ -154,7 +154,12 @@ Der Sticky hat schon zwei App-Plätze (`app0` und `app1`, je 4 MB), siehe `parti
   Foto holen gehen. Für Energie-Messungen ungeeignet (Fold speist den Sticky).
 - fest (15.11.2026): Seite für unterwegs über **GitHub Pages** (https://markussstaub-dot.github.io/sticky-lab/console/).
   Am Rechner geht sie weiter als Datei oder über localhost.
-- Vorschlag: Flashen bleibt bei arduino-cli. Die Console gibt den Port frei („Trennen“), damit hochgeladen werden kann.
+- fest (Markus, 15.11.2026): **Reiter „Firmware“ in der Console**: liest das Seeed-Playground-Verzeichnis
+  (github.com/Seeed-Projects/reterminal-sticky-playground-registry, `firmwares/*/firmware.json` und Manifeste im
+  ESP-Web-Tools-Format) und das eigene Sticky Lab (liegt mit Manifest auf GitHub Pages), Aufspielen mit esptool-js
+  über Web Serial direkt aus dem Browser. Ganze Abbilder ab Adresse 0 überschreiben auch Flash-Daten (Bordbuch,
+  Einstellungen); die SD-Karte bleibt. Am Fold vorerst nur Liste, Flashen am Rechner.
+- Vorschlag: Flashen sonst weiter mit arduino-cli. Die Console gibt den Port frei („Trennen“), damit hochgeladen werden kann.
 - Vorschlag: Die Firmware antwortet auf USB maschinenlesbar (Zeilen wie `MESSUNG …`, `STATION …`, `FOTO n` + Daten).
 
 ## 9. Ausbaufähig bleiben, z. B. für einen farbigen Sticky (Markus, 15.11.2026)

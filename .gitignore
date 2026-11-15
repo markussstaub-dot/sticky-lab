@@ -10,3 +10,6 @@ __pycache__/
 
 # Spickzettel fürs EDC-Sticky (persönlich)
 SPICKZETTEL-EDC.md
+
+# Firmware zum Aufspielen aus der Console (GitHub Pages)
+!console/fw/**/*.bin

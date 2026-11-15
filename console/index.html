@@ -80,13 +80,34 @@ th{color:var(--muted);font-weight:normal}
 .tag.offen{border-style:dashed}
 .grenze{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);font-size:13px}
 .grenze b{font-weight:600}
+#firmware{padding:16px;max-width:1300px}
+.fwkopf input{font:inherit;padding:8px 12px;border-radius:999px;border:2px solid var(--line);background:var(--surface);color:var(--ink);min-width:240px}
+#fwliste{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:12px}
+.fw h3{margin:0;font-size:16px}
+.fw .wer{color:var(--muted);font-size:12px;margin:2px 0 6px}
+.fw p{margin:0 0 8px;font-size:13px}
+.fw select{font:inherit;padding:6px;border-radius:8px;background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.fw.eigen{border-color:var(--ink);border-width:2px}
+.balken{height:10px;border:2px solid var(--ink);border-radius:999px;overflow:hidden;margin:10px 0 4px;max-width:600px}
+.balken span{display:block;height:100%;width:0;background:var(--ink)}
+body.screenpad #firmware{padding:6px 12px;max-width:none}
+body.screenpad #fwliste{display:block;columns:300px;column-gap:12px;height:calc(100vh - 150px);overflow-x:auto}
+body.screenpad .fw{break-inside:avoid;margin-bottom:10px}
 </style></head><body>
 <header>
  <span class="punkt" id="punkt"></span><h1>Sticky Console</h1>
  <button id="verbinden" class="voll">Verbinden</button>
- <nav class="reiter"><button class="voll" data-tab="steuerung">Steuerung</button><button data-tab="inventar">Tech-Inventar</button></nav>
+ <nav class="reiter"><button class="voll" data-tab="steuerung">Steuerung</button><button data-tab="inventar">Tech-Inventar</button><button data-tab="firmware">Firmware</button></nav>
  <span id="info">nicht verbunden</span>
 </header>
+<section id="firmware" hidden>
+ <p class="lead">Firmware auf den angeschlossenen Sticky spielen: das eigene <b>Sticky Lab</b> und alles aus dem
+ <b>Seeed-Playground</b>. Per USB direkt aus dem Browser (Edge/Chrome am Rechner). Ganze Abbilder ab Adresse 0 überschreiben
+ auch Daten im Flash (z. B. Bordbuch, Einstellungen) – die SD-Karte bleibt.</p>
+ <div class="reihe fwkopf"><input id="fwsuche" type="search" placeholder="suchen …"><span class="hinweis" id="fwstatus">lädt …</span></div>
+ <div id="fwfortschritt" hidden><div class="balken"><span></span></div><span class="hinweis" id="fwtext"></span></div>
+ <div id="fwliste"></div>
+</section>
 <section id="inventar" hidden>
  <p class="lead">Was der Kleine bietet und wo seine Grenzen liegen. <b>bekannt</b> = aus Schaltplan und EDC-Erfahrung,
  <b>gemessen</b> = im Lab (laufen live aus den Messungen ein), <b>offen</b> = Frage fürs Lab.</p>
@@ -404,6 +425,8 @@ document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
   document.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('voll', x === b));
   $('#steuerung').hidden = b.dataset.tab !== 'steuerung';
   $('#inventar').hidden = b.dataset.tab !== 'inventar';
+  $('#firmware').hidden = b.dataset.tab !== 'firmware';
+  if (b.dataset.tab === 'firmware') window.fwLaden?.();
   if (b.dataset.tab === 'inventar') inventar();
 });
 
@@ -488,6 +511,104 @@ function inventar(){
   $('#inv').innerHTML = INV().map(b => `<div class="karte bau"><h3>${b.name}</h3><div class="rolle">${b.rolle}</div><dl>` +
     b.zeilen.map(([k, [w, s]]) => `<dt>${k}</dt><dd>${w}<span class="tag ${s}">${s}</span></dd>`).join('') + `</dl>` +
     (b.grenze ? `<div class="grenze"><b>Grenze ausloten:</b> ${b.grenze[1]}</div>` : '') + `</div>`).join('');
+}
+</script>
+<script type="module">
+// ---- Firmware: Sticky Lab + Seeed-Playground, Aufspielen mit esptool-js über Web Serial ----
+import { ESPLoader, Transport } from "https://cdn.jsdelivr.net/npm/esptool-js@0.7.0/+esm";
+const REPO = 'Seeed-Projects/reterminal-sticky-playground-registry', ROH = `https://raw.githubusercontent.com/${REPO}/main/`;
+const EIGEN = [{ id: 'sticky-lab', name: 'Sticky Lab', summary: 'Diese Werkbank: Stationen zu e-Ink, Akku und Design, dazu Burgduell. Spielt nur die App ein, Flash-Daten und SD bleiben.',
+  author: { name: 'eigenes Projekt' }, status: 'aktuell', versions: [{ version: 'aktuell', manifest: new URL('fw/sticky-lab/manifest.json', location.href).href }] }];
+let liste = [], geladen = false, laeuft = false;
+const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+window.fwLaden = async () => {
+  if (geladen) return; geladen = true;
+  zeigen();
+  try {
+    const baum = await (await fetch(`https://api.github.com/repos/${REPO}/git/trees/main?recursive=1`)).json();
+    const pfade = (baum.tree || []).map(t => t.path).filter(p => /^firmwares\/[^/]+\/firmware\.json$/.test(p) && !p.includes('_template'));
+    const alle = await Promise.all(pfade.map(async p => {
+      try {
+        const f = await (await fetch(ROH + p)).json(); const ordner = p.replace(/firmware\.json$/, '');
+        f.versions = (f.flash?.versions || []).filter(v => v.manifestPath).map(v => ({ version: v.version, channel: v.channel, manifest: ROH + ordner + v.manifestPath }));
+        f.nurOnline = (f.flash?.versions || []).length && !f.versions.length;
+        return f;
+      } catch { return null; }
+    }));
+    liste = alle.filter(Boolean).sort((a, b) => ((a.group === 'official' ? 0 : 1) - (b.group === 'official' ? 0 : 1)) || a.name.localeCompare(b.name));
+    $('#fwstatus').textContent = `${liste.length} Firmwares im Playground · Stand GitHub ${new Date().toLocaleDateString('de-DE')}`;
+  } catch (e) { $('#fwstatus').textContent = 'Playground nicht erreichbar: ' + e.message; }
+  zeigen();
+};
+
+function karte(f, eigen) {
+  const v = f.versions || [];
+  const knopf = v.length ? `<select>${v.map((x, i) => `<option value="${i}">${esc(x.version)}${x.channel ? ' · ' + esc(x.channel) : ''}</option>`).join('')}</select>
+    <button class="voll" data-fw="${esc(f.id)}">Aufspielen</button>` : `<span class="hinweis">${f.nurOnline ? 'nur über den Seeed-Playground' : 'kein Abbild'}</span>`;
+  return `<div class="karte fw${eigen ? ' eigen' : ''}"><h3>${esc(f.name)}</h3>
+    <div class="wer">${esc(f.author?.name)}${f.status ? ' · ' + esc(f.status) : ''}${f.category ? ' · ' + esc(f.category) : ''}</div>
+    <p>${esc(f.summary)}</p>${f.source?.url ? `<p><a href="${esc(f.source.url)}" target="_blank" rel="noopener">Quelle</a></p>` : ''}
+    <div class="reihe">${knopf}</div></div>`;
+}
+function zeigen() {
+  const q = ($('#fwsuche').value || '').toLowerCase();
+  const passt = f => !q || [f.name, f.summary, f.author?.name, ...(f.tags || [])].join(' ').toLowerCase().includes(q);
+  $('#fwliste').innerHTML = EIGEN.filter(passt).map(f => karte(f, true)).join('') + liste.filter(passt).map(f => karte(f, false)).join('');
+  document.querySelectorAll('[data-fw]').forEach(b => b.onclick = () => {
+    const f = [...EIGEN, ...liste].find(x => x.id === b.dataset.fw);
+    aufspielen(f, f.versions[+b.parentElement.querySelector('select').value]);
+  });
+}
+$('#fwsuche').oninput = zeigen;
+
+function fortschritt(anteil, text) {
+  $('#fwfortschritt').hidden = false;
+  $('.balken span').style.width = Math.round(anteil * 100) + '%';
+  $('#fwtext').textContent = text;
+}
+
+async function aufspielen(f, v) {
+  if (laeuft) return;
+  if (!('serial' in navigator) || ANDROID) { alert('Aufspielen geht nur am Rechner mit Edge oder Chrome (Web Serial).'); return; }
+  if (usb) { alert('Bitte erst „Trennen“ – Aufspielen läuft über Web Serial.'); return; }
+  let m;
+  try { m = await (await fetch(v.manifest)).json(); } catch (e) { alert('Manifest nicht lesbar: ' + e.message); return; }
+  const teile = m.builds?.find(b => /ESP32-S3/i.test(b.chipFamily))?.parts || [];
+  if (!teile.length) { alert('Kein ESP32-S3-Abbild im Manifest.'); return; }
+  const ganz = teile.some(t => t.offset === 0 && (t.size || 0) > (1 << 20));
+  if (!confirm(`${f.name} ${v.version} auf den angeschlossenen Sticky spielen?\n\n` +
+      (ganz ? 'Achtung: ganzes Abbild ab Adresse 0 – überschreibt auch Daten im Flash (Bordbuch, Einstellungen). Die SD-Karte bleibt.'
+            : 'Nur App und Startdateien – Flash-Daten und SD-Karte bleiben.'))) return;
+  laeuft = true;
+  let p = port;   // laufende Console-Verbindung freigeben, esptool öffnet den Port selbst
+  try {
+    if (p) await trennen();
+    if (!p) p = await navigator.serial.requestPort();
+    const basis = new URL('.', v.manifest).href;
+    const dateien = [];
+    for (const t of teile) {
+      fortschritt(0, `lade ${t.path} (${Math.round((t.size || 0) / 1024)} KB) …`);
+      const d = new Uint8Array(await (await fetch(new URL(t.path, basis))).arrayBuffer());
+      dateien.push({ data: d, address: t.offset });
+    }
+    const transport = new Transport(p, false);
+    const loader = new ESPLoader({ transport, baudrate: 460800, terminal: { clean() {}, writeLine: t => log(t), write: () => {} } });
+    fortschritt(0, 'verbinde mit dem Sticky (Bootloader) …');
+    log('Chip: ' + await loader.main());
+    const gesamt = dateien.reduce((a, d) => a + d.data.length, 0);
+    const vorher = i => dateien.slice(0, i).reduce((a, d) => a + d.data.length, 0);
+    await loader.writeFlash({ fileArray: dateien, flashMode: 'keep', flashFreq: 'keep', flashSize: 'keep', eraseAll: false, compress: true,
+      reportProgress: (i, geschrieben, total) => fortschritt((vorher(i) + geschrieben / total * dateien[i].data.length) / gesamt,
+        `schreibe ${teile[i].path} … ${Math.round(geschrieben / total * 100)} %`) });
+    await loader.after('hard_reset');
+    await transport.disconnect();
+    fortschritt(1, `${f.name} ${v.version} ist drauf. Der Sticky startet neu.`);
+    log(`Aufgespielt: ${f.name} ${v.version}`);
+  } catch (e) {
+    fortschritt(0, 'Fehler: ' + e.message);
+    log('Aufspielen: ' + e.message);
+  } finally { laeuft = false; }
 }
 </script>
 </body></html>

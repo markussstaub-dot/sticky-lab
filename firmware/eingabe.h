@@ -66,6 +66,7 @@ static bool tpRead(uint16_t reg, uint8_t* buf, uint8_t n) {
     return true;
 }
 
+static void touchSammlerStart();
 static void touchInit() {
     // Stromzyklus und Goodix-Reset wie in der Werks-Firmware (INT low beim Reset → Adresse 0x5D)
     pinMode(PIN_TP_RST, OUTPUT); pinMode(PIN_TP_INT, OUTPUT);
@@ -89,28 +90,61 @@ static void touchInit() {
     tpWrite(0x8040, 0);   // normaler Lesemodus
     tpWrite(0x814E, 0);   // Statuspuffer leeren
     Serial.printf("Touch: GT911 an 0x%02X, Konfig 0x%02X\n", tpAddr, ver);
+    touchSammlerStart();
 }
 
 static bool tpUnten = false;
 static int tpX = 0, tpY = 0;   // letzte Lage in Display-Koordinaten
 
-/** cb(x, y, unten) bei Berühren und Loslassen; x/y im Querformat 800 × 480 */
-static void touchPoll(void (*cb)(int, int, bool)) {
-    if (!tpAddr) return;
-    uint8_t st;
-    if (!tpRead(0x814E, &st, 1) || !(st & 0x80)) return;
-    uint8_t n = st & 0x0F;
-    if (n > 0) {
-        uint8_t p[7];
-        tpRead(0x814F, p, 7);
-        int rx = p[1] | p[2] << 8, ry = p[3] | p[4] << 8;
-        tpX = 799 - ry; tpY = 479 - rx;   // GT911 liefert hochkant (am Gerät geprüft, EDC 11.11.2026)
-        if (!tpUnten) { tpUnten = true; bedient(); cb(tpX, tpY, true); }
-    } else if (tpUnten) {
-        tpUnten = false;
-        cb(tpX, tpY, false);
+// Touch-Sammler (wie Seeeds Beispiele): eine eigene Aufgabe fragt den GT911 alle ~15 ms ab, auch während die
+// Hauptschleife in einem Refresh steht, und legt Ereignisse in eine Warteschlange. Vorher (Abfrage nur in loop())
+// fehlten während jedes Refreshs ~0,85 s Punkte – Kritzel-Linien wurden zackig (Markus, 15.11.2026).
+struct TpEreignis { int16_t x, y; uint8_t art; };   // art: 0 = aufgesetzt, 1 = bewegt, 2 = losgelassen
+static QueueHandle_t tpSchlange = nullptr;
+static uint32_t tpVerloren = 0;
+
+static void touchAufgabe(void*) {
+    bool unten = false; int lx = -1, ly = -1;
+    for (;;) {
+        vTaskDelay(pdMS_TO_TICKS(15));
+        uint8_t st;
+        if (!tpRead(0x814E, &st, 1) || !(st & 0x80)) continue;
+        uint8_t n = st & 0x0F;
+        TpEreignis e;
+        if (n > 0) {
+            uint8_t p[7];
+            tpRead(0x814F, p, 7);
+            int rx = p[1] | p[2] << 8, ry = p[3] | p[4] << 8;
+            e.x = 799 - ry; e.y = 479 - rx;   // GT911 liefert hochkant (am Gerät geprüft, EDC 11.11.2026)
+            e.art = unten ? 1 : 0;
+            if (!unten || e.x != lx || e.y != ly) { if (xQueueSend(tpSchlange, &e, 0) != pdTRUE) tpVerloren++; }
+            unten = true; lx = e.x; ly = e.y;
+        } else if (unten) {
+            e.x = lx; e.y = ly; e.art = 2; unten = false;
+            if (xQueueSend(tpSchlange, &e, 0) != pdTRUE) tpVerloren++;
+        }
+        tpWrite(0x814E, 0);
     }
-    tpWrite(0x814E, 0);
+}
+static void touchSammlerStart() {
+    if (!tpAddr || tpSchlange) return;
+    tpSchlange = xQueueCreate(256, sizeof(TpEreignis));
+    xTaskCreatePinnedToCore(touchAufgabe, "touch", 3072, nullptr, 2, nullptr, 0);
+}
+
+/** Wer jeden Punkt braucht (Kritzeln), meldet sich hier an: punkt(x, y, neuerStrich) für Aufsetzen und Bewegung */
+static void (*tpPunkt)(int, int, bool) = nullptr;
+
+/** Holt alle gesammelten Ereignisse ab. cb(x, y, unten) bei Aufsetzen und Loslassen; x/y quer 800 × 480 */
+static void touchPoll(void (*cb)(int, int, bool)) {
+    if (!tpSchlange) return;
+    TpEreignis e;
+    while (xQueueReceive(tpSchlange, &e, 0) == pdTRUE) {
+        tpX = e.x; tpY = e.y;
+        if (e.art == 0) { tpUnten = true; bedient(); if (tpPunkt) tpPunkt(e.x, e.y, true); cb(e.x, e.y, true); }
+        else if (e.art == 1) { if (tpPunkt) tpPunkt(e.x, e.y, false); }
+        else { tpUnten = false; cb(e.x, e.y, false); }
+    }
 }
 
 static bool drin(int x, int y, int x0, int y0, int w, int h) { return x >= x0 && x < x0 + w && y >= y0 && y < y0 + h; }

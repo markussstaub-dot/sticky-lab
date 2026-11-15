@@ -36,6 +36,7 @@ Jede Station ist eine Seite. Reihenfolge = Bau-Reihenfolge.
 | 6 | **Touch-Labor** (umgesetzt FW 0.3.0: Zielen, Rückmeldung, Kritzeln) | Zielscheibe mit Treffer-Kreuzen, Kritzelspur, Rückmeldungsarten im Vergleich (Rahmen, Invertieren, Klick, Summer) | Latenz Berührung → sichtbare Rückmeldung, Abweichung vom Ziel in px |
 | 7 | **Instrumente** (umgesetzt FW 0.4.0: Klima mit Taupunkt, Wasserwaage, Uhr, Akku; Klima jede Minute in die CSV) | Sensoren als Braun-Instrumente: Klima (SHT40) mit Taupunkt, Wasserwaage (LSM6DS3), Akku mit Spannung, Strom und Verlauf (BQ27220), Uhr (PCF8563) | Werte live, wahlweise alle n Sekunden in die CSV |
 | 8 | **Energie** (umgesetzt FW 0.2.0) | Akku-Kapazität aus dem BQ27220 (FullChargeCapacity), Dauerlauf: n Refreshes einer Art, dann Füllstand vorher/nachher; Grundverbrauch wach, Leichtschlaf, Tiefschlaf über Stunden | mAh je Voll-/Teil-Refresh, mA je Zustand, hochgerechnet „Refreshes pro Ladung“ und „Tage im Schlaf“ |
+| 9 | **Burgduell** (Markus, 15.11.2026: Spiel lokal statt über das Handy) | Eigenes Artillerie-Spiel (eigene Burgen, eigener Look, kein Nachbau eines bestehenden Spiels): Gelände mit Hügeln, Wind, Zielen per Tipp, ▲▼ Feinwinkel, Feuer = Doppelring; Flugbahn als Punktspur in einem Teil-Refresh, Krater im Gelände, 3 Treffer zerstören eine Burg; 2 Spieler oder gegen den Sticky | Refresh-Zeit je Zug; Vorbild für eine lokale Spielseite in EDC |
 
 - Stand 15.11.2026: alle acht Stationen gebaut (FW 0.4.0). Nächstes: Messungen mit dem Finger und auf Akku, dann
   vertiefen (Strichschrift, Testbild von SD, Ghosting-Serie, „Schnell“-Refresh klären, Summer-Klänge).
@@ -116,6 +117,13 @@ Der Sticky hat schon zwei App-Plätze (`app0` und `app1`, je 4 MB), siehe `parti
   schaltet „zurück zu EDC“ (in der Übersicht) per Neustart auf `app0`. Von EDC zum Lab geht es ohne Änderung an EDC
   nur mit dem PC (Skript `umschalten.ps1`, schreibt nur otadata, wenige Sekunden). Später kann EDC eine Taste
   dafür bekommen, das wäre dann ein Schritt in EDC. Aufwand: etwa ein Abend.
+- Vorschlag (Markus, 15.11.2026): **B mit Umschalten am Gerät**: EDC in `app0`, Lab in `app1` (beide passen: EDC
+  ~1,0 MB, Lab ~0,7 MB, je 4 MB Platz). Lab → EDC: Kachel „zurück zu EDC“ setzt den Start auf `app0` und startet neu.
+  EDC → Lab: braucht eine kleine Ergänzung in EDC (Menüeintrag „Sticky Lab“, setzt `app1`). Daten bleiben getrennt.
+- Vorschlag (Markus, 15.11.2026): **Firmware-Bibliothek in der APK**: die Sticky-App trägt fertige Firmwares (EDC,
+  Lab, später Spiele) mit und spielt die gewählte per BLE in den freien App-Platz (OTA), danach Umschalten wie oben.
+  ~0,7–1 MB über BLE dauert grob 2–5 min. Braucht OTA-Empfang in EDC und eine Auswahlseite in der App – Arbeit im
+  EDC-Projekt, nicht im Lab.
 - fest (egal ob A oder B): **das Lab rührt die EDC-Daten nicht an**: kein Formatieren der `spiffs`-Partition
   (Bordbuch-Seiten), eigener NVS-Namensraum `lab`, auf der SD nur der Ordner `/lab/`.
 - Hinweis: ein normales `arduino-cli upload` der EDC-Firmware schreibt `app0` und stellt den Start auf `app0`. Das Lab

@@ -164,17 +164,22 @@ static void dazu(int x, int y) {
     if (!dreckig) { dx0 = dx1 = x; dy0 = dy1 = y; dreckig = true; }
     dx0 = min(dx0, x); dy0 = min(dy0, y); dx1 = max(dx1, x); dy1 = max(dy1, y);
 }
+/** Jeder Punkt aus dem Touch-Sammler (eingabe.h), auch die während eines Refreshs gesammelten */
+static void punkt(int x, int y, bool neu) {
+    if (modus != M_KRITZELN || !drin(x, y, 0, AY, W, AH)) return;
+    if (neu || !strichAn) {
+        if (!strichAn) { strichStart = millis(); strichRefreshs = 0; strichMs = 0; }
+        strichAn = true; lx = x; ly = y;
+        display.fillCircle(x, y, 2, SCHWARZ); dazu(x, y);
+        return;
+    }
+    display.drawWideLine(lx, ly, x, y, 4, SCHWARZ);
+    dazu(lx, ly); dazu(x, y);
+    lx = x; ly = y;
+}
 static void kritzelnTick() {
     if (modus != M_KRITZELN) return;
-    bool imFeld = tpUnten && drin(tpX, tpY, 0, AY, W, AH);
-    if (imFeld) {
-        if (!strichAn) { strichAn = true; lx = tpX; ly = tpY; strichStart = millis(); strichRefreshs = 0; strichMs = 0; }
-        if (tpX != lx || tpY != ly) {
-            display.drawWideLine(lx, ly, tpX, tpY, 4, SCHWARZ);
-            dazu(lx, ly); dazu(tpX, tpY);
-            lx = tpX; ly = tpY;
-        }
-    }
+    tpPunkt = punkt;
     if (dreckig && millis() - letzterRefresh > 60) {
         int m = 5;
         int x = max(0, dx0 - m), y = max(AY, dy0 - m), x2 = min(W, dx1 + m), y2 = min(AY + AH, dy1 + m);
@@ -201,6 +206,7 @@ static void modusAnfang() {
     else kritzelnAnfang();
 }
 static void betreten() {
+    tpPunkt = punkt;
     statuszeile("6 · Touch");
     modusAnfang();
     pillen();

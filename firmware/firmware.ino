@@ -8,7 +8,7 @@
  * Bauen: arduino-cli compile -b "esp32:esp32:XIAO_ESP32S3:PSRAM=opi,CDCOnBoot=cdc"
  *        --build-property build.flash_size=32MB --build-path "%LOCALAPPDATA%\sticky-build\sticky-lab" firmware
  */
-#define LAB_VERSION "0.4.4"
+#define LAB_VERSION "0.5.1"
 
 #include <esp_sleep.h>
 #include <driver/gpio.h>
@@ -28,6 +28,7 @@
 #include "stationen/instrumente.h"
 #include "stationen/schriften.h"
 #include "stationen/bewegung.h"
+#include "stationen/burgduell.h"
 
 // ---- Stationen (Index 0 = Übersicht, danach Nummer wie in der SPEC) ------------------------
 static const Station STATIONEN[] = {
@@ -40,6 +41,7 @@ static const Station STATIONEN[] = {
     { "6 · Touch", touch::betreten, touch::taste, touch::tipp, touch::kritzelnTick },
     { "7 · Instrumente", instrumente::betreten, instrumente::taste, instrumente::tipp, instrumente::tick },
     { "8 · Energie", energie::betreten, energie::taste, energie::tipp, nullptr },
+    { "9 · Burgduell", burgduell::betreten, burgduell::taste, burgduell::tipp, nullptr },
 };
 static const int ANZAHL = sizeof STATIONEN / sizeof STATIONEN[0];
 static int aktuell = -1;
@@ -47,6 +49,7 @@ static int aktuell = -1;
 static void geheZu(int i) {
     if (i < 0 || i >= ANZAHL || !STATIONEN[i].betreten) return;
     aktuell = i;
+    tpPunkt = nullptr;   // nur die Station, die jeden Touch-Punkt braucht, meldet sich wieder an
     display.fillScreen(WEISS);
     if (i == 0) { char t[48]; snprintf(t, sizeof t, "Übersicht  ·  FW " LAB_VERSION "  ·  %s", panelChip()); statuszeile(t); }
     STATIONEN[i].betreten();
@@ -134,6 +137,7 @@ void setup() {
     delay(300);
     Serial.printf("\nSticky Lab %s\n", LAB_VERSION);
     Wire.begin(PIN_MISC_SDA, PIN_MISC_SCL, 100000);
+    randomSeed(esp_random());   // echte Zufallszahlen (Burgduell-Gelände, Wind)
     akkuInit();
 
     if (!display.begin()) Serial.println(display.lastResult().message);
@@ -170,8 +174,7 @@ void loop() {
     }
     tastenPoll(tasteCb);
     if (tasteUnten(K_KI) && !kiFotoGemacht && millis() - kiSeit > 800) fotoMachen();
-    static uint32_t tp = 0;
-    if (millis() - tp > 25) { tp = millis(); touchPoll(touchCb); }
+    touchPoll(touchCb);   // holt nur ab, was der Touch-Sammler gesammelt hat
     if (aktuell >= 0 && STATIONEN[aktuell].tick) STATIONEN[aktuell].tick();
     // USB-Befehle (Sticky-Console, console/index.html): je ein Zeichen, „t x y“ mit Zeilenende
     // Ohne USB ist der CH343 stromlos und seine Leitung zum ESP schwebt: Rauschen wäre sonst ein Befehl (z. B. „f“ =

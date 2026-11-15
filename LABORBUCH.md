@@ -111,3 +111,14 @@ Erkenntnisse mit Datum. Rohdaten: `/lab/messungen.csv` auf der SD-Karte bzw. CSV
 - Ruhe/Teil/Voll waren unbrauchbar: im Sammler lief `int16 × uint32` über (negativer Entladestrom → +4,3 Mio. je
   Probe). Behoben in 0.4.4, Messung wiederholen.
 - Akku-Chip nach ~17 min Akkubetrieb: Rest 7433 von 7500 mAh (−67 „mAh“ laut Chip, nicht verlässlich).
+
+## 15.11.2026 – FW 0.5.0/0.5.1: Burgduell, Touch-Sammler
+
+- **Station 9 Burgduell** (eigenes Spiel, lokal): ein Zug = ein Teil-Refresh des ganzen Bilds, **1204 ms**. Flugbahn
+  als Punktspur, Krater, 3 Treffer; der Sticky als Gegner probiert alle Kräfte durch und streut anfangs, mit jedem
+  Zug weniger. Markus: „sieht toll aus“.
+- **Kritzeln war zackig** (Markus): der Touch wurde nur in `loop()` abgefragt, während jedes Teil-Refreshs (~0,85 s)
+  fehlten Punkte → lange gerade Striche. Jetzt fragt eine eigene Aufgabe den GT911 alle 15 ms ab (wie in Seeeds
+  Beispielen) und sammelt in einer Warteschlange (256 Ereignisse); die Linie bekommt alle Punkte. Mit dem Finger
+  noch zu prüfen.
+- Nebenbei: Statuszeile zeigte nach dem Akkutest kurz **3 %** (Akku-Chip, unkonfiguriert – Prozent bleibt fraglich).

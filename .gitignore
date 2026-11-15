@@ -7,3 +7,6 @@ build/
 *.map
 *.bin
 __pycache__/
+
+# Spickzettel fürs EDC-Sticky (persönlich)
+SPICKZETTEL-EDC.md

@@ -1,6 +1,6 @@
 {
   "name": "Sticky Lab",
-  "version": "0.5.3",
+  "version": "0.5.7",
   "flashSize": "32MB",
   "flashMode": "dio",
   "flashFreq": "80m",
@@ -30,8 +30,8 @@
         {
           "path": "sticky-lab.bin",
           "offset": 65536,
-          "size": 701664,
-          "sha256": "d6f9c1ee98395568626714aaa2269e751a59b0818f5969b3431c429a5a7600c7"
+          "size": 701856,
+          "sha256": "a8c7435c518c5c34c87e36ca3e55f278ecdcd674308a7d403e5f609b6366eaac"
         }
       ]
     }

@@ -130,3 +130,17 @@ Erkenntnisse mit Datum. Rohdaten: `/lab/messungen.csv` auf der SD-Karte bzw. CSV
   vom Ring zum Punkt und Wandberührungen. Mit dem Finger noch zu messen.
 - Console: Reiter **Firmware** listet das eigene Lab und alle 37 Playground-Firmwares (36 aufspielbar) und spielt
   per esptool-js über Web Serial auf. Im Browser geprüft: Liste lädt; Aufspielen braucht Markus' Klick.
+
+## 15.11.2026 – FW 0.5.4–0.5.7: Zeichnen über die Console (Maus, Finger, S Pen)
+
+- Der S Pen des Fold arbeitet elektromagnetisch (EMR) und wirkt nicht auf den kapazitiven GT911 des Stickys. Dafür
+  zeichnet man jetzt **auf dem Spiegel der Console**: Aufsetzen/Bewegen/Loslassen gehen als `z x y`, `m x y`, `h`
+  an den Sticky und landen in derselben Warteschlange wie echter Touch.
+- Drei Fehler auf dem Weg, alle mit einem gezeichneten Stern gefunden:
+  1. Empfangspuffer 256 Byte lief während eines Refreshs über → `Serial.setRxBufferSize(8192)` (Start meldet die
+     Größe).
+  2. Lose Ziffern aus abgeschnittenen Zeilen wurden als „geh zu Station n“ gelesen → Stationen nur noch mit `s<n>`.
+  3. **`constrain(Serial.parseInt(), …)`**: `constrain` ist ein Makro und wertet das Argument mehrfach aus – es
+     las bis zu drei Zahlen statt einer (31 Punkte gesendet, 12 falsch angekommen). Erst lesen, dann begrenzen.
+     Dieselbe Falle steckte im Burgduell bei `random()`.
+- Danach: 31 von 31 Punkten exakt, der Stern ist sauber.

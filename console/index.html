@@ -45,7 +45,7 @@ body.screenpad .bau .rolle{font-size:12px;margin-bottom:4px}
 body.screenpad .bau dl{font-size:12.5px;gap:1px 8px;line-height:1.3}
 body.screenpad .grenze{font-size:12px;margin-top:4px;padding-top:4px}
 body.screenpad .tag.bekannt{display:none}   /* nur gemessen/offen markieren, spart Zeilen */
-canvas{width:100%;height:auto;display:block;background:#f4f2ec;border-radius:6px;cursor:crosshair;image-rendering:auto}
+canvas{width:100%;height:auto;display:block;background:#f4f2ec;border-radius:6px;cursor:crosshair;image-rendering:auto;touch-action:none}
 canvas.scharf{image-rendering:pixelated}
 .zoom{margin:0 0 10px}
 .zoom button{min-height:36px;padding:0 12px;font-size:14px}
@@ -116,7 +116,7 @@ body.screenpad .fw{break-inside:avoid;margin-bottom:10px}
 <main id="steuerung">
  <section>
   <div class="karte spiegel">
-   <h2>Spiegel · Klick = Tippen am Sticky</h2>
+   <h2>Spiegel · Klick = Tippen, Ziehen = Zeichnen am Sticky</h2>
    <div class="reihe zoom">
     <button data-zoom="original" title="so groß wie das echte Display (3,97″, 86,5 × 51,9 mm)">Originalgröße</button>
     <button data-zoom="pixel" title="ein Sticky-Pixel = ein Bildschirm-Pixel">1:1 Pixel</button>
@@ -144,14 +144,14 @@ body.screenpad .fw{break-inside:avoid;margin-bottom:10px}
    <h2>Fernbedienung</h2>
    <div class="reihe">
     <button data-cmd="k">KI · Übersicht</button>
-    <button data-cmd="1">1 Refresh</button>
-    <button data-cmd="2">2 Schrift</button>
-    <button data-cmd="3">3 Raster</button>
-    <button data-cmd="4">4 Braun</button>
-    <button data-cmd="5">5 Bewegung</button>
-    <button data-cmd="6">6 Touch</button>
-    <button data-cmd="7">7 Instrumente</button>
-    <button data-cmd="8">8 Energie</button>
+    <button data-cmd="s1;">1 Refresh</button>
+    <button data-cmd="s2;">2 Schrift</button>
+    <button data-cmd="s3;">3 Raster</button>
+    <button data-cmd="s4;">4 Braun</button>
+    <button data-cmd="s5;">5 Bewegung</button>
+    <button data-cmd="s6;">6 Touch</button>
+    <button data-cmd="s7;">7 Instrumente</button>
+    <button data-cmd="s8;">8 Energie</button>
     <button data-cmd="a">Akku lesen</button>
     <button data-cmd="u">▲</button>
     <button data-cmd="d">▼</button>
@@ -359,7 +359,7 @@ async function trennen(){
 }
 
 $('#verbinden').onclick = verbinden;
-document.querySelectorAll('[data-cmd]').forEach(b => b.onclick = () => senden(b.dataset.cmd));
+document.querySelectorAll('[data-cmd]').forEach(b => b.onclick = () => senden(b.dataset.cmd.replace(';', '\n')));   // „s6;“ → „s6⏎“
 $('#los').onclick = () => senden('t 690 410\n');
 $('#serie').onclick = async () => {
   const b = $('#serie'); b.disabled = true;
@@ -369,11 +369,30 @@ $('#serie').onclick = async () => {
   }
   b.disabled = false;
 };
-$('#spiegel').onclick = e => {
-  const r = e.target.getBoundingClientRect();
-  const x = Math.round((e.clientX - r.left) / r.width * 800), y = Math.round((e.clientY - r.top) / r.height * 480);
-  senden(`t ${x} ${y}\n`);
+// Zeichnen auf dem Spiegel: Maus, Finger oder S Pen. Aufsetzen/Bewegen/Loslassen gehen als z/m/h an den Sticky und
+// landen dort wie echter Touch – ein kurzer Klick ist ein Tipp, ein Strich malt in Station 6 → Kritzeln.
+let stiftUnten = false, stiftX = -9, stiftY = -9, stiftZeit = 0;
+const spiegelPunkt = e => {
+  const c = $('#spiegel'), r = c.getBoundingClientRect();
+  return [Math.round((e.clientX - r.left) / r.width * c.width), Math.round((e.clientY - r.top) / r.height * c.height)];
 };
+$('#spiegel').addEventListener('pointerdown', e => {
+  e.preventDefault(); $('#spiegel').setPointerCapture(e.pointerId);
+  const [x, y] = spiegelPunkt(e); stiftUnten = true; stiftX = x; stiftY = y; stiftZeit = performance.now();
+  senden(`z ${x} ${y}\n`);
+});
+$('#spiegel').addEventListener('pointermove', e => {
+  if (!stiftUnten) return;
+  for (const p of (e.getCoalescedEvents?.() || [e])) {
+    const [x, y] = spiegelPunkt(p);
+    if (Math.abs(x - stiftX) + Math.abs(y - stiftY) < 3 || performance.now() - stiftZeit < 12) continue;   // nicht fluten
+    stiftX = x; stiftY = y; stiftZeit = performance.now();
+    senden(`m ${x} ${y}\n`);
+  }
+});
+const stiftHoch = () => { if (!stiftUnten) return; stiftUnten = false; senden('h'); if ($('#auto').checked) setTimeout(() => senden('f'), 1500); };
+$('#spiegel').addEventListener('pointerup', stiftHoch);
+$('#spiegel').addEventListener('pointercancel', stiftHoch);
 $('#png').onclick = () => $('#spiegel').toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'sticky-' + Date.now() + '.png'; a.click(); });
 $('#csv').onclick = () => {
   const t = 'laufzeit_s,station,art,wert,einheit,teil_seit_voll,notiz\n' + messungen.map(m => [m.s, m.station, m.art, m.wert, m.einheit, m.seit, m.notiz].join(',')).join('\n');

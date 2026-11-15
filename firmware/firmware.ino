@@ -3,12 +3,13 @@
  * Spec: ../SPEC.md · Nachschlagewerk: reterminal-sticky (EDC, FW 0.31.8)
  *
  * Bedienung: KI kurz = Übersicht · KI halten = Bildschirmfoto nach /lab/fotos · ▲/▼ = blättern · Tippen = Aktion
- * USB-Seriell (115200): „f“ = Foto über USB (werkzeuge/foto2png.py), „1“…„7“ = Station, „0“ = Übersicht
+ * USB-Seriell (115200): „f“ = Foto über USB (werkzeuge/foto2png.py), „s1“…„s9“ = Station, „s0“ = Übersicht,
+ *   „t x y“ = Tipp, „z/m x y“ + „h“ = Strich, „i“ Info, „a“ Akku, „c“ Messungen
  *
  * Bauen: arduino-cli compile -b "esp32:esp32:XIAO_ESP32S3:PSRAM=opi,CDCOnBoot=cdc"
  *        --build-property build.flash_size=32MB --build-path "%LOCALAPPDATA%\sticky-build\sticky-lab" firmware
  */
-#define LAB_VERSION "0.5.3"
+#define LAB_VERSION "0.5.7"
 
 #include <esp_sleep.h>
 #include <driver/gpio.h>
@@ -133,9 +134,11 @@ void setup() {
     pinMode(PIN_CHG_STATE, INPUT_PULLUP);
     pinMode(PIN_USB, INPUT);
     analogSetPinAttenuation(PIN_USB, ADC_11db);
+    size_t rxPuffer = Serial.setRxBufferSize(8192);   // Striche aus der Console kommen auch während eines Refreshs (~0,9 s) an
     Serial.begin(115200);
+    Serial.setTimeout(50);   // parseInt wartet sonst bis 1 s je Zahl
     delay(300);
-    Serial.printf("\nSticky Lab %s\n", LAB_VERSION);
+    Serial.printf("\nSticky Lab %s, RX-Puffer %u\n", LAB_VERSION, (unsigned)rxPuffer);
     Wire.begin(PIN_MISC_SDA, PIN_MISC_SCL, 100000);
     randomSeed(esp_random());   // echte Zufallszahlen (Burgduell-Gelände, Wind)
     akkuInit();
@@ -176,6 +179,7 @@ void loop() {
     if (tasteUnten(K_KI) && !kiFotoGemacht && millis() - kiSeit > 800) fotoMachen();
     touchPoll(touchCb);   // holt nur ab, was der Touch-Sammler gesammelt hat
     if (aktuell >= 0 && STATIONEN[aktuell].tick) STATIONEN[aktuell].tick();
+    static bool strichEcho = false;   // Fehlersuche: empfangene Strich-Punkte zurückmelden (bei Bedarf true)
     // USB-Befehle (Sticky-Console, console/index.html): je ein Zeichen, „t x y“ mit Zeilenende
     // Ohne USB ist der CH343 stromlos und seine Leitung zum ESP schwebt: Rauschen wäre sonst ein Befehl (z. B. „f“ =
     // 4 s Foto senden). Darum nur am USB auswerten, sonst verwerfen und zählen.
@@ -190,7 +194,7 @@ void loop() {
     while (usbDa() && Serial.available()) {
         int c = Serial.read();
         if (c == 'f') fotoSeriell();
-        else if (c >= '0' && c <= '9') geheZu(c - '0');
+        else if (c == 's') geheZu(Serial.parseInt());   // „s6“ = Station 6; lose Ziffern (Reste bei Rückstau) zählen nicht
         else if (c == 'u') { bedient(); tasteCb(K_UP, true); }
         else if (c == 'd') { bedient(); tasteCb(K_DOWN, true); }
         else if (c == 'k') { bedient(); kiFotoGemacht = false; tasteCb(K_KI, false); }   // KI kurz
@@ -199,6 +203,15 @@ void loop() {
             int x = Serial.parseInt(), y = Serial.parseInt();
             bedient();
             touchCb(x, y, true);
+        } else if (c == 'z' || c == 'm' || c == 'h') {
+            // Striche aus der Console (Maus, Finger oder S Pen am Fold): wie echter Touch in die Warteschlange
+            static int16_t fx = 0, fy = 0;
+            TpEreignis e;
+            // Achtung: constrain() ist ein Makro und wertet sein Argument mehrfach aus – erst lesen, dann begrenzen
+            if (c != 'h') { int x = Serial.parseInt(), y = Serial.parseInt(); fx = constrain(x, 0, W - 1); fy = constrain(y, 0, H - 1); }
+            e.x = fx; e.y = fy; e.art = c == 'z' ? 0 : c == 'm' ? 1 : 2;
+            if (tpSchlange) xQueueSend(tpSchlange, &e, 0);
+            if (strichEcho) Serial.printf("P %c %d %d %d\n", c, fx, fy, (int)analogReadMilliVolts(PIN_USB));
         } else if (c == 'a') akkuSeriell();
         else if (c == 'c') {   // Messungen von der Karte über USB
             File f = sdEin() ? SD.open("/lab/messungen.csv") : File();

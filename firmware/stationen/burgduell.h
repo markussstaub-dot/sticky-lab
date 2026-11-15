@@ -142,7 +142,7 @@ static void feuer() {
     } else if (treffer == -1) { krater(ex, ey, 16); snprintf(meldung, sizeof meldung, "%s: daneben", wer); }
     else snprintf(meldung, sizeof meldung, "%s: ins Aus", wer);
     zuege++;
-    if (!vorbei) { am = 1 - am; wind = constrain(wind + (int)random(-2, 3), -6, 6); }
+    if (!vorbei) { am = 1 - am; int dw = random(-2, 3); wind = constrain(wind + dw, -6, 6); }   // random() nie in constrain(): Makro
     allesNeu();
     uint32_t ms = teil(0, 0, W, H);
     messung("burgduell", "zug", ms, "ms", meldung);
@@ -157,7 +157,7 @@ static void stickyZieht() {
         if (abst < bestAbst) { bestAbst = abst; beste = k; }
     }
     int streu = max(2, 14 - zuege);
-    winkel[1] = w; kraft[1] = constrain(beste + (int)random(-streu, streu + 1), 10, 100);
+    winkel[1] = w; int dk = random(-streu, streu + 1); kraft[1] = constrain(beste + dk, 10, 100);
     snprintf(meldung, sizeof meldung, "Sticky zielt ...");
     hud(); teil(0, HUD_Y, W, H - HUD_Y);
     delay(400);

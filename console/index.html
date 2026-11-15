@@ -17,6 +17,8 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;padding:16p
 .karte{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px}
 .karte h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px}
 #buehne{overflow:auto;max-width:100%}
+/* ScreenPad (Zenbook Pro Duo, 3840 × 1100): links liegt die ScreenXpert-Leiste über dem Fenster */
+body.screenpad{padding-left:76px}
 canvas{width:100%;height:auto;display:block;background:#f4f2ec;border-radius:6px;cursor:crosshair;image-rendering:auto}
 canvas.scharf{image-rendering:pixelated}
 .zoom{margin:0 0 10px}
@@ -347,7 +349,11 @@ $('#groesser').onclick = () => { if (zoomArt === 'einpassen') zoomArt = 'origina
 $('#kleiner').onclick = () => { if (zoomArt === 'einpassen') zoomArt = 'original'; zoomFaktor = Math.max(0.25, zoomFaktor / 1.25); zoomSetzen(); };
 $('#pxmm').onchange = e => { const v = +e.target.value; if (v >= 2 && v <= 40) { pxmm = v; zoomSetzen(); } };
 // Fenster auf einen anderen Bildschirm gezogen → devicePixelRatio kann sich ändern
+// ScreenPad erkennen: Bildschirm mehr als 2,5-mal so breit wie hoch (Hauptbildschirm 16:9 = 1,78)
+const screenpadPruefen = () => document.body.classList.toggle('screenpad', screen.width / screen.height > 2.5);
+screenpadPruefen();
 let letzteDpr = devicePixelRatio;
+setInterval(screenpadPruefen, 1000);
 setInterval(() => { if (devicePixelRatio !== letzteDpr) { letzteDpr = devicePixelRatio; zoomSetzen(); } }, 1000);
 addEventListener('resize', zoomSetzen);
 zoomSetzen();

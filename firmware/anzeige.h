@@ -177,7 +177,8 @@ static void pille(int x, int y, int w, int h, const char* s, Rolle rolle, bool g
 static void doppelring(int cx, int cy, int r, const char* s, bool gedrueckt = false) {
     display.fillCircle(cx, cy, r, gedrueckt ? SCHWARZ : WEISS);
     uint32_t v = gedrueckt ? WEISS : SCHWARZ;
-    for (int i = 0; i < 3; i++) { display.drawCircle(cx, cy, r - i, SCHWARZ); display.drawCircle(cx, cy, r - 10 - i, v); }
+    int innen = r < 52 ? 7 : 10;   // kleine Ringe: innerer Ring näher am äußeren, damit das Wort Platz hat
+    for (int i = 0; i < 3; i++) { display.drawCircle(cx, cy, r - i, SCHWARZ); display.drawCircle(cx, cy, r - innen - i, v); }
     text(s, cx, cy, r < 52 ? &FreeSansBold9pt7b : &FreeSansBold12pt7b, MC_DATUM, v);
 }
 

@@ -8,7 +8,7 @@ namespace burgduell {
 
 static const int FY = STATUS_H, FH = 410 - STATUS_H;        // Spielfeld
 static const int HUD_Y = 412;
-static const int FEUER_X = 750, FEUER_Y = 446, FEUER_R = 30;
+static const int FEUER_X = 748, FEUER_Y = 445, FEUER_R = 36;
 static const int GX = 16, GY = 420, GW = 170, GH = 52;      // Pille Gegner
 static const int BW = 46, BH = 40;                          // Burg
 
@@ -36,7 +36,7 @@ static void neueWelt() {
     hp[0] = hp[1] = 3; am = 0; zuege = 0; vorbei = false; spurN = 0;
     wind = random(-5, 6);
     winkel[0] = winkel[1] = 45; kraft[0] = kraft[1] = 55;
-    snprintf(meldung, sizeof meldung, "Tipp ins Feld zielt, Doppelring feuert");
+    snprintf(meldung, sizeof meldung, "Tipp ins Feld = zielen, ▲▼ = fein, Ring = Feuer");
 }
 static void kanone(int b, int& x, int& y) { x = burgX[b] + (b == 0 ? 10 : -10); y = boden[burgX[b]] - BH - 10; }
 
@@ -88,11 +88,18 @@ static void hud() {
     display.fillRect(0, HUD_Y, W, H - HUD_Y, WEISS);
     display.drawFastHLine(0, HUD_Y, W, SCHWARZ);
     pille(GX, GY, GW, GH, gegenSticky ? "gegen Sticky" : "2 Spieler", R_NEBEN);
+    // zwei Zeilen links vom Feuer-Knopf: wer, Winkel, Kraft – darunter die Meldung
     char b[80];
-    if (vorbei) snprintf(b, sizeof b, "%s  ·  Tipp = neues Spiel", meldung);
-    else snprintf(b, sizeof b, "%s  ·  Winkel %d°  ·  Kraft %d  ·  %s",
-                  am == 0 ? "Voll-Fahne" : (gegenSticky ? "Sticky" : "Ring-Fahne"), winkel[am], kraft[am], meldung);
-    text(b, GX + GW + 14, GY + GH / 2, &FreeSans9pt7b, ML_DATUM);
+    const int tx = GX + GW + 14;
+    if (vorbei) {
+        text(meldung, tx, GY + 14, &FreeSansBold12pt7b, ML_DATUM);
+        text("Tippen = neues Spiel", tx, GY + 40, &FreeSans9pt7b, ML_DATUM);
+    } else {
+        snprintf(b, sizeof b, "%s  ·  Winkel %d°  ·  Kraft %d",
+                 am == 0 ? "Voll-Fahne" : (gegenSticky ? "Sticky" : "Ring-Fahne"), winkel[am], kraft[am]);
+        text(b, tx, GY + 14, &FreeSansBold9pt7b, ML_DATUM);
+        text(meldung, tx, GY + 40, &FreeSans9pt7b, ML_DATUM);
+    }
     if (!vorbei) doppelring(FEUER_X, FEUER_Y, FEUER_R, "Feuer");
 }
 static void statusZug() {

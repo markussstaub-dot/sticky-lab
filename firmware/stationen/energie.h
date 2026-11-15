@@ -65,8 +65,8 @@ static void ergebnisse() {
     y += 8;
     int voll = bqWert(BQ_VOLL, 0);
     if (voll <= 0) { text("Hochrechnung: Kapazität unbekannt", EX + 10, y, &FreeSans9pt7b); return; }
-    snprintf(b, sizeof b, "Hochrechnung, %d mAh laut Chip:", voll);
-    text(b, EX + 10, y, &FreeSansBold12pt7b); y += 32;
+    snprintf(b, sizeof b, "Hochrechnung (laut Chip %d mAh):", voll);
+    text(b, EX + 10, y, &FreeSansBold9pt7b); y += 28;
     if (erg[V_TEIL].da && erg[V_TEIL].uahJe > 0) {
         snprintf(b, sizeof b, "%.0f Teil-Refreshes je Ladung", voll * 1000.0f / erg[V_TEIL].uahJe);
         text(b, EX + 10, y, &FreeSans9pt7b); y += 24;

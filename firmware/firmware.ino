@@ -9,7 +9,7 @@
  * Bauen: arduino-cli compile -b "esp32:esp32:XIAO_ESP32S3:PSRAM=opi,CDCOnBoot=cdc"
  *        --build-property build.flash_size=32MB --build-path "%LOCALAPPDATA%\sticky-build\sticky-lab" firmware
  */
-#define LAB_VERSION "0.5.8"
+#define LAB_VERSION "0.6.2"
 
 #include <esp_sleep.h>
 #include <driver/gpio.h>
@@ -30,6 +30,7 @@
 #include "stationen/schriften.h"
 #include "stationen/bewegung.h"
 #include "stationen/burgduell.h"
+#include "stationen/tastatur.h"
 
 // ---- Stationen (Index 0 = Übersicht, danach Nummer wie in der SPEC) ------------------------
 static const Station STATIONEN[] = {
@@ -43,6 +44,7 @@ static const Station STATIONEN[] = {
     { "7 · Instrumente", instrumente::betreten, instrumente::taste, instrumente::tipp, instrumente::tick },
     { "8 · Energie", energie::betreten, energie::taste, energie::tipp, nullptr },
     { "9 · Burgduell", burgduell::betreten, burgduell::taste, burgduell::tipp, nullptr },
+    { "10 · Tastatur", tastatur::betreten, tastatur::taste, tastatur::tipp, tastatur::tick },
 };
 static const int ANZAHL = sizeof STATIONEN / sizeof STATIONEN[0];
 static int aktuell = -1;

@@ -144,3 +144,12 @@ Erkenntnisse mit Datum. Rohdaten: `/lab/messungen.csv` auf der SD-Karte bzw. CSV
      las bis zu drei Zahlen statt einer (31 Punkte gesendet, 12 falsch angekommen). Erst lesen, dann begrenzen.
      Dieselbe Falle steckte im Burgduell bei `random()`.
 - Danach: 31 von 31 Punkten exakt, der Stern ist sauber.
+
+## 15.11.2026 – FW 0.6.x: Station 10 Tastatur (DE/EN)
+
+- Bildschirmtastatur quer: QWERTZ mit Ä Ö Ü ß (11 Tasten à 72 px) bzw. QWERTY, Umschalten DE/EN unten links,
+  Beschriftungen folgen der Sprache. Tasten werden nie neu gezeichnet, Rückmeldung je Anschlag = Klick; nur die
+  Textzeile wird gesammelt aufgefrischt (nach 0,3 s Pause, spätestens alle 1,5 s), **827 ms** je Auffrischen.
+- Per USB getippt (Maschine, 100 ms je Anschlag): 61 Zeichen + 4 Shift, **0 Fehler**, 258 Zeichen/min – kein
+  Anschlag geht während eines Refreshs verloren (Touch-Sammler). Menschliche Messung steht aus.
+- Schwäche: die Schrift kennt kein ß, es erscheint als „ss“ (wird aber als ß gespeichert und gezählt).

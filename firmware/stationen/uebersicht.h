@@ -5,7 +5,7 @@ struct Kachel { const char* nr; const char* name; int station; };   // station <
 static const Kachel KACHELN[10] = {
     {"1", "Refresh", 1}, {"2", "Schrift", 2}, {"3", "Raster", 3}, {"4", "Braun", 4},
     {"5", "Bewegung", 5}, {"6", "Touch", 6}, {"7", "Instrumente", 7}, {"8", "Energie", 8},
-    {"9", "Burgduell", 9}, {"", "Info", -2},
+    {"9", "Burgduell", 9}, {"10", "Tastatur", 10},
 };
 static const int KW = 142, KH = 160, KX0 = 21, KY0 = 66, KGAP = 12, SPALTEN = 5;
 

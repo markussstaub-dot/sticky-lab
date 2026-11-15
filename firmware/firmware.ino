@@ -8,7 +8,7 @@
  * Bauen: arduino-cli compile -b "esp32:esp32:XIAO_ESP32S3:PSRAM=opi,CDCOnBoot=cdc"
  *        --build-property build.flash_size=32MB --build-path "%LOCALAPPDATA%\sticky-build\sticky-lab" firmware
  */
-#define LAB_VERSION "0.3.0"
+#define LAB_VERSION "0.4.0"
 
 #include <esp_sleep.h>
 #include <driver/gpio.h>
@@ -23,14 +23,22 @@
 #include "stationen/refresh.h"
 #include "stationen/energie.h"
 #include "stationen/touch.h"
+#include "stationen/braunkasten.h"
+#include "stationen/rasterlabor.h"
+#include "stationen/instrumente.h"
+#include "stationen/schriften.h"
+#include "stationen/bewegung.h"
 
 // ---- Stationen (Index 0 = Übersicht, danach Nummer wie in der SPEC) ------------------------
 static const Station STATIONEN[] = {
     { "Übersicht", uebersichtBetreten, uebersichtTaste, uebersichtTipp, nullptr },
     { "1 · Refresh-Labor", refresh::betreten, refresh::taste, refresh::tipp, nullptr },
-    {}, {}, {}, {},           // 2–5 kommen noch
+    { "2 · Schrift", schriften::betreten, schriften::taste, schriften::tipp, nullptr },
+    { "3 · Raster", rasterlabor::betreten, rasterlabor::taste, rasterlabor::tipp, nullptr },
+    { "4 · Braun-Baukasten", braunkasten::betreten, braunkasten::taste, braunkasten::tipp, nullptr },
+    { "5 · Bewegung", bewegung::betreten, bewegung::taste, bewegung::tipp, nullptr },
     { "6 · Touch", touch::betreten, touch::taste, touch::tipp, touch::kritzelnTick },
-    {},                       // 7 kommt noch
+    { "7 · Instrumente", instrumente::betreten, instrumente::taste, instrumente::tipp, instrumente::tick },
     { "8 · Energie", energie::betreten, energie::taste, energie::tipp, nullptr },
 };
 static const int ANZAHL = sizeof STATIONEN / sizeof STATIONEN[0];

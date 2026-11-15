@@ -3,6 +3,7 @@
 #include <Seeed_GFX.h>
 #include <font/GFXFF/FreeSans9pt7b.h>
 #include <font/GFXFF/FreeSans12pt7b.h>
+#include <font/GFXFF/FreeSansBold9pt7b.h>
 #include <font/GFXFF/FreeSansBold12pt7b.h>
 #include <font/GFXFF/FreeSansBold24pt7b.h>
 
@@ -69,6 +70,9 @@ static void umwandeln(const char* s, char* a, size_t n, uint8_t* art) {
             if (p[1] == 0x9F) { art[j] = 0; a[j++] = 's'; art[j] = 0; a[j++] = 's'; p += 2; continue; }
         }
         if (c == 0xC2 && p[1] == 0xB7) { art[j] = 2; a[j++] = ' '; p += 2; continue; }
+        if (c == 0xC2 && p[1] == 0xB1) { art[j] = 0; a[j++] = '+'; art[j] = 0; a[j++] = '/'; art[j] = 0; a[j++] = '-'; p += 2; continue; }   // ±
+        if (c == 0xC2 && p[1] == 0xB5) { art[j] = 0; a[j++] = 'u'; p += 2; continue; }   // µ
+        if (c == 0xC2 && p[1] == 0xB0) { art[j] = 5; a[j++] = ' '; p += 2; continue; }   // ° als kleiner Ring
         if (c == 0xE2 && p[1] == 0x96 && (p[2] == 0xB2 || p[2] == 0xBC)) { art[j] = p[2] == 0xB2 ? 3 : 4; a[j++] = ' '; art[j] = 0; a[j++] = ' '; art[j] = 0; a[j++] = ' '; p += 3; continue; }
         if (c < 0x80) { art[j] = 0; a[j++] = c; p++; } else p++;   // Unbekanntes überspringen
     }
@@ -78,13 +82,19 @@ static const GFXglyph* glyphe(const GFXfont* f, char c) {
     if ((uint8_t)c < f->first || (uint8_t)c > f->last) return nullptr;
     return &f->glyph[(uint8_t)c - f->first];
 }
+/** Breite der ersten n Zeichen als Summe der Vorschübe (textWidth() lässt ein Leerzeichen am Ende weg) */
+static int vorschub(const GFXfont* f, const char* a, int n = -1) {
+    int w = 0;
+    for (int i = 0; a[i] && (n < 0 || i < n); i++) { const GFXglyph* g = glyphe(f, a[i]); if (g) w += g->xAdvance; }
+    return w;
+}
 static void text(const char* s, int x, int y, const GFXfont* f, uint8_t datum = TL_DATUM, uint32_t farbe = SCHWARZ) {
     char a[128]; uint8_t art[128];
     umwandeln(s, a, sizeof a, art);
     display.setFreeFont(f);
     display.setTextSize(1);
     display.setTextColor(farbe);
-    int w = display.textWidth(a);
+    int w = vorschub(f, a);
     const GFXglyph* gH = glyphe(f, 'H');
     int cap = gH ? -gH->yOffset : 10;
     int links = x, basis = y;
@@ -99,11 +109,9 @@ static void text(const char* s, int x, int y, const GFXfont* f, uint8_t datum = 
     display.setTextDatum(L_BASELINE);
     display.drawString(a, links, basis);
     int r = max(1, (int)f->yAdvance / 22);
-    char vor[128];
     for (int i = 0; a[i]; i++) {
         if (!art[i]) continue;
-        memcpy(vor, a, i); vor[i] = 0;
-        int cx0 = links + display.textWidth(vor);
+        int cx0 = links + vorschub(f, a, i);
         const GFXglyph* g = glyphe(f, a[i]);
         if (!g) continue;
         int mitte = cx0 + g->xOffset + g->width / 2;
@@ -113,6 +121,9 @@ static void text(const char* s, int x, int y, const GFXfont* f, uint8_t datum = 
             int d = max(r + 1, (int)g->width / 4);
             display.fillCircle(mitte - d, oben, r, farbe);
             display.fillCircle(mitte + d, oben, r, farbe);
+        } else if (art[i] == 5) {
+            int rr = max(2, (int)f->yAdvance / 12);
+            display.drawCircle(cx0 + rr + 1, basis - cap + rr, rr, farbe);
         } else if (art[i] == 2) {
             display.fillCircle(cx0 + g->xAdvance / 2, basis - cap / 2, max(2, (int)f->yAdvance / 14), farbe);
         } else {
@@ -163,7 +174,7 @@ static void doppelring(int cx, int cy, int r, const char* s, bool gedrueckt = fa
     display.fillCircle(cx, cy, r, gedrueckt ? SCHWARZ : WEISS);
     uint32_t v = gedrueckt ? WEISS : SCHWARZ;
     for (int i = 0; i < 3; i++) { display.drawCircle(cx, cy, r - i, SCHWARZ); display.drawCircle(cx, cy, r - 10 - i, v); }
-    text(s, cx, cy, &FreeSansBold12pt7b, MC_DATUM, v);
+    text(s, cx, cy, r < 52 ? &FreeSansBold9pt7b : &FreeSansBold12pt7b, MC_DATUM, v);
 }
 
 // ---- Statuszeile ------------------------------------------------------------------------

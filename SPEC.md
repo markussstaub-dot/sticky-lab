@@ -29,15 +29,16 @@ Jede Station ist eine Seite. Reihenfolge = Bau-Reihenfolge.
 | # | Station | Was man sieht und tut | Was gemessen wird |
 |---|---|---|---|
 | 1 | **Refresh-Labor** | Testmuster (Schachbrett, Text, Fläche), Knöpfe: Voll · Teil · Schnell · Teil ohne Schlaf | Dauer in ms, wie viele Teil-Refreshes bis zum sichtbaren Ghosting, Zähler seit dem letzten Voll-Refresh |
-| 2 | **Schrift-Katalog** | dieselbe Zeile in allen Schriften und Größen (Bitmap, Strichschrift aus EDC, Ziffernblatt), mit ▲/▼ blättern, Tippen = Lupe 4× | Mindestgröße, die auf Armlänge lesbar ist (Markus entscheidet, das Lab merkt es sich) |
-| 3 | **Raster & Dithering** | Graukeil und ein Testbild von der SD: Schwelle, Bayer 4×4/8×8, Floyd-Steinberg, Atkinson, Halbtonpunkte, Linienraster | Rechenzeit; dazu die Frage, was auf 1 bpp am besten aussieht |
-| 4 | **Braun-Baukasten** | alle Bedienelemente aus `braun.js`, jetzt in C++ in der Firmware gezeichnet: Doppelring, Pille, Rasterrand, dünner Ring, Schieber, Drehrad, Reiter; jeweils Ruhe, gedrückt und aktiv | Zeichenzeit je Element; ob 58 px für „Wurstfinger“ reichen |
-| 5 | **Bewegung** | Animation per Teil-Refresh: Fortschrittsbalken, Zeiger, Zahlenrolle wie im Kilometerzähler, Ladekreis | erreichte Bilder pro Sekunde; ab wann es ruckelt oder schmiert |
+| 2 | **Schrift-Katalog** (umgesetzt FW 0.4.0: Sans, Serif, Mono, TomThumb, Lupe 4×; Strichschrift noch offen) | dieselbe Zeile in allen Schriften und Größen (Bitmap, Strichschrift aus EDC, Ziffernblatt), mit ▲/▼ blättern, Tippen = Lupe 4× | Mindestgröße, die auf Armlänge lesbar ist (Markus entscheidet, das Lab merkt es sich) |
+| 3 | **Raster & Dithering** (umgesetzt FW 0.4.0: Graukeil in 6 Verfahren, Kugel in 4; Testbild von SD noch offen) | Graukeil und ein Testbild von der SD: Schwelle, Bayer 4×4/8×8, Floyd-Steinberg, Atkinson, Halbtonpunkte, Linienraster | Rechenzeit; dazu die Frage, was auf 1 bpp am besten aussieht |
+| 4 | **Braun-Baukasten** (umgesetzt FW 0.4.0: Knöpfe in 3 Zuständen, Schieber, Drehknopf, Schalter, Reiter, ET66-Tasten; `firmware/braun.h`) | alle Bedienelemente aus `braun.js`, jetzt in C++ in der Firmware gezeichnet: Doppelring, Pille, Rasterrand, dünner Ring, Schieber, Drehrad, Reiter; jeweils Ruhe, gedrückt und aktiv | Zeichenzeit je Element; ob 58 px für „Wurstfinger“ reichen |
+| 5 | **Bewegung** (umgesetzt FW 0.4.0: Balken, Zeiger, Zahlenrolle, Schalter „wach“) | Animation per Teil-Refresh: Fortschrittsbalken, Zeiger, Zahlenrolle wie im Kilometerzähler, Ladekreis | erreichte Bilder pro Sekunde; ab wann es ruckelt oder schmiert |
 | 6 | **Touch-Labor** (umgesetzt FW 0.3.0: Zielen, Rückmeldung, Kritzeln) | Zielscheibe mit Treffer-Kreuzen, Kritzelspur, Rückmeldungsarten im Vergleich (Rahmen, Invertieren, Klick, Summer) | Latenz Berührung → sichtbare Rückmeldung, Abweichung vom Ziel in px |
-| 7 | **Instrumente** | Sensoren als Braun-Instrumente: Klima (SHT40) mit Taupunkt, Wasserwaage (LSM6DS3), Akku mit Spannung, Strom und Verlauf (BQ27220), Uhr (PCF8563) | Werte live, wahlweise alle n Sekunden in die CSV |
+| 7 | **Instrumente** (umgesetzt FW 0.4.0: Klima mit Taupunkt, Wasserwaage, Uhr, Akku; Klima jede Minute in die CSV) | Sensoren als Braun-Instrumente: Klima (SHT40) mit Taupunkt, Wasserwaage (LSM6DS3), Akku mit Spannung, Strom und Verlauf (BQ27220), Uhr (PCF8563) | Werte live, wahlweise alle n Sekunden in die CSV |
 | 8 | **Energie** (umgesetzt FW 0.2.0) | Akku-Kapazität aus dem BQ27220 (FullChargeCapacity), Dauerlauf: n Refreshes einer Art, dann Füllstand vorher/nachher; Grundverbrauch wach, Leichtschlaf, Tiefschlaf über Stunden | mAh je Voll-/Teil-Refresh, mA je Zustand, hochgerechnet „Refreshes pro Ladung“ und „Tage im Schlaf“ |
 
-- Stand 15.11.2026: 1, 6 und 8 gebaut. Vorschlag als Nächstes: 4 (Braun-Baukasten).
+- Stand 15.11.2026: alle acht Stationen gebaut (FW 0.4.0). Nächstes: Messungen mit dem Finger und auf Akku, dann
+  vertiefen (Strichschrift, Testbild von SD, Ghosting-Serie, „Schnell“-Refresh klären, Summer-Klänge).
 - Vorschlag (ursprünglich): zuerst **1, 4, 6** bauen. Sie sind die Grundlage für alles andere: schnelles Zeichnen, die Bauteile und
   das Bediengefühl.
 - offen: weitere Stationen, z. B. **Hoch/Quer** (drehen per Lagesensor), **Schlafbild** (was steht nach dem

@@ -40,3 +40,18 @@ Erkenntnisse mit Datum. Rohdaten: `/lab/messungen.csv` auf der SD-Karte bzw. CSV
 - Zielen- und Rückmeldungs-Logik per USB geprüft (künstliche Tipps mit Versatz +3/−2 px → 3,6 px gemessen).
   Echte Finger-Messung und Kritzeln stehen noch aus.
 - Ohne Kabel noch nicht gemessen (Protokoll auf der Karte leer).
+
+## 15.11.2026 – FW 0.4.0: Stationen 2, 3, 4, 5, 7
+
+- **Animation: höchstens ~1,2 Bilder/s.** Je Bild ein Teil-Refresh des bewegten Bereichs: Balken 859 ms (normal)
+  bzw. 761 ms (wach), Zeiger 784 ms, Zahlenrolle 782 ms (beide wach). „wach“ spart ~100 ms je Bild, wie in EDC.
+  Folge: Bewegung auf dem Sticky als Schrittfolge denken (Zeiger springt, Rolle zählt), nicht als Film.
+- **Zeichnen kostet merklich bei 80 MHz:** Pille ~42 ms, Schieber ~66 ms, Reiter ~67 ms, Drehknopf ~133 ms
+  (schräge breite Linien), alle vier Instrumente ~0,6 s. Dithering 590 × 50 px ~0,1 s, Kugel 176 × 176 ~0,3 s.
+  Hauptkosten sind einzelne drawPixel-Aufrufe; schneller ginge es direkt in den 1-bpp-Puffer oder mit 240 MHz.
+- **Dithering:** Floyd-Steinberg und Atkinson zeigen die Kugel am plastischsten; Atkinson kontrastreicher (gibt nur
+  6/8 des Fehlers weiter, dunkle Bereiche saufen ab). Bayer 8×8 ist gleichmäßig, aber sichtbar gerastert.
+- **Sensoren laufen:** SHT40 24,3 °C / 37 % (Taupunkt 8,6 °C, im Gehäuse am USB, Eigenwärme noch offen),
+  LSM6DS3TR-C liefert nach dem Einschalten erst nach ~30 ms Werte, Uhr PCF8563 stimmt (von EDC gestellt).
+- **Schrift:** `textWidth()` von Seeed_GFX2 lässt ein Leerzeichen am Ende weg; die Umlaut-Punkte saßen deshalb
+  eine Leerzeichenbreite zu weit links. Jetzt eigene Breite aus den Glyphen-Vorschüben.

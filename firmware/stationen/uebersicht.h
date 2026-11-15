@@ -3,8 +3,8 @@
 
 struct Kachel { const char* nr; const char* name; int station; };   // station < 0 = noch nicht gebaut
 static const Kachel KACHELN[8] = {
-    {"1", "Refresh", 1}, {"2", "Schrift", -1}, {"3", "Raster", -1}, {"4", "Braun", -1},
-    {"5", "Bewegung", -1}, {"6", "Touch", 6}, {"7", "Instrumente", -1}, {"8", "Energie", 8},
+    {"1", "Refresh", 1}, {"2", "Schrift", 2}, {"3", "Raster", 3}, {"4", "Braun", 4},
+    {"5", "Bewegung", 5}, {"6", "Touch", 6}, {"7", "Instrumente", 7}, {"8", "Energie", 8},
 };
 static const int KW = 170, KH = 160, KX0 = 30, KY0 = 66, KGAP = 20;
 

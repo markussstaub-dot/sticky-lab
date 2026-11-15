@@ -26,6 +26,8 @@ body.screenpad main > section{display:flex;gap:12px;align-items:flex-start}
 body.screenpad .fern{margin-top:0 !important;flex:0 0 260px}
 body.screenpad .fern .reihe{margin-top:0}
 body.screenpad .fern p{display:none}
+body.screenpad .fern button{min-height:34px;padding:0 10px;font-size:13px}
+body.screenpad .fern .reihe{gap:5px}
 body.screenpad .spiegel{flex:1 1 auto;display:grid;grid-template-columns:auto minmax(200px,1fr);column-gap:14px;align-items:start}
 body.screenpad .spiegel h2{grid-column:1/-1}
 body.screenpad .spiegel #buehne{grid-column:1;grid-row:2 / span 4}
@@ -122,7 +124,12 @@ th{color:var(--muted);font-weight:normal}
    <div class="reihe">
     <button data-cmd="k">KI · Übersicht</button>
     <button data-cmd="1">1 Refresh</button>
+    <button data-cmd="2">2 Schrift</button>
+    <button data-cmd="3">3 Raster</button>
+    <button data-cmd="4">4 Braun</button>
+    <button data-cmd="5">5 Bewegung</button>
     <button data-cmd="6">6 Touch</button>
+    <button data-cmd="7">7 Instrumente</button>
     <button data-cmd="8">8 Energie</button>
     <button data-cmd="a">Akku lesen</button>
     <button data-cmd="u">▲</button>
@@ -419,7 +426,10 @@ const INV = () => [
    ['Teil wach', mittel('Teil wach') || ['853 ms, ohne die zwei 100-ms-Schlafpausen', 'gemessen']],
    ['Schnell', ['kehrt nach 0 ms zurück, läuft wohl im Hintergrund; EDC sah falsche Bilder', 'offen']],
    ['ohne Strom', ['Bild bleibt stehen (auch ein falsches)', 'bekannt']],
-   ['Graustufen', ['nur über Raster/Dithering; Graustufen-Modus der Bibliothek ungetestet', 'offen']],
+   ['Graustufen', ['nur über Raster/Dithering (Station 3: Bayer, Floyd-Steinberg, Atkinson, Halbton, je ~0,1 s für 590 × 50 px); Graustufen-Modus der Bibliothek ungetestet', 'gemessen']],
+   ['Animation', (() => { const v = ['anim-balken','anim-zeiger','anim-rolle'].map(a => messungen.filter(x => x.art === a).pop()).filter(Boolean);
+      return v.length ? [v.map(m => `${m.art.slice(5)} ${m.notiz}`).join(', '), 'gemessen'] : ['höchstens ~1,2 Bilder/s (Lab 15.11., Station 5: 760–860 ms je Bild)', 'gemessen']; })()],
+   ['Schriften', ['FreeSans/Serif/Mono 9–24 pt und TomThumb, nur ASCII; Umlaute, ±, µ, ° setzt die Firmware selbst', 'gemessen']],
   ], grenze: ['offen', 'Ab wie vielen Teil-Refreshes sieht man Reste? Hängt Teil-Refresh von der Fläche ab? Wie viele Bilder pro Sekunde gehen für Animation?'] },
  { name: 'Touch', rolle: 'Goodix GT911, kapazitiv', zeilen: [
    ['Finger', ['bis 5 gleichzeitig (Lab nutzt 1)', 'bekannt']],
@@ -439,7 +449,7 @@ const INV = () => [
   ] },
  { name: 'Sensoren', rolle: 'alle am MISC-I²C (GPIO 0/1)', zeilen: [
    ['Bewegung', ['LSM6DS3TR-C, 6 Achsen, 0x6A, Interrupt GPIO 7 (weckt)', 'bekannt']],
-   ['Klima', ['SHT40, Temperatur und Feuchte, 0x44', 'bekannt']],
+   ['Klima', (m => m ? [`SHT40, 0x44: ${(m.wert / 10).toFixed(1)} °C, ${m.notiz.replace('tau', 'Taupunkt')} °C (live)`, 'gemessen'] : ['SHT40, Temperatur und Feuchte, 0x44 – Station 7 zeigt sie', 'bekannt'])(messungen.filter(x => x.art === 'klima').pop())],
    ['Uhr', ['PCF8563, 0x51; sein Wecker schaltet die 3,3 V ein → Einschalten aus „ganz aus“', 'bekannt']],
   ], grenze: ['offen', 'Misst der SHT40 im Gehäuse die Eigenwärme mit? Wie fein reagiert der Bewegungssensor im Schlaf?'] },
  { name: 'Energie', rolle: 'Li-Po-Akku mit Ladechip und Füllstandsmesser', zeilen: [

@@ -43,12 +43,8 @@ static void akkuJetzt() {
     snprintf(b, sizeof b, "%d / %d mAh", a.rest, a.voll); zeile("Rest / voll", b, y); y += 34;
     snprintf(b, sizeof b, "%d mAh", a.design); zeile("Design", b, y); y += 34;
     snprintf(b, sizeof b, "%d %%  ·  SoH %d %%", a.soc, a.soh); zeile("Ladung", b, y); y += 34;
-    // ° kennt die Schrift nicht: als kleinen Ring nachsetzen
-    char g[40]; snprintf(g, sizeof g, "%.1f  C  ·  %d Zyklen", a.grad, a.zyklen);
-    zeile("Temperatur", g, y);
-    { char t[16]; snprintf(t, sizeof t, "%.1f ", a.grad);
-      display.setFreeFont(&FreeSans12pt7b); int x = LX + 130 + display.textWidth(t);
-      display.drawCircle(x - 1, y + 4, 3, SCHWARZ); }
+    snprintf(b, sizeof b, "%.1f °C  ·  %d Zyklen", a.grad, a.zyklen);
+    zeile("Temperatur", b, y);
     y += 34;
     zeile("USB", usbDa() ? (laedt() ? "ja, lädt, misst mit!" : "ja, misst mit!") : "nein, Akku", y);
 }

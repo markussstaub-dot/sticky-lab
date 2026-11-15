@@ -19,15 +19,15 @@ static int platzNummer() {
     return (lauf && lauf->subtype == ESP_PARTITION_SUBTYPE_APP_OTA_1) ? 1 : 0;
 }
 
-/** Projektname der Firmware im anderen Platz („firmware“ = Lab, „firmware-ble“ = EDC); leer = kein gültiges Abbild */
+/** Name der Firmware im anderen Platz nach der festen Regel (app0 = „EDC“, app1 = „Sticky Lab“); leer = kein gültiges
+ *  Abbild. Der Projektname im Abbild taugt nicht: Arduino trägt überall denselben ein (am Gerät gesehen 15.11.2026). */
 static const char* platzAndererName() {
-    static char name[33] = "";
-    static bool gelesen = false;
-    if (!gelesen) {
-        gelesen = true;
+    static const char* name = nullptr;
+    if (!name) {
         const esp_partition_t* p = platzAnderer();
         esp_app_desc_t d;
-        if (p && esp_ota_get_partition_description(p, &d) == ESP_OK) strlcpy(name, d.project_name, sizeof name);
+        bool gueltig = p && esp_ota_get_partition_description(p, &d) == ESP_OK;
+        name = !gueltig ? "" : p->subtype == ESP_PARTITION_SUBTYPE_APP_OTA_1 ? "Sticky Lab" : "EDC";
     }
     return name;
 }

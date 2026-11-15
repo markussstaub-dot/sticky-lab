@@ -9,7 +9,7 @@
  * Bauen: arduino-cli compile -b "esp32:esp32:XIAO_ESP32S3:PSRAM=opi,CDCOnBoot=cdc"
  *        --build-property build.flash_size=32MB --build-path "%LOCALAPPDATA%\sticky-build\sticky-lab" firmware
  */
-#define LAB_VERSION "0.8.0"
+#define LAB_VERSION "0.8.1"
 
 #include <esp_sleep.h>
 #include <driver/gpio.h>

@@ -34,7 +34,7 @@ static void uebersichtBetreten() {
     const char* anders = platzAndererName();
     if (anders[0]) {
         char t[24];
-        snprintf(t, sizeof t, "> %s", strcmp(anders, "firmware-ble") ? anders : "EDC");
+        snprintf(t, sizeof t, "> %s", anders);
         pille(PX, PY, PW, PH, t, R_WERKZEUG);
     }
 }

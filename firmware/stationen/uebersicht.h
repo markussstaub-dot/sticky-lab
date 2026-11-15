@@ -10,6 +10,8 @@ static const Kachel KACHELN[10] = {
 static const int KW = 142, KH = 160, KX0 = 21, KY0 = 66, KGAP = 12, SPALTEN = 5;
 
 static void kachelLage(int i, int& x, int& y) { x = KX0 + (i % SPALTEN) * (KW + KGAP); y = KY0 + (i / SPALTEN) * (KH + KGAP); }
+// Umschalten auf die andere Firmware (EDC in app0), nur wenn dort etwas Gültiges liegt (platz.h)
+static const int PX = 604, PY = 408, PW = 176, PH = 58;
 
 static void uebersichtBetreten() {
     for (int i = 0; i < 10; i++) {
@@ -28,7 +30,13 @@ static void uebersichtBetreten() {
         text(EN && k.en ? k.en : k.name, x + KW / 2, y + 112, &FreeSans12pt7b, MC_DATUM);
         if (k.station < 0) text(T("kommt noch", "coming"), x + KW / 2, y + 138, &FreeSans9pt7b, MC_DATUM);
     }
-    text(T("KI = Übersicht  ·  ▼ = Station 1  ·  ▲ = English  ·  KI halten = Foto", "AI = overview  ·  ▼ = station 1  ·  ▲ = Deutsch  ·  hold AI = photo"), W / 2, 458, &FreeSans9pt7b, MC_DATUM);
+    text(T("KI = Übersicht  ·  ▼ = Station 1  ·  ▲ = English  ·  KI halten = Foto", "AI = overview  ·  ▼ = station 1  ·  ▲ = Deutsch  ·  hold AI = photo"), 300, 437, &FreeSans9pt7b, MC_DATUM);
+    const char* anders = platzAndererName();
+    if (anders[0]) {
+        char t[24];
+        snprintf(t, sizeof t, "> %s", strcmp(anders, "firmware-ble") ? anders : "EDC");
+        pille(PX, PY, PW, PH, t, R_WERKZEUG);
+    }
 }
 
 static void uebersichtTipp(int x, int y) {
@@ -37,6 +45,7 @@ static void uebersichtTipp(int x, int y) {
         kachelLage(i, kx, ky);
         if (drin(x, y, kx, ky, KW, KH) && KACHELN[i].station > 0) { geheZu(KACHELN[i].station); return; }
     }
+    if (drin(x, y, PX, PY, PW, PH) && platzAndererName()[0]) platzWechseln();   // startet neu in EDC
 }
 static void uebersichtTaste(Knopf k) {
     if (k == K_DOWN) geheZu(1);   // ▼ führt zur ersten Station

@@ -9,7 +9,7 @@
  * Bauen: arduino-cli compile -b "esp32:esp32:XIAO_ESP32S3:PSRAM=opi,CDCOnBoot=cdc"
  *        --build-property build.flash_size=32MB --build-path "%LOCALAPPDATA%\sticky-build\sticky-lab" firmware
  */
-#define LAB_VERSION "0.7.6"
+#define LAB_VERSION "0.8.0"
 
 #include <esp_sleep.h>
 #include <driver/gpio.h>
@@ -19,6 +19,7 @@
 #include "eingabe.h"
 #include "karte.h"
 #include "foto.h"
+#include "platz.h"
 #include "station.h"
 #include "stationen/uebersicht.h"
 #include "stationen/refresh.h"
@@ -148,6 +149,7 @@ void setup() {
     Serial.setTimeout(50);   // parseInt wartet sonst bis 1 s je Zahl
     delay(300);
     Serial.printf("\nSticky Lab %s, RX-Puffer %u\n", LAB_VERSION, (unsigned)rxPuffer);
+    platzNotausgang(PIN_BTN_UP);   // ▲ beim Einschalten halten = anderer Firmware-Platz (EDC)
     Wire.begin(PIN_MISC_SDA, PIN_MISC_SCL, 100000);
     spracheLaden();
     randomSeed(esp_random());   // echte Zufallszahlen (Burgduell-Gelände, Wind)

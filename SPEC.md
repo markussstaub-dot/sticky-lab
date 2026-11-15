@@ -125,6 +125,10 @@ Der Sticky hat schon zwei App-Plätze (`app0` und `app1`, je 4 MB), siehe `parti
   - Vorschlag **feste Plätze**: EDC immer `app0`, Lab immer `app1`. Ein Update (Kabel, Karte oder BLE) schreibt nur in
     den Platz seiner eigenen Firmware, nie „in den freien“ – sonst überschreibt ein EDC-Update das Lab
   - Vorschlag: der Platz, der gerade läuft, steht in der Übersicht bzw. im EDC-Menü (z. B. „EDC · Platz 0“)
+  - umgesetzt Lab 0.8.0 + EDC 0.33.0 (15.11.2026, gebaut, noch nicht geflasht): `firmware/platz.h` (gleich in EDC),
+    Pille „> EDC“ unten rechts in der Übersicht (nur wenn in `app0` etwas Gültiges liegt), Notausgang ▲ 1 s beim
+    Einschalten. Aufspielen nach `app1`: `werkzeuge\lab-nach-app1.ps1 -Port COMx` (baut, prüft Größe, schreibt
+    nur 0x410000; EDC bleibt Startplatz)
 - Vorschlag (Markus, 15.11.2026): **Firmware-Bibliothek in der APK**: die Sticky-App trägt fertige Firmwares (EDC,
   Lab, später Spiele) mit und spielt die gewählte per BLE in den freien App-Platz (OTA), danach Umschalten wie oben.
   ~0,7–1 MB über BLE dauert grob 2–5 min. Braucht OTA-Empfang in EDC und eine Auswahlseite in der App – Arbeit im

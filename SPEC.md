@@ -38,6 +38,7 @@ Jede Station ist eine Seite. Reihenfolge = Bau-Reihenfolge.
 | 8 | **Energie** (umgesetzt FW 0.2.0) | Akku-Kapazität aus dem BQ27220 (FullChargeCapacity), Dauerlauf: n Refreshes einer Art, dann Füllstand vorher/nachher; Grundverbrauch wach, Leichtschlaf, Tiefschlaf über Stunden | mAh je Voll-/Teil-Refresh, mA je Zustand, hochgerechnet „Refreshes pro Ladung“ und „Tage im Schlaf“ |
 | 9 | **Burgduell** (Markus, 15.11.2026: Spiel lokal statt über das Handy) | Eigenes Artillerie-Spiel (eigene Burgen, eigener Look, kein Nachbau eines bestehenden Spiels): Gelände mit Hügeln, Wind, Zielen per Tipp, ▲▼ Feinwinkel, Feuer = Doppelring; Flugbahn als Punktspur in einem Teil-Refresh, Krater im Gelände, 3 Treffer zerstören eine Burg; 2 Spieler oder gegen den Sticky | Refresh-Zeit je Zug; Vorbild für eine lokale Spielseite in EDC |
 | 10 | **Tastatur** (Markus, 15.11.2026, Deutsch und Englisch) | Bildschirmtastatur quer, QWERTZ mit Ä Ö Ü ß bzw. QWERTY, Umschalten DE/EN. Tasten werden nie neu gezeichnet (Rückmeldung = Klick), nur die Textzeile wird gesammelt aufgefrischt, sobald ~0,3 s Pause ist; Anschläge während eines Refreshs gehen dank Touch-Sammler nicht verloren. Übung: vorgegebenen Satz abtippen | Zeichen pro Minute, Fehler (Abstand zum Zielsatz) |
+| 11 | **Pins & Neustarts** (Markus, 16.11.2026: geparkt, nach der Absturzschleife in EDC 0.39.1) | Je Taste und Sensor-Pin (KI, ▲, ▼, Bewegung, Touch-INT, SD-Erkennung, Laden, USB): Pegel live, Flanken pro Sekunde, ob Interrupt bzw. Wecken eingerichtet ist (GPIO-Register); dazu Neustart-Grund der letzten Starts mit einem Zähler, der Neustarts übersteht, und ein Sturm-Melder (welcher Pin wann > 50 Interrupts/ms) | Flanken/s je Pin, Neustarts in Folge mit Grund; Ziel: eine Absturzschleife am Gerät erkennen, ohne USB mitzulesen |
 
 - Stand 15.11.2026: alle acht Stationen gebaut (FW 0.4.0). Nächstes: Messungen mit dem Finger und auf Akku, dann
   vertiefen (Strichschrift, Testbild von SD, Ghosting-Serie, „Schnell“-Refresh klären, Summer-Klänge).
@@ -189,6 +190,13 @@ Der Sticky hat schon zwei App-Plätze (`app0` und `app1`, je 4 MB), siehe `parti
 - offen: welches Farbpanel (Spectra 6 o. ä.), ob Seeed_GFX2 es unterstützt, ob Touch und Tasten gleich bleiben.
 
 ## 10. Offen
+
+- Vorschlag (16.11.2026, aus Station 11): **EDC zeigt eine Neustartschleife selbst an** – startet er mehrmals in
+  Folge nach Absturz/Watchdog neu, steht auf Home „Neustartschleife, Grund …“ statt stillem Blinken. Anlass:
+  EDC 0.39.1 hing nach dem Wechsel aus dem Lab in einer Schleife (Tasten-Interrupt-Sturm); behoben in EDC 0.39.2
+  durch Zurücksetzen der Tasten-Pins beim Start + Sturmbremse. Das Lab hat dieselbe Tasten-Logik ohne Zurücksetzen –
+  bewusst noch nicht nachgezogen („drauf ankommen lassen“); hängt das Lab nach dem Wechsel aus EDC, dieselbe Zeile
+  aus EDC `tastenInit()` übernehmen.
 
 - Idee (Markus, 15.11.2026): **Sticky Stack** – zwei Stickys halten magnetisch aneinander, aber nur Rücken an
   Front (gestapelt). Nebeneinander (1600 × 480) bräuchte einen gedruckten Halter. Braucht eine Verbindung zwischen den Geräten (BLE oder

@@ -39,6 +39,7 @@ Jede Station ist eine Seite. Reihenfolge = Bau-Reihenfolge.
 | 9 | **Burgduell** (Markus, 15.11.2026: Spiel lokal statt über das Handy) | Eigenes Artillerie-Spiel (eigene Burgen, eigener Look, kein Nachbau eines bestehenden Spiels): Gelände mit Hügeln, Wind, Zielen per Tipp, ▲▼ Feinwinkel, Feuer = Doppelring; Flugbahn als Punktspur in einem Teil-Refresh, Krater im Gelände, 3 Treffer zerstören eine Burg; 2 Spieler oder gegen den Sticky | Refresh-Zeit je Zug; Vorbild für eine lokale Spielseite in EDC |
 | 10 | **Tastatur** (Markus, 15.11.2026, Deutsch und Englisch) | Bildschirmtastatur quer, QWERTZ mit Ä Ö Ü ß bzw. QWERTY, Umschalten DE/EN. Tasten werden nie neu gezeichnet (Rückmeldung = Klick), nur die Textzeile wird gesammelt aufgefrischt, sobald ~0,3 s Pause ist; Anschläge während eines Refreshs gehen dank Touch-Sammler nicht verloren. Übung: vorgegebenen Satz abtippen | Zeichen pro Minute, Fehler (Abstand zum Zielsatz) |
 | 11 | **Pins & Neustarts** (Markus, 16.11.2026: geparkt, nach der Absturzschleife in EDC 0.39.1) | Je Taste und Sensor-Pin (KI, ▲, ▼, Bewegung, Touch-INT, SD-Erkennung, Laden, USB): Pegel live, Flanken pro Sekunde, ob Interrupt bzw. Wecken eingerichtet ist (GPIO-Register); dazu Neustart-Grund der letzten Starts mit einem Zähler, der Neustarts übersteht, und ein Sturm-Melder (welcher Pin wann > 50 Interrupts/ms) | Flanken/s je Pin, Neustarts in Folge mit Grund; Ziel: eine Absturzschleife am Gerät erkennen, ohne USB mitzulesen |
+| 12 | **Fremdsensoren** (Markus, 16.11.2026: geparkt; Idee mit Tom als Messtechniker) | Ein Bastel-Board (Vorschlag: XIAO ESP32 o. Ä.) liest externe Sensoren und funkt kurze Zeilen wie `temp 21.4 °C` an den Sticky – bevorzugt **ESP-NOW** (ohne Router, ohne Koppeln, mehrere Boards), alternativ BLE; auch fertige BLE-Messgeräte (Multimeter, Thermometer, Stromzange). Der Sticky zeigt jeden Kanal automatisch als Braun-Instrument mit Name, Einheit und Verlauf, schreibt CSV auf SD, piept bei Grenzwerten – neue Sensoren brauchen kein Update. Ausbaustufe **Regler**: PID läuft auf dem Board (regelt weiter, wenn Sticky schläft oder Funk weg ist), der Sticky ist Bedienteil: Sollwert per Drehrad, Soll/Ist-Kurve, P/I/D live einstellen, Alarm; Beispiele Sous-vide, Räucherofen, Gärschrank | Funk-Latenz und Reichweite, Akku-Laufzeit als Dauer-Anzeige; Stellglied (Relais, MOSFET) und Sicherheit (Fühlerbruch, Übertemperatur, Netzspannung) sind Toms Teil |
 
 - Stand 15.11.2026: alle acht Stationen gebaut (FW 0.4.0). Nächstes: Messungen mit dem Finger und auf Akku, dann
   vertiefen (Strichschrift, Testbild von SD, Ghosting-Serie, „Schnell“-Refresh klären, Summer-Klänge).
@@ -190,6 +191,9 @@ Der Sticky hat schon zwei App-Plätze (`app0` und `app1`, je 4 MB), siehe `parti
 - offen: welches Farbpanel (Spectra 6 o. ä.), ob Seeed_GFX2 es unterstützt, ob Touch und Tasten gleich bleiben.
 
 ## 10. Offen
+
+- Hinweis Station 12: die USB-Buchse hängt am Wandler CH343, der Sticky ist dort immer Gerät, nie USB-Host – externe
+  Hardware also per Funk anbinden (ESP-NOW/BLE), nicht per USB-Kabel.
 
 - Vorschlag (16.11.2026, aus Station 11): **EDC zeigt eine Neustartschleife selbst an** – startet er mehrmals in
   Folge nach Absturz/Watchdog neu, steht auf Home „Neustartschleife, Grund …“ statt stillem Blinken. Anlass:

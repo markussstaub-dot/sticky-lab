@@ -129,6 +129,10 @@ Der Sticky hat schon zwei App-Plätze (`app0` und `app1`, je 4 MB), siehe `parti
   - Vorschlag **feste Plätze**: EDC immer `app0`, Lab immer `app1`. Ein Update (Kabel, Karte oder BLE) schreibt nur in
     den Platz seiner eigenen Firmware, nie „in den freien“ – sonst überschreibt ein EDC-Update das Lab
   - Vorschlag: der Platz, der gerade läuft, steht in der Übersicht bzw. im EDC-Menü (z. B. „EDC · Platz 0“)
+  - Lab 0.9.1 (16.11.2026, für den Seeed-Playground): läuft das Lab nicht in seinem Platz `app1` (Playground spielt
+    nach `app0`), heißt die Pille neutral „> app1“ und der Notausgang beim Einschalten ist aus – sonst stünde dort
+    „> Sticky Lab“ für ein unbekanntes Abbild (z. B. Rest der Werks-Firmware). Schalter `PLATZ_EIGEN` in `platz.h`;
+    EDC braucht ihn nicht (ohne Schalter wie bisher), beim nächsten Abgleich der Datei aber mitnehmen.
   - umgesetzt Lab 0.8.0 + EDC 0.33.0 (15.11.2026, gebaut, noch nicht geflasht): `firmware/platz.h` (gleich in EDC),
     Pille „> EDC“ unten rechts in der Übersicht (nur wenn in `app0` etwas Gültiges liegt), Notausgang ▲ 1 s beim
     Einschalten. Aufspielen nach `app1`: `werkzeuge\lab-nach-app1.ps1 -Port COMx` (baut, prüft Größe, schreibt

@@ -5,6 +5,13 @@
 #include <esp_ota_ops.h>
 #include <esp_partition.h>
 
+// Eigener Platz dieser Firmware nach der festen Regel (EDC 0, Lab 1), vor dem Einbinden setzen. Läuft die Firmware
+// woanders (z. B. das Lab aus dem Seeed-Playground in app0), weiß sie nicht, was im anderen Platz liegt: dann heißt
+// die Pille neutral „app0/app1“ und der Notausgang beim Einschalten ist aus. Ohne PLATZ_EIGEN wie bisher.
+#ifndef PLATZ_EIGEN
+#define PLATZ_EIGEN -1
+#endif
+
 /** Der andere App-Platz (app0 ↔ app1) */
 static const esp_partition_t* platzAnderer() {
     const esp_partition_t* lauf = esp_ota_get_running_partition();
@@ -27,7 +34,9 @@ static const char* platzAndererName() {
         const esp_partition_t* p = platzAnderer();
         esp_app_desc_t d;
         bool gueltig = p && esp_ota_get_partition_description(p, &d) == ESP_OK;
-        name = !gueltig ? "" : p->subtype == ESP_PARTITION_SUBTYPE_APP_OTA_1 ? "Sticky Lab" : "EDC";
+        bool app1 = p && p->subtype == ESP_PARTITION_SUBTYPE_APP_OTA_1;
+        bool amEigenenPlatz = PLATZ_EIGEN < 0 || platzNummer() == PLATZ_EIGEN;
+        name = !gueltig ? "" : !amEigenenPlatz ? (app1 ? "app1" : "app0") : app1 ? "Sticky Lab" : "EDC";
     }
     return name;
 }
@@ -47,6 +56,7 @@ static bool platzWechseln() {
 /** Notausgang: ▲ beim Einschalten 1 s gehalten → anderer Platz. Nur nach echtem Einschalten, nicht nach Neustart */
 static void platzNotausgang(int pinHoch) {
     if (esp_reset_reason() != ESP_RST_POWERON) return;
+    if (PLATZ_EIGEN >= 0 && platzNummer() != PLATZ_EIGEN) return;   // fremder Platz: nicht ins Ungewisse springen
     pinMode(pinHoch, INPUT_PULLUP);
     for (int i = 0; i < 20; i++) { if (digitalRead(pinHoch) != LOW) return; delay(50); }   // 1 s durchgehend gedrückt
     Serial.println("Platz: ▲ beim Einschalten gehalten");

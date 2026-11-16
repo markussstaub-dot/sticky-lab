@@ -3,13 +3,13 @@
  * Spec: ../SPEC.md · Nachschlagewerk: reterminal-sticky (EDC, FW 0.31.8)
  *
  * Bedienung: KI kurz = Übersicht · KI halten = Bildschirmfoto nach /lab/fotos · ▲/▼ = blättern · Tippen = Aktion
- * USB-Seriell (115200): „f“ = Foto über USB (werkzeuge/foto2png.py), „s1“…„s9“ = Station, „s0“ = Übersicht,
+ * USB-Seriell (115200): „f“ = Foto über USB (werkzeuge/foto2png.py), „s1“…„s11“ = Station, „s0“ = Übersicht,
  *   „t x y“ = Tipp, „z/m x y“ + „h“ = Strich, „i“ Info, „a“ Akku, „c“ Messungen
  *
  * Bauen: arduino-cli compile -b "esp32:esp32:XIAO_ESP32S3:PSRAM=opi,CDCOnBoot=cdc"
  *        --build-property build.flash_size=32MB --build-path "%LOCALAPPDATA%\sticky-build\sticky-lab" firmware
  */
-#define LAB_VERSION "0.8.1"
+#define LAB_VERSION "0.9.0"
 
 #include <esp_sleep.h>
 #include <driver/gpio.h>
@@ -32,6 +32,7 @@
 #include "stationen/bewegung.h"
 #include "stationen/burgduell.h"
 #include "stationen/tastatur.h"
+#include "stationen/pins.h"
 #include "hilfe.h"
 
 // ---- Stationen (Index 0 = Übersicht, danach Nummer wie in der SPEC) ------------------------
@@ -47,12 +48,15 @@ static const Station STATIONEN[] = {
     { "8 · Energie", energie::betreten, energie::taste, energie::tipp, nullptr },
     { "9 · Burgduell", burgduell::betreten, burgduell::taste, burgduell::tipp, nullptr },
     { "10 · Tastatur", tastatur::betreten, tastatur::taste, tastatur::tipp, tastatur::tick },
+    { "11 · Pins & Neustarts", pinstation::betreten, pinstation::taste, pinstation::tipp, pinstation::tick },
 };
 static const int ANZAHL = sizeof STATIONEN / sizeof STATIONEN[0];
 static int aktuell = -1;
+static const int STATION_PINS = 11;   // zählt zusätzliche Pins nur, solange sie offen ist
 
 static void geheZu(int i) {
     if (i < 0 || i >= ANZAHL || !STATIONEN[i].betreten) return;
+    if (aktuell == STATION_PINS && i != STATION_PINS) pinstation::verlassen();
     aktuell = i;
     tpPunkt = nullptr;   // nur die Station, die jeden Touch-Punkt braucht, meldet sich wieder an
     display.fillScreen(WEISS);
@@ -158,6 +162,7 @@ void setup() {
     if (!display.begin()) Serial.println(display.lastResult().message);
     // erst nach display.begin()
     sdStart();
+    pinstation::start();   // Neustart zählen und Grund merken, vor den Interrupts (Station 11)
     tastenInit();
     touchInit();
     bedient();
@@ -173,7 +178,8 @@ void setup() {
                  digitalRead(PIN_BTN_KI), digitalRead(PIN_BTN_UP), digitalRead(PIN_BTN_DOWN));
         messung("diag", "tasten", 0, "-", p);
     }
-    geheZu(0);
+    // Absturzschleife (3x in Folge Absturz/Watchdog): gleich die Station zeigen, die sie erklärt
+    geheZu(pinstation::folge >= 3 ? STATION_PINS : 0);
 }
 
 void loop() {
@@ -187,6 +193,7 @@ void loop() {
             messung("diag", "lebt", runden, "runden", p);
         }
     }
+    diagPoll();
     tastenPoll(tasteCb);
     if (tasteUnten(K_KI) && !kiFotoGemacht && millis() - kiSeit > 800) fotoMachen();
     touchPoll(touchCb);   // holt nur ab, was der Touch-Sammler gesammelt hat

@@ -2,6 +2,8 @@
 // Stolperfalle: tastenInit() und touchInit() erst NACH display.begin() aufrufen, sonst kommen keine Drücke an.
 #pragma once
 #include <Wire.h>
+#include <driver/rtc_io.h>
+#include "diagnose.h"
 
 static uint32_t letzteBedienung = 0;
 static void bedient() { letzteBedienung = millis(); }
@@ -11,10 +13,24 @@ static void klick() { tone(PIN_BUZZER, 2700, 30); }
 enum Knopf : uint8_t { K_KI = 0, K_UP, K_DOWN };
 struct Taste { int pin; int ruhe; int stand; uint32_t seit; volatile bool gedrueckt; };
 static Taste tasten[3] = { {PIN_BTN_KI}, {PIN_BTN_UP}, {PIN_BTN_DOWN} };
-static void IRAM_ATTR tasteIsr(void* arg) { ((Taste*)arg)->gedrueckt = true; }
+// Interrupt-Sturm (aus EDC 0.39.2, 16.11.2026): feuert ein Pin mehr als 50-mal in derselben Millisekunde, schaltet
+// diagFlanke() seinen Interrupt ab – die Taste läuft über die Abfrage weiter. Zählt zugleich für Station 11.
+static void IRAM_ATTR tasteIsr(void* arg) {
+    Taste* t = (Taste*)arg;
+    t->gedrueckt = true;
+    diagFlanke(t - tasten);
+}
 
 static void tastenInit() {
-    for (auto& t : tasten) pinMode(t.pin, INPUT_PULLUP);
+    // Reste fremder Einstellungen (Leichtschlaf-Wecken, Halten, RTC-Funktion – z. B. von EDC im anderen Platz)
+    // löschen, bevor die Interrupts kommen. Wie EDC 0.39.2 tastenInit() (Commit ff0d2ea).
+    for (auto& t : tasten) {
+        gpio_wakeup_disable((gpio_num_t)t.pin);
+        gpio_hold_dis((gpio_num_t)t.pin);
+        if (rtc_gpio_is_valid_gpio((gpio_num_t)t.pin)) rtc_gpio_deinit((gpio_num_t)t.pin);
+        gpio_reset_pin((gpio_num_t)t.pin);
+        pinMode(t.pin, INPUT_PULLUP);
+    }
     delay(5);
     for (auto& t : tasten) {
         t.ruhe = digitalRead(t.pin);   // Ruhepegel lernen

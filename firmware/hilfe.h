@@ -6,9 +6,9 @@ struct HilfeText { const char* titel_de; const char* titel_en; const char* de[6]
 
 static const HilfeText HILFE[] = {
  { "Übersicht", "Overview",
-   { "Zehn Stationen loten aus, was der Sticky kann.", "Kachel antippen = Station öffnen.", "KI kurz = zurück zur Übersicht, KI halten = Bildschirmfoto.",
+   { "Elf Stationen loten aus, was der Sticky kann.", "Kachel antippen = Station öffnen.", "KI kurz = zurück zur Übersicht, KI halten = Bildschirmfoto.",
      "▲ = Deutsch/English, ▼ = Station 1.", "Messwerte landen in /lab/messungen.csv.", "Tipp auf die Statuszeile = Hilfe (überall)." },
-   { "Ten stations probe what the Sticky can do.", "Tap a tile = open the station.", "AI short = back to overview, AI hold = screenshot.",
+   { "Eleven stations probe what the Sticky can do.", "Tap a tile = open the station.", "AI short = back to overview, AI hold = screenshot.",
      "▲ = English/Deutsch, ▼ = station 1.", "Measurements go to /lab/messungen.csv.", "Tap the status line = help (everywhere)." } },
  { "Refresh-Labor", "Refresh lab",
    { "Misst, wie lange ein Bildwechsel dauert.", "Unten die Art wählen (Teil, wach, Schnell, Voll), dann Los.", "Das Testfeld kippt bei jedem Lauf; der Probetext wandert.",
@@ -60,6 +60,11 @@ static const HilfeText HILFE[] = {
      "Ergebnis: Zeichen pro Minute und Fehler.", "DE/EN unten links, ⇧ = ein Großbuchstabe.", "▼ = löschen." },
    { "Typing on e-ink: every key clicks at once,", "the text line refreshes in batches (~0.85 s).", "Practice: type the sentence above, OK = evaluate.",
      "Result: characters per minute and errors.", "DE/EN bottom left, ⇧ = one capital.", "▼ = delete." } },
+ { "Pins & Neustarts", "Pins & restarts",
+   { "Je Pin: Pegel, Flanken/s (max), Interrupt-Art, Wecken.", "„aus“ = Interrupt abgeschaltet (Sturm > 50 je ms).", "Bewegung, Touch, SD, Laden zählen nur hier; USB per Abfrage.",
+     "Unten: Grund dieses Starts, wie lange der vorige lief,", "Neustarts in Folge, letzter Sturm. 3x Absturz = Start hier.", "In CSV = Zeile je Pin, Löschen = Verlauf leeren." },
+   { "Per pin: level, edges/s (max), interrupt type, wake.", "“off” = interrupt disabled (storm > 50 per ms).", "Motion, touch, SD, charging count here only; USB polled.",
+     "Below: reason for this start, how long the last one ran,", "restarts in a row, last storm. 3 crashes = start here.", "To CSV = one row per pin, Clear = empty history." } },
 };
 static const int HILFE_N = sizeof HILFE / sizeof HILFE[0];
 static bool hilfeAn = false;

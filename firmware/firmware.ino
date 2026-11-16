@@ -77,6 +77,11 @@ static void fotoMachen() {
     else tone(PIN_BUZZER, 600, 200);
 }
 
+// ▼ in der Übersicht: kurz = Station 1, 2 s halten = Burgduell (Geheimnis ohne Kachel, Markus 16.11.2026)
+static uint32_t runterSeit = 0;
+static bool runterVerbraucht = true;
+static const uint32_t GEHEIM_MS = 2000;
+
 static void tasteCb(Knopf k, bool unten) {
     if (!usbDa()) messung("diag", "taste", k * 10 + (unten ? 1 : 0), "k*10+unten");   // Fehlersuche Akkubetrieb
     if (k == K_KI) {
@@ -86,7 +91,12 @@ static void tasteCb(Knopf k, bool unten) {
     }
     if (hilfeAn) { if (unten) { hilfeAn = false; geheZu(aktuell); } return; }   // jede Taste schließt die Hilfe
     // ▲ und ▼ zusammen = Hilfe (wie EDC)
-    if (unten && ((k == K_UP && tasteUnten(K_DOWN)) || (k == K_DOWN && tasteUnten(K_UP)))) { tpPunkt = nullptr; hilfeZeigen(aktuell); return; }
+    if (unten && ((k == K_UP && tasteUnten(K_DOWN)) || (k == K_DOWN && tasteUnten(K_UP)))) { runterVerbraucht = true; tpPunkt = nullptr; hilfeZeigen(aktuell); return; }
+    if (aktuell == 0 && k == K_DOWN) {
+        if (unten) { runterSeit = millis(); runterVerbraucht = false; }
+        else if (!runterVerbraucht) { runterVerbraucht = true; geheZu(1); }
+        return;
+    }
     if (unten && aktuell >= 0 && STATIONEN[aktuell].taste) STATIONEN[aktuell].taste(k);
 }
 static void touchCb(int x, int y, bool unten) {
@@ -196,6 +206,11 @@ void loop() {
     diagPoll();
     tastenPoll(tasteCb);
     if (tasteUnten(K_KI) && !kiFotoGemacht && millis() - kiSeit > 800) fotoMachen();
+    if (aktuell == 0 && !hilfeAn && !runterVerbraucht && tasteUnten(K_DOWN) && millis() - runterSeit > GEHEIM_MS) {
+        runterVerbraucht = true;
+        tone(PIN_BUZZER, 1800, 60); delay(90); tone(PIN_BUZZER, 2400, 60); delay(90); tone(PIN_BUZZER, 3200, 90);
+        geheZu(9);
+    }
     touchPoll(touchCb);   // holt nur ab, was der Touch-Sammler gesammelt hat
     if (!hilfeAn && aktuell >= 0 && STATIONEN[aktuell].tick) STATIONEN[aktuell].tick();
     static bool strichEcho = false;   // Fehlersuche: empfangene Strich-Punkte zurückmelden (bei Bedarf true)
@@ -215,7 +230,7 @@ void loop() {
         if (c == 'f') fotoSeriell();
         else if (c == 's') geheZu(Serial.parseInt());   // „s6“ = Station 6; lose Ziffern (Reste bei Rückstau) zählen nicht
         else if (c == 'u') { bedient(); tasteCb(K_UP, true); }
-        else if (c == 'd') { bedient(); tasteCb(K_DOWN, true); }
+        else if (c == 'd') { bedient(); tasteCb(K_DOWN, true); tasteCb(K_DOWN, false); }   // kurz (Übersicht wertet beim Loslassen aus)
         else if (c == 'k') { bedient(); kiFotoGemacht = false; tasteCb(K_KI, false); }   // KI kurz
         else if (c == 'p') fotoMachen();                                                  // Foto auf die Karte
         else if (c == 't') {

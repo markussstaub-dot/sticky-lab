@@ -6,9 +6,9 @@ struct HilfeText { const char* titel_de; const char* titel_en; const char* de[6]
 
 static const HilfeText HILFE[] = {
  { "Übersicht", "Overview",
-   { "Elf Stationen loten aus, was der Sticky kann.", "Kachel antippen = Station öffnen.", "KI kurz = zurück zur Übersicht, KI halten = Bildschirmfoto.",
+   { "Zehn Stationen loten aus, was der Sticky kann - und ein Geheimnis.", "Kachel antippen = Station öffnen.", "KI kurz = zurück zur Übersicht, KI halten = Bildschirmfoto.",
      "▲ = Deutsch/English, ▼ = Station 1.", "Messwerte landen in /lab/messungen.csv.", "Tipp auf die Statuszeile = Hilfe (überall)." },
-   { "Eleven stations probe what the Sticky can do.", "Tap a tile = open the station.", "AI short = back to overview, AI hold = screenshot.",
+   { "Ten stations probe what the Sticky can do - and one secret.", "Tap a tile = open the station.", "AI short = back to overview, AI hold = screenshot.",
      "▲ = English/Deutsch, ▼ = station 1.", "Measurements go to /lab/messungen.csv.", "Tap the status line = help (everywhere)." } },
  { "Refresh-Labor", "Refresh lab",
    { "Misst, wie lange ein Bildwechsel dauert.", "Unten die Art wählen (Teil, wach, Schnell, Voll), dann Los.", "Das Testfeld kippt bei jedem Lauf; der Probetext wandert.",

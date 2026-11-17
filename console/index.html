@@ -95,6 +95,10 @@ body.screenpad #fwliste{display:block;columns:300px;column-gap:12px;height:calc(
 body.screenpad .fw{break-inside:avoid;margin-bottom:10px}
 /* Spickzettel-Reiter: Liste · Karte · Vorschau nebeneinander (ScreenPad: niedrig und breit) */
 #spick:not([hidden]){display:grid;grid-template-columns:250px minmax(280px,1fr) auto;gap:14px;padding:14px;align-items:start}
+#notfall:not([hidden]){display:grid;grid-template-columns:minmax(280px,420px) auto;gap:14px;padding:14px;align-items:start}
+#nfText{width:100%;min-height:330px;box-sizing:border-box;font:14px/1.5 ui-monospace,Consolas,monospace}
+#nfBild{width:100%;max-width:800px;border:1px solid #888;background:#fff}
+@media (max-width:1100px){#notfall:not([hidden]){grid-template-columns:1fr}}
 @media (max-width:1100px){#spick:not([hidden]){grid-template-columns:220px 1fr}#spick .spvor{grid-column:1/-1}}
 #spSzenen{display:flex;flex-wrap:wrap;gap:6px}
 #spSzenen button{min-height:36px;padding:0 12px;font-size:14px}
@@ -126,7 +130,7 @@ body.screenpad #spick .reihe button{min-height:36px;padding:0 12px;font-size:14p
  <span class="punkt" id="punkt"></span><h1>Sticky Console</h1>
  <button id="verbinden" class="voll" data-en="Connect">Verbinden</button>
  <button id="sprache" title="Deutsch / English">EN</button>
- <nav class="reiter"><button class="voll" data-tab="steuerung" data-en="Control">Steuerung</button><button data-tab="inventar" data-en="Tech inventory">Tech-Inventar</button><button data-tab="firmware">Firmware</button><button data-tab="spick" data-en="Cheat sheets">Spickzettel</button></nav>
+ <nav class="reiter"><button class="voll" data-tab="steuerung" data-en="Control">Steuerung</button><button data-tab="inventar" data-en="Tech inventory">Tech-Inventar</button><button data-tab="firmware">Firmware</button><button data-tab="spick" data-en="Cheat sheets">Spickzettel</button><button data-tab="notfall" data-en="Emergency">Notfall</button></nav>
  <span id="info" data-en="not connected">nicht verbunden</span>
 </header>
 <section id="firmware" hidden>
@@ -170,6 +174,24 @@ body.screenpad #spick .reihe button{min-height:36px;padding:0 12px;font-size:14p
    <span class="hinweis" id="spDatei"></span>
   </div>
   <p class="hinweis" id="spMeldung"></p>
+ </div>
+</section>
+<section id="notfall" hidden>
+ <div class="karte">
+  <h2 data-en="Emergency sheet (EDC firmware ≥ 0.40.0)">Notfallblatt (EDC-Firmware ≥ 0.40.0)</h2>
+  <p class="hinweis" data-en="Lines “Key: value”: Name, Zusatz, Kontakt: Who | number, Medizin, Treffpunkt, Box, Hinweis. Stays in this browser only – never uploaded anywhere. Anyone who finds the Sticky can read the sheet.">Zeilen „Schlüssel: Wert“: Name, Zusatz, Kontakt: Wer | Nummer, Medizin, Treffpunkt, Box, Hinweis. Bleibt nur in diesem Browser, geht nirgends ins Netz. Wer den Sticky findet, kann das Blatt lesen.</p>
+  <textarea id="nfText" spellcheck="false"></textarea>
+  <div class="reihe"><button id="nfOeffnen" data-en="Open file">Datei öffnen</button><button id="nfSpeichern" data-en="Save file">Datei speichern</button><input id="nfWahl" type="file" accept=".md,.txt" hidden></div>
+ </div>
+ <div class="karte">
+  <h2 data-en="Preview 800 × 480, black and white like the display">Vorschau 800 × 480, schwarz-weiß wie das Display</h2>
+  <canvas id="nfBild" width="800" height="480"></canvas>
+  <div class="reihe">
+   <button id="nfAufspielen" class="haupt" data-en="Upload via USB">Per USB aufspielen</button>
+   <button id="nfSd" data-en="Download for SD card">Für SD-Karte laden</button>
+   <button id="nfKarte" data-en="Print paper card">Papierkarte drucken</button>
+  </div>
+  <p class="hinweis" id="nfMeldung"></p>
  </div>
 </section>
 <main id="steuerung">
@@ -269,6 +291,7 @@ const verbunden = () => !!(port || usb);
 
 function zeile(t){
   log(t);
+  if (t.startsWith('DATEI ')) { window.notfallAntwort?.(t); return; }   // Notfallblatt per USB (notfall.js)
   if (t.startsWith('FOTO ')) { const n = +t.split(' ')[1]; if (n > 0) fotoErwartet = n; return 'foto'; }
   if (t.startsWith('MESSUNG ')) {
     const f = t.slice(8).split(',');
@@ -524,6 +547,8 @@ document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => {
   $('#inventar').hidden = b.dataset.tab !== 'inventar';
   $('#firmware').hidden = b.dataset.tab !== 'firmware';
   $('#spick').hidden = b.dataset.tab !== 'spick';
+  $('#notfall').hidden = b.dataset.tab !== 'notfall';
+  if (b.dataset.tab === 'notfall') window.notfallZeigen?.();
   if (b.dataset.tab === 'spick') window.spickZeigen?.();
   if (b.dataset.tab === 'firmware') window.fwLaden?.();
   if (b.dataset.tab === 'inventar') inventar();
@@ -716,4 +741,5 @@ async function aufspielen(f, v) {
 }
 </script>
 <script src="spickzettel.js"></script>
+<script src="notfall.js"></script>
 </body></html>

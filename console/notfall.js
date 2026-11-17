@@ -241,7 +241,19 @@ Hinweis: details on the paper card
   $n('#nfAufspielen').onclick = async () => {
     neu();
     if (typeof verbunden === 'function' && !verbunden()) { await verbinden(); if (!verbunden()) return; }
-    meld.textContent = tt('spielt auf …', 'uploading …');
+    const w = antwortAbwarten(3000);              // „Wer hängt am Kabel?“ (FW ≥ 0.42.0)
+    await roh(new TextEncoder().encode('WER
+'));
+    const wer = (await w).split(' ');
+    const geraet = wer[0] === 'WER' ? `${wer[1]} · FW ${wer[4]}` : tt('Sticky', 'Sticky');
+    let meins = null;
+    try { meins = localStorage.getItem('sticky.notfall.geraet'); } catch { /* egal */ }
+    // anderes Gerät mit fremdem Blatt: nachfragen; das eigene (zuletzt benutzte) Gerät still aktualisieren
+    if (wer[0] === 'WER' && meins && meins !== wer[2] && wer[6] === '1'
+        && !confirm(tt(`${wer[1]} ist nicht dein bisheriger Sticky und trägt schon ein Notfallblatt. Überschreiben?`,
+                       `${wer[1]} is not your usual Sticky and already holds an emergency sheet. Overwrite?`))) return;
+    if (wer[0] === 'WER') try { localStorage.setItem('sticky.notfall.geraet', wer[2]); } catch { /* egal */ }
+    meld.textContent = tt(`spielt auf ${geraet} …`, `uploading to ${geraet} …`);
     try {
       await datei('widgets/notfall/bild.bin', Notfall.bits(bild));
       await datei('widgets/notfall/felder.txt', new TextEncoder().encode(Notfall.felder()));

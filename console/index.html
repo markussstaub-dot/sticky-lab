@@ -291,7 +291,7 @@ const verbunden = () => !!(port || usb);
 
 function zeile(t){
   log(t);
-  if (t.startsWith('DATEI ')) { window.notfallAntwort?.(t); return; }   // Notfallblatt per USB (notfall.js)
+  if (t.startsWith('DATEI ') || t.startsWith('WER ')) { window.notfallAntwort?.(t); return; }   // Notfallblatt per USB (notfall.js)
   if (t.startsWith('FOTO ')) { const n = +t.split(' ')[1]; if (n > 0) fotoErwartet = n; return 'foto'; }
   if (t.startsWith('MESSUNG ')) {
     const f = t.slice(8).split(',');

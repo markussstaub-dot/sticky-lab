@@ -52,6 +52,35 @@ Jede Station ist eine Seite. Reihenfolge = Bau-Reihenfolge.
   bekommt einen Sprungzähler (höchstens 2–3 Sprünge) und eine Kennung, die das Relais sich merkt, damit nichts doppelt
   oder im Kreis läuft; Bestätigungen gehen denselben Weg zurück. Kein WLAN-Repeater fürs Haus: das ginge (ESP32 als
   NAT-Router), wäre aber langsam (einige Mbit/s) und ein eigenes Netz – dafür lieber einen fertigen Repeater
+- Vorschlag **Basis im WLAN, NAS als Sammelstelle** (Markus, 17.11.2026): Die Basis hängt am Netzteil im Heim-WLAN und
+  hört gleichzeitig per ESP-NOW auf die Fühler (gleicher Kanal wie der Router; Fühler suchen den Kanal beim Start selbst,
+  falls der Router wechselt). Sie schickt jeden Wert per **MQTT** an einen Mosquitto-Container auf dem Synology-NAS
+  (Container Manager); ein kleiner Mitschreiber legt Tages-CSV in einen NAS-Ordner (läuft so ins Hyper Backup mit).
+  Später möglich: Grafana für Kurven, Home Assistant/Node-RED, Alarm aufs Handy („Kühltruhe warm“). Der Sticky zeigt
+  dieselben Werte über Station 12. Kette: Fühler → ESP-NOW → (Relais) → Basis → WLAN → NAS. Reihenfolge: nach dem PT100
+  (Freitag) – erst echte Werte, dann die Sammelstelle
+- Vorschlag **Handy als Relais unterwegs** (Markus, 17.11.2026; Tailscale läuft auf dem NAS): Fühler senden zusätzlich
+  eine kurze **BLE-Rundsendung** (Beacon, ~20 Byte: Name, Wert, Nr.; Handys können kein ESP-NOW). Die Sticky-App auf dem
+  Fold horcht in Intervallen (z. B. 10 s je Minute) nach diesen Beacons, puffert und schickt per **Mobilfunk +
+  Tailscale** an den MQTT-Container auf dem NAS; ohne Netz wird nachgeliefert. Damit kommen Werte aus Auto, Zelt,
+  Bugout oder Tauchbasis von überall nach Hause. Haken: Android drosselt BLE-Scans im Hintergrund → Dauerdienst mit
+  Benachrichtigung (wie Bubble Log bei Fahrten); Handy-Akku. Drei Wege zusammen: zu Hause Basis im WLAN, unterwegs das
+  Handy, dazwischen Relais-C3
+  - Anschluss an Bestehendes (Stand 16./17.11.2026, siehe `sonstiges/homeserver` und `sonstiges/hauslurch`): Tailscale
+    läuft auf Zenbook, Fold und NAS (Subnet Router); die Fold-App schickt schon Diktate per HTTP über Tailscale an den
+    Hauslurch-Eingang – das Relais-Muster gibt es also, Fühlerwerte sind ein zweites Ziel. Ziel auf dem NAS: Mosquitto
+    im Container Manager, später **Home Assistant** (Homeserver-SPEC) – dann erscheinen die Fühler dort als Sensoren mit
+    Verlauf und Alarm. Option: C3 zu Hause mit **ESPHome** (hat ESP-NOW) statt eigener Firmware, Pflege in Home
+    Assistant; die eigene Nachlieferung bleibt für unterwegs
+- Ideenliste **Seeed-Bausteine für Station 12** (Markus, 17.11.2026; Web-Recherche, vor dem Kauf prüfen):
+  - **XIAO nRF52840**: BLE, sehr sparsam (Seeed nennt ~5 µA Tiefschlaf; Berichte zeigen, dass das nur mit sauber
+    abgeschalteter Peripherie und eher mit nRF Connect SDK als mit Arduino erreicht wird – selbst messen). Passt als
+    Beacon-Fühler für „Handy als Relais“, monatelang auf kleinem Akku statt eines dauerwachen C3
+  - **XIAO MG24**: Thread/Matter + BLE 5.3, für Batterie-Geräte gebaut; Seeed-Anleitung „Matter über Thread in Home
+    Assistant“ (braucht einen Thread-Border-Router, z. B. USB-Stick am NAS). Später auch Zigbee (Arduino-Core 5.0)
+  - **XIAO ESP32-C6**: WLAN 6, BLE 5, Thread/Zigbee – Allrounder, wenn Home Assistant läuft
+  - **XIAO ESP32-S3 + Wio-SX1262 (LoRa/Meshtastic)**: Kilometer statt Meter, siehe reterminal-sticky-SPEC (Bugout)
+  - **Grove-Sensoren**: stecken statt löten, Übergang bis zum Lötkurs
 - Stand 15.11.2026: alle acht Stationen gebaut (FW 0.4.0). Nächstes: Messungen mit dem Finger und auf Akku, dann
   vertiefen (Strichschrift, Testbild von SD, Ghosting-Serie, „Schnell“-Refresh klären, Summer-Klänge).
 - Vorschlag (ursprünglich): zuerst **1, 4, 6** bauen. Sie sind die Grundlage für alles andere: schnelles Zeichnen, die Bauteile und

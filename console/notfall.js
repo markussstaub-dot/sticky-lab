@@ -60,7 +60,8 @@ Hinweis: details on the paper card
     return zeilen;
   }
   const datum = () => new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  const KNOEPFE = [[20, 428, 220, 472, 'SOS', 'sos'], [236, 428, 436, 472, 'Sparmodus', 'spar']];
+  // SOS · Sparmodus · Sonne (Sonnenkompass, EDC ≥ 0.43.0); gleiche Lage wie notfallblatt.py ohne Dokumente
+  const KNOEPFE = [[16, 428, 216, 472, 'SOS', 'sos'], [228, 428, 428, 472, 'Sparmodus', 'spar'], [440, 428, 640, 472, 'Sonne', 'sonne']];
 
   /** Blatt auf eine Leinwand 800 × 480 (gleiche Anordnung wie notfallblatt.py; nichts unter 22 px, liest meist ein Helfer) */
   function zeichnen(c, d, en) {
@@ -123,16 +124,13 @@ Hinweis: details on the paper card
     for (const z of [...box, ...hinweis]) { g.fillText(z, rechts, y); y += 27; }
     linie(0, 415, W);
     for (const [x0, y0, x1, y1, s, a] of KNOEPFE) {
-      const text = a === 'spar' && en ? 'Power save' : s;
+      const text = en ? ({ spar: 'Power save', sonne: 'Sun' }[a] ?? s) : s;
       g.beginPath(); g.roundRect(x0 + 1, y0 + 1, x1 - x0 - 2, y1 - y0 - 2, 21);
       g.textAlign = 'center'; g.textBaseline = 'middle';
       if (a === 'sos') { g.fill(); g.fillStyle = '#fff'; g.font = font(26, true); g.fillText(text, (x0 + x1) / 2, (y0 + y1) / 2 + 1); g.fillStyle = '#000'; }
       else { g.lineWidth = 2; g.stroke(); g.font = font(G); g.fillText(text, (x0 + x1) / 2, (y0 + y1) / 2 + 1); }
       g.textAlign = 'left'; g.textBaseline = 'top';
     }
-    g.font = font(G); g.textAlign = 'right'; g.textBaseline = 'middle';
-    g.fillText(en ? 'Battery empty: stays' : 'Akku leer: bleibt stehen', W - 16, 450);
-    g.textAlign = 'left'; g.textBaseline = 'top';
     // auf reines Schwarz/Weiß bringen (wie das Display), damit die Vorschau ehrlich ist
     const img = g.getImageData(0, 0, W, H);
     for (let i = 0; i < img.data.length; i += 4) { const v = img.data[i] < 128 ? 0 : 255; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }

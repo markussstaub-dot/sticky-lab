@@ -109,14 +109,24 @@ static void basisLoop() {
         fFuss = (fFuss + 1) % 32;
         char wer[12]; unsigned long nr, vor; int temp10;
         if (sscanf(e.text, "D %11s %lu %lu %d", wer, &nr, &vor, &temp10) != 4) continue;
-        char a[40];
-        snprintf(a, sizeof a, "A %s %lu", wer, nr);
-        senden(a);                                                  // jede Nr bestätigen, auch doppelte
         uint32_t h = 0;
         for (const char* p = wer; *p; p++) h = h * 31 + *p;
         uint32_t& gesehen = zuletztGesehen[h % 8];
-        if (nr <= gesehen) continue;                                // schon gespeichert
+        char gpfad[24];
+        snprintf(gpfad, sizeof gpfad, "/g-%s.txt", wer);            // zuletzt gespeicherte Nr, übersteht Neustarts
+        if (!gesehen) { File g = LittleFS.open(gpfad, "r"); if (g) { gesehen = g.parseInt(); g.close(); } }
+        // Nur lückenlos annehmen: eine Nr nach einer Lücke weder speichern noch bestätigen – der Fühler schickt ab
+        // der ersten unbestätigten Nr erneut. (Vorher: 106 vor 105 gespeichert, 105 dann als „schon gesehen“
+        // bestätigt, aber nie gespeichert → Wert verloren.) Ohne Vorwissen (gesehen 0) gilt die erste Nr als Anfang.
+        bool neu = !gesehen || nr == gesehen + 1;
+        if (!neu && nr > gesehen) continue;                         // Lücke: abwarten
+        char a[40];
+        snprintf(a, sizeof a, "A %s %lu", wer, nr);
+        senden(a);                                                  // Neues und Doppeltes bestätigen
+        if (!neu) continue;                                         // schon gespeichert
         gesehen = nr;
+        File g = LittleFS.open(gpfad, "w");
+        if (g) { g.print(nr); g.close(); }
         File f = LittleFS.open("/empfang.csv", "a");
         uint32_t u = uhrJetzt();
         uint32_t gemessen = u ? u - vor : 0;                        // echte Messzeit, wenn die Uhr gestellt ist

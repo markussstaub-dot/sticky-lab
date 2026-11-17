@@ -15,7 +15,7 @@ Kontakt: Erika (Partnerin) | +49 170 0000000
 Kontakt: Paul (Bruder) | +49 151 0000000
 Medizin: Blutgruppe A+
 Treffpunkt: Bahnhof, Haupteingang
-Box: Powerbank, Lampe, Pfeife, Rettungsdecke, Pflaster, Bargeld
+Box: Powerbank, Lesebrille, Lampe, Pfeife, Rettungsdecke, Pflaster, Bargeld
 Hinweis: Details auf der Papierkarte
 `;
   const MUSTER_EN = `# Emergency sheet – lines "Key: value", missing keys are left out. Lines starting with # are skipped.
@@ -62,72 +62,76 @@ Hinweis: details on the paper card
   const datum = () => new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const KNOEPFE = [[20, 428, 220, 472, 'SOS', 'sos'], [236, 428, 436, 472, 'Sparmodus', 'spar']];
 
-  /** Blatt auf eine Leinwand 800 × 480 (gleiche Anordnung wie notfallblatt.py) */
+  /** Blatt auf eine Leinwand 800 × 480 (gleiche Anordnung wie notfallblatt.py; nichts unter 22 px, liest meist ein Helfer) */
   function zeichnen(c, d, en) {
+    const G = 22, unten = 404;
     const g = c.getContext('2d');
     g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
     g.fillStyle = '#000'; g.strokeStyle = '#000'; g.textBaseline = 'top';
     g.fillRect(0, 0, W, 56);
     g.fillStyle = '#fff'; g.textBaseline = 'middle';
     g.font = font(30, true); g.fillText(en ? 'EMERGENCY' : 'NOTFALL', 20, 29);
-    g.font = font(15); g.fillText((en ? 'as of ' : 'Stand ') + datum(), en ? 250 : 200, 30);
+    g.font = font(G); g.fillText((en ? 'as of ' : 'Stand ') + datum(), en ? 240 : 190, 30);
     g.fillStyle = '#000'; g.textBaseline = 'top';
     const links = 20, mitte = 420, rechts = 436;
-    let y = 74;
-    const marke = (x, yy, s) => { g.font = font(14); g.fillText(s.toUpperCase(), x, yy); };
+    let y = 66;
+    const marke = (x, yy, s) => { g.font = font(G); g.fillText(s, x, yy); };
     const linie = (x0, yy, x1, b = 2) => { g.fillRect(x0, yy, x1 - x0, b); };
     if (d.Name) {
-      marke(links, y, en ? 'Name' : 'Name'); y += 20;
-      passend(g, d.Name, 32, mitte - links, true); g.fillText(d.Name, links, y); y += 40;
-      if (d.Zusatz) { passend(g, d.Zusatz, 16, mitte - links); g.fillText(d.Zusatz, links, y); y += 24; }
+      passend(g, d.Name, 34, mitte - links, true, G); g.fillText(d.Name, links, y); y += 42;
+      if (d.Zusatz) { g.font = font(G); for (const z of umbrechen(g, d.Zusatz, mitte - links - 10).slice(0, 2)) { g.fillText(z, links, y); y += 28; } }
       linie(links, y + 4, mitte - 10); y += 14;
     }
     if (d.Kontakt.length) {
-      marke(links, y, en ? 'In case of emergency call' : 'Im Notfall anrufen'); y += 24;
-      d.Kontakt.slice(0, 3).forEach((k, i) => {
+      marke(links, y, en ? 'In case of emergency call' : 'Im Notfall anrufen'); y += 30;
+      d.Kontakt.slice(0, d.Treffpunkt ? 2 : 3).forEach((k, i) => {
         const [wer, nr = ''] = k.split('|').map((s) => s.trim());
-        g.beginPath(); g.arc(links + 15, y + 19, 15, 0, 7); g.fill();
-        g.fillStyle = '#fff'; g.font = font(17, true); g.textAlign = 'center'; g.textBaseline = 'middle';
-        g.fillText(String(i + 1), links + 15, y + 20);
+        g.beginPath(); g.arc(links + 17, y + 25, 17, 0, 7); g.fill();
+        g.fillStyle = '#fff'; g.font = font(G, true); g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.fillText(String(i + 1), links + 17, y + 26);
         g.fillStyle = '#000'; g.textAlign = 'left'; g.textBaseline = 'top';
-        passend(g, wer, 18, mitte - links - 54); g.fillText(wer, links + 44, y);
-        passend(g, nr, 22, mitte - links - 54, true); g.fillText(nr, links + 44, y + 21);
-        y += 54;
+        passend(g, wer, G, mitte - links - 56, false, G); g.fillText(wer, links + 46, y);
+        passend(g, nr, 28, mitte - links - 56, true, G); g.fillText(nr, links + 46, y + 25);
+        y += 62;
       });
       linie(links, y, mitte - 10); y += 10;
     }
     if (d.Treffpunkt) {
-      marke(links, y, en ? 'Meeting point' : 'Treffpunkt'); y += 22;
-      g.font = font(19);
-      for (const z of umbrechen(g, d.Treffpunkt, mitte - links - 10).slice(0, 2)) { g.fillText(z, links, y); y += 24; }
+      marke(links, y, en ? 'Meeting point' : 'Treffpunkt'); y += 28;
+      g.font = font(G, true);
+      for (const z of umbrechen(g, d.Treffpunkt, mitte - links - 10)) { if (y + G > unten) break; g.fillText(z, links, y); y += 28; }
     }
-    y = 74;
+    y = 66;
     if (d.Medizin.length) {
-      const h = 56 + 30 * Math.min(d.Medizin.length, 5);
+      const n = Math.min(d.Medizin.length, 4), h = 60 + 32 * n;
       g.beginPath(); g.roundRect(rechts + 3, y + 3, W - 16 - rechts - 6, h - 6, 15); g.lineWidth = 6; g.stroke();
       g.beginPath(); g.roundRect(rechts + 11, y + 11, W - 26 - rechts - 12, h - 22, 9); g.lineWidth = 2; g.stroke();
-      g.font = font(14); g.fillText(en ? 'MEDICAL · SHORT' : 'MEDIZIN · KURZ', rechts + 24, y + 20);
-      let yy = y + 42;
-      d.Medizin.slice(0, 5).forEach((m, i) => { passend(g, m, 21, W - 26 - rechts - 34, i === 0); g.fillText(m, rechts + 24, yy); yy += 30; });
-      y += h + 18;
+      g.font = font(G); g.fillText(en ? 'Medical' : 'Medizin', rechts + 24, y + 18);
+      let yy = y + 46;
+      d.Medizin.slice(0, n).forEach((m, i) => { passend(g, m, 24, W - 26 - rechts - 34, i === 0, G); g.fillText(m, rechts + 24, yy); yy += 32; });
+      y += h + 12;
     }
-    if (d.Box) {
-      marke(rechts, y, en ? 'In the box' : 'In der Box'); y += 22;
-      g.font = font(16);
-      for (const z of umbrechen(g, d.Box, W - 16 - rechts).slice(0, 5)) { g.fillText(z, rechts, y); y += 21; }
+    g.font = font(G);
+    const platz = Math.floor((unten - y) / 27);
+    let hinweis = d.Hinweis ? umbrechen(g, d.Hinweis, W - 16 - rechts) : [];
+    let box = d.Box ? [en ? 'In the box' : 'In der Box', ...umbrechen(g, d.Box, W - 16 - rechts)] : [];
+    if (box.length + hinweis.length > platz) {          // zu lang: Hinweis ganz oder gar nicht, Box-Liste kürzen
+      if (hinweis.length > Math.floor(platz / 2)) hinweis = [];
+      box = box.slice(0, Math.max(0, platz - hinweis.length));
+      if (box.length > 1) box[box.length - 1] = box[box.length - 1].replace(/,$/, '') + ' …';
     }
-    if (d.Hinweis) { passend(g, d.Hinweis, 15, W - 16 - rechts); g.fillText(d.Hinweis, rechts, Math.min(y + 6, 392)); }
+    for (const z of [...box, ...hinweis]) { g.fillText(z, rechts, y); y += 27; }
     linie(0, 415, W);
     for (const [x0, y0, x1, y1, s, a] of KNOEPFE) {
       const text = a === 'spar' && en ? 'Power save' : s;
       g.beginPath(); g.roundRect(x0 + 1, y0 + 1, x1 - x0 - 2, y1 - y0 - 2, 21);
       g.textAlign = 'center'; g.textBaseline = 'middle';
-      if (a === 'sos') { g.fill(); g.fillStyle = '#fff'; g.font = font(20, true); g.fillText(text, (x0 + x1) / 2, (y0 + y1) / 2 + 1); g.fillStyle = '#000'; }
-      else { g.lineWidth = 2; g.stroke(); g.font = font(18); g.fillText(text, (x0 + x1) / 2, (y0 + y1) / 2 + 1); }
+      if (a === 'sos') { g.fill(); g.fillStyle = '#fff'; g.font = font(26, true); g.fillText(text, (x0 + x1) / 2, (y0 + y1) / 2 + 1); g.fillStyle = '#000'; }
+      else { g.lineWidth = 2; g.stroke(); g.font = font(G); g.fillText(text, (x0 + x1) / 2, (y0 + y1) / 2 + 1); }
       g.textAlign = 'left'; g.textBaseline = 'top';
     }
-    g.font = font(14); g.textAlign = 'right'; g.textBaseline = 'middle';
-    g.fillText(en ? 'Battery empty: image stays' : 'Akku leer: Bild bleibt stehen', W - 16, 450);
+    g.font = font(G); g.textAlign = 'right'; g.textBaseline = 'middle';
+    g.fillText(en ? 'Battery empty: stays' : 'Akku leer: bleibt stehen', W - 16, 450);
     g.textAlign = 'left'; g.textBaseline = 'top';
     // auf reines Schwarz/Weiß bringen (wie das Display), damit die Vorschau ehrlich ist
     const img = g.getImageData(0, 0, W, H);
@@ -224,10 +228,11 @@ Hinweis: details on the paper card
   }
   const antwortAbwarten = (ms) => new Promise((r) => { warte = r; setTimeout(() => r(''), ms); });
   async function datei(rel, bytes) {
-    let bereit = antwortAbwarten(3000);           // Handschlag ab FW 0.41.0 („DATEI BEREIT“), ältere legen gleich los
+    const bereit = antwortAbwarten(20000);        // Handschlag ab FW 0.41.0: erst nach „DATEI BEREIT“ senden
     await roh(new TextEncoder().encode(`DATEI ${rel} ${bytes.length}\n`));
     const b = await bereit;
     if (b.startsWith('DATEI FEHLER')) throw new Error(b);
+    if (!b.startsWith('DATEI BEREIT')) throw new Error(tt('kein „bereit“ – EDC-Firmware ≥ 0.41.0 nötig', 'no “ready” – needs EDC firmware ≥ 0.41.0'));
     const antwort = antwortAbwarten(20000);
     for (let o = 0; o < bytes.length; o += 4096) await roh(bytes.subarray(o, o + 4096));
     const a = await antwort;

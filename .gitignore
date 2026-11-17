@@ -16,3 +16,6 @@ SPICKZETTEL-EDC.md
 
 # Playground-Paket und Vermarktung: nicht ins Repo
 vermarktung/
+
+# eigene Geräte-Adressen (C3-Fühler)
+fuehler/*/geraete.h

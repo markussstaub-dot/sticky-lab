@@ -1,0 +1,2 @@
+// Kopieren nach geraete.h und die MAC des Basis-C3 eintragen (esptool --port COMx read-mac).
+#define BASIS_MAC_WERT {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}

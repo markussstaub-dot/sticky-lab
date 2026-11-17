@@ -222,9 +222,13 @@ Hinweis: details on the paper card
     if (typeof writer !== 'undefined' && writer) return writer.write(bytes);
     throw new Error(tt('nicht verbunden', 'not connected'));
   }
+  const antwortAbwarten = (ms) => new Promise((r) => { warte = r; setTimeout(() => r(''), ms); });
   async function datei(rel, bytes) {
-    const antwort = new Promise((r) => { warte = r; setTimeout(() => r(''), 20000); });
+    let bereit = antwortAbwarten(3000);           // Handschlag ab FW 0.41.0 („DATEI BEREIT“), ältere legen gleich los
     await roh(new TextEncoder().encode(`DATEI ${rel} ${bytes.length}\n`));
+    const b = await bereit;
+    if (b.startsWith('DATEI FEHLER')) throw new Error(b);
+    const antwort = antwortAbwarten(20000);
     for (let o = 0; o < bytes.length; o += 4096) await roh(bytes.subarray(o, o + 4096));
     const a = await antwort;
     if (!a.startsWith('DATEI OK')) throw new Error(a || tt('keine Antwort – EDC-Firmware ≥ 0.40.0 und SD-Karte nötig', 'no answer – needs EDC firmware ≥ 0.40.0 and an SD card'));

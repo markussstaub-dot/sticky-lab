@@ -3,10 +3,11 @@
 *Deutsch weiter unten.*
 
 A workbench firmware for the [Seeed reTerminal Sticky](https://www.seeedstudio.com/) (ESP32-S3, 3.97″ e-ink
-800 × 480, touch, three keys): ten stations that measure what the little device can do and where e-ink and the small
+800 × 480, touch, three keys): stations that measure what the little device can do and where e-ink and the small
 battery set limits – refresh types and ghosting, fonts, dithering, Braun-style controls drawn on the panel, motion,
-touch accuracy and latency, built-in sensors, energy, a castle-duel game and an on-screen keyboard. German and
-English (switch with ▲ on the overview). No phone app, no BLE.
+touch accuracy and latency, built-in sensors, energy, a castle-duel game, an on-screen keyboard, pins & restarts and
+**Mesh**: talking to a Meshtastic node (e.g. SenseCAP T1000-E) directly over BLE, no phone needed. German and
+English (switch with ▲ on the overview). No phone app.
 
 **Sticky Console:** https://markussstaub-dot.github.io/sticky-lab/console/ – mirror (actual size, draw on it with
 mouse, finger or S Pen), remote control, measurements, tech inventory and **firmware flashing** (this lab and the
@@ -38,8 +39,9 @@ MIT
 
 ## Deutsch
 
-Eigene Firmware für den reTerminal Sticky als Werkbank: zehn Stationen loten aus, was der Kleine kann und wo e-Ink
-und der kleine Akku Grenzen setzen. Deutsch und Englisch (▲ in der Übersicht). Plan und Entscheidungen:
+Eigene Firmware für den reTerminal Sticky als Werkbank: Stationen loten aus, was der Kleine kann und wo e-Ink
+und der kleine Akku Grenzen setzen – seit 0.10.0 auch, wie er per BLE ohne Handy mit einem Meshtastic-Knoten
+spricht (Station 13 „Mesh“). Deutsch und Englisch (▲ in der Übersicht). Plan und Entscheidungen:
 [SPEC.md](SPEC.md), Ergebnisse: [LABORBUCH.md](LABORBUCH.md). Die **Sticky-Console** (Link oben) zeigt den Bildschirm
 in Originalgröße, steuert den Sticky fern, sammelt Messungen, hat ein Tech-Inventar und spielt Firmware auf – auch
 alles aus dem Seeed-Playground.

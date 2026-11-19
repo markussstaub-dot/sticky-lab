@@ -1,17 +1,18 @@
 /**
- * Sticky Lab – Werkbank für e-Ink-Technik und Design auf dem reTerminal Sticky (ohne App, ohne BLE)
+ * Sticky Lab – Werkbank für e-Ink-Technik und Design auf dem reTerminal Sticky (ohne App; BLE nur in Station 13 Mesh)
  * Spec: ../SPEC.md · Nachschlagewerk: reterminal-sticky (EDC, FW 0.31.8)
  *
  * Bedienung: KI kurz = Übersicht · KI halten = Bildschirmfoto nach /lab/fotos · ▲/▼ = blättern · Tippen = Aktion
- * USB-Seriell (115200): „f“ = Foto über USB (werkzeuge/foto2png.py), „s1“…„s11“ = Station, „s0“ = Übersicht,
+ * USB-Seriell (115200): „f“ = Foto über USB (werkzeuge/foto2png.py), „s1“…„s13“ = Station, „s0“ = Übersicht,
  *   „t x y“ = Tipp, „z/m x y“ + „h“ = Strich, „i“ Info, „a“ Akku, „c“ Messungen
  *
  * Bauen: arduino-cli compile -b "esp32:esp32:XIAO_ESP32S3:PSRAM=opi,CDCOnBoot=cdc"
  *        --build-property build.flash_size=32MB --build-path "%LOCALAPPDATA%\sticky-build\sticky-lab" firmware
  */
-#define LAB_VERSION "0.9.1"
+#define LAB_VERSION "0.10.0"
 #define PLATZ_EIGEN 1   // Lab gehört nach app1 (platz.h); aus dem Playground läuft es in app0
 
+#include <NimBLEDevice.h>   // vor anzeige.h: deren Makro T(de, en) bricht NimBLEs Templates
 #include <esp_sleep.h>
 #include <driver/gpio.h>
 #include "pins.h"
@@ -34,6 +35,7 @@
 #include "stationen/burgduell.h"
 #include "stationen/tastatur.h"
 #include "stationen/pins.h"
+#include "stationen/mesh.h"
 #include "hilfe.h"
 
 // ---- Stationen (Index 0 = Übersicht, danach Nummer wie in der SPEC) ------------------------
@@ -50,14 +52,18 @@ static const Station STATIONEN[] = {
     { "9 · Burgduell", burgduell::betreten, burgduell::taste, burgduell::tipp, nullptr },
     { "10 · Tastatur", tastatur::betreten, tastatur::taste, tastatur::tipp, tastatur::tick },
     { "11 · Pins & Neustarts", pinstation::betreten, pinstation::taste, pinstation::tipp, pinstation::tick },
+    { "12 · Fremdsensoren", nullptr, nullptr, nullptr, nullptr },   // noch nicht gebaut (Fühler-Versuch in fuehler/)
+    { "13 · Mesh", mesh::betreten, mesh::taste, mesh::tipp, mesh::tick },
 };
 static const int ANZAHL = sizeof STATIONEN / sizeof STATIONEN[0];
 static int aktuell = -1;
 static const int STATION_PINS = 11;   // zählt zusätzliche Pins nur, solange sie offen ist
+static const int STATION_MESH = 13;   // hält eine BLE-Verbindung, solange sie offen ist
 
 static void geheZu(int i) {
     if (i < 0 || i >= ANZAHL || !STATIONEN[i].betreten) return;
     if (aktuell == STATION_PINS && i != STATION_PINS) pinstation::verlassen();
+    if (aktuell == STATION_MESH && i != STATION_MESH) mesh::verlassen();
     aktuell = i;
     tpPunkt = nullptr;   // nur die Station, die jeden Touch-Punkt braucht, meldet sich wieder an
     display.fillScreen(WEISS);
@@ -110,6 +116,7 @@ static void touchCb(int x, int y, bool unten) {
 static const uint32_t SCHLAF_NACH_MS = 3 * 60 * 1000;
 static void vielleichtSchlafen() {
     if (millis() - letzteBedienung < SCHLAF_NACH_MS || usbDa()) return;
+    if (aktuell == STATION_MESH && mesh::verbunden()) return;   // Leichtschlaf würde die BLE-Verbindung kappen
     // Schlafbild muss ohne Strom stimmen: „Zzz“ in die Statuszeile, damit niemand das Gerät für tot hält
     display.fillRect(W - 300, 0, 300, STATUS_H - 2, WEISS);
     text(T("Zzz  ·  Taste weckt", "Zzz  ·  press a key"), W - 20, 23, &FreeSansBold12pt7b, MR_DATUM);

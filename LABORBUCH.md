@@ -2,6 +2,23 @@
 
 Erkenntnisse mit Datum. Rohdaten: `/lab/messungen.csv` auf der SD-Karte bzw. CSV aus der Console.
 
+
+## 19.11.2026 – FW 0.10.0: Station 13 Mesh (Durchstich mit dem T1000-E)
+
+- Gerät: Katjas Sticky, Lab in **app1** neben EDC 0.44.0 (app0 war leer). Gegenüber: SenseCAP T1000-E mit
+  Meshtastic 2.7.15, Region EU_868, Kanäle LongFast + „Familie“
+- **Geht:** Suche (5 s) → Verbinden → Koppeln mit PIN 123456 → Einstellungen lesen: bereit nach **15,7 s**,
+  42 Pakete, 1 Knoten, 2 Kanäle. Schnellantwort „OK“ ging laut T1000-E-Log über LoRa raus (Kanal Familie)
+- **Stolperfalle 1 (Meshtastic 2.7.15, nRF52):** Nach einer Sitzung über die USB-Schnittstelle (meshtastic-CLI)
+  lehnt der Knoten jede BLE-Kopplung ab, bis er neu startet (Rückruf `onUnwantedPairing` bleibt hängen; in neuerer
+  Firmware behoben). Abhilfe: nach CLI-Arbeit `meshtastic --reboot`. Rohes Mitlesen des Logs auf COM16 stört nicht
+- **Stolperfalle 2:** Ohne Bonding trennt der Knoten nach dem PIN. Mit Bonding geht es; EDC nutzt keine Bonds,
+  die NimBLE-Bond-Ablage im NVS stört sie also nicht
+- **Stolperfalle 3:** Ohne `hop_limit` geht das Paket mit 0 Sprüngen raus (keine Weiterleitung). Jetzt 3 wie die App
+- Bauen: `#include <NimBLEDevice.h>` muss vor `anzeige.h` stehen, sonst bricht deren Makro `T(de, en)` NimBLEs Templates
+- Offen: Empfang eines fremden Textes (braucht einen zweiten Knoten, Wio-Kit), Akku verbunden, Zeit bis bereit
+  verkürzen (Knotenliste nicht jedes Mal komplett holen)
+
 ## 15.11.2026 – FW 0.1.0 auf dem Lab-Gerät (zweiter Sticky), 80 MHz, am USB
 
 | Refresh | Fläche | Dauer | Bemerkung |

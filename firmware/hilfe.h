@@ -6,9 +6,9 @@ struct HilfeText { const char* titel_de; const char* titel_en; const char* de[6]
 
 static const HilfeText HILFE[] = {
  { "Übersicht", "Overview",
-   { "Zehn Stationen loten aus, was der Sticky kann - und ein Geheimnis.", "Kachel antippen = Station öffnen.", "KI kurz = zurück zur Übersicht, KI halten = Bildschirmfoto.",
+   { "Elf Stationen loten aus, was der Sticky kann - und ein Geheimnis.", "Kachel antippen = Station öffnen.", "KI kurz = zurück zur Übersicht, KI halten = Bildschirmfoto.",
      "▲ = Deutsch/English, ▼ = Station 1.", "Messwerte landen in /lab/messungen.csv.", "Tipp auf die Statuszeile = Hilfe (überall)." },
-   { "Ten stations probe what the Sticky can do - and one secret.", "Tap a tile = open the station.", "AI short = back to overview, AI hold = screenshot.",
+   { "Eleven stations probe what the Sticky can do - and one secret.", "Tap a tile = open the station.", "AI short = back to overview, AI hold = screenshot.",
      "▲ = English/Deutsch, ▼ = station 1.", "Measurements go to /lab/messungen.csv.", "Tap the status line = help (everywhere)." } },
  { "Refresh-Labor", "Refresh lab",
    { "Misst, wie lange ein Bildwechsel dauert.", "Unten die Art wählen (Teil, wach, Schnell, Voll), dann Los.", "Das Testfeld kippt bei jedem Lauf; der Probetext wandert.",
@@ -65,6 +65,13 @@ static const HilfeText HILFE[] = {
      "Unten: Grund dieses Starts, wie lange der vorige lief,", "Neustarts in Folge, letzter Sturm. 3x Absturz = Start hier.", "In CSV = Zeile je Pin, Löschen = Verlauf leeren." },
    { "Per pin: level, edges/s (max), interrupt type, wake.", "“off” = interrupt disabled (storm > 50 per ms).", "Motion, touch, SD, charging count here only; USB polled.",
      "Below: reason for this start, how long the last one ran,", "restarts in a row, last storm. 3 crashes = start here.", "To CSV = one row per pin, Clear = empty history." } },
+ { "Fremdsensoren", "External sensors",
+   { "Noch nicht gebaut.", "", "", "", "", "" }, { "Not built yet.", "", "", "", "", "" } },
+ { "Mesh", "Mesh",
+   { "Spricht per Bluetooth direkt mit einem Meshtastic-Knoten (T1000-E).", "▲ oder „Verbinden“ = suchen, koppeln (PIN 123456), lesen.", "Eingehende Texte erscheinen links, Knoten mit Position rechts.",
+     "Unten tippen = Schnellantwort senden, ▼ = Kanal wechseln.", "Nur eine BLE-Verbindung: solange verbunden, kommt die Handy-App nicht ran.", "Station verlassen trennt. Verbunden schläft der Sticky nicht." },
+   { "Talks to a Meshtastic node (T1000-E) directly over Bluetooth.", "▲ or “Connect” = scan, pair (PIN 123456), read.", "Incoming texts appear on the left, nodes with position on the right.",
+     "Tap below = send a quick reply, ▼ = change channel.", "One BLE link only: while connected the phone app can't connect.", "Leaving the station disconnects. Connected, the Sticky stays awake." } },
 };
 static const int HILFE_N = sizeof HILFE / sizeof HILFE[0];
 static bool hilfeAn = false;
